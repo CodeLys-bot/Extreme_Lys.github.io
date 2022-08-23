@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+  <meta charset="UTF-8">
+  <meta 
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+  <meta 
+    http-equiv="X-UA-Compatible" 
+    content="ie=edge">
+  <meta 
+    name="theme-color" 
+    content="#fff" 
+    id="theme-color">
+  <meta 
+    name="description" 
+    content="Hexo">
+  <link 
+    rel="icon" 
+    href="/">
+  <title>工厂方法模式</title>
+  
+    
+      <meta 
+        property="og:title" 
+        content="工厂方法模式">
+    
+    
+      <meta 
+        property="og:url" 
+        content="https://extremelys.github.io/2022/08/15/FactoryMethodPatten/index.html">
+    
+    
+      <meta 
+        property="og:img" 
+        content="https://img.songhn.com/img/Y67gdd.png">
+    
+    
+    
+      <meta 
+        property="og:type" 
+        content="article">
+      <meta 
+        property="og:article:published_time" 
+        content="2022-08-15">
+      <meta 
+        property="og:article:modified_time" 
+        content="2022-08-22">
+      <meta 
+        property="og:article:author" 
+        content="简单且极端">
+      
+        
+          <meta 
+            property="og:article:tag" 
+            content="设计模式">
+        
+      
+    
+  
+  
+  <link rel="preload" href="//at.alicdn.com/t/font_1946621_i1kgafibvw.css" as="style" >
+  <link rel="preload" href="//at.alicdn.com/t/font_1952792_89b4ac4k4up.css" as="style" >
+  <link rel="preload" href="/css/main.css" as="style" >
+  
+  <link rel="modulepreload" href="//instant.page/5.1.0">
+  
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1946621_i1kgafibvw.css">
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1952792_89b4ac4k4up.css">
+  
+  
+  
+    <link rel="stylesheet" href="/js/lib/lightbox/baguetteBox.min.css">
+  
+  <script>
+    function loadScript(url, cb) {
+      var script = document.createElement('script');
+      script.src = url;
+      if (cb) script.onload = cb;
+      script.async = true;
+      document.body.appendChild(script);
+    }
+    function loadCSS(href, data, attr) {
+      var sheet = document.createElement('link');
+      sheet.ref = 'stylesheet';
+      sheet.href = href;
+      sheet.dataset[data] = attr;
+      document.head.appendChild(sheet);
+    }
+    function changeCSS(cssFile, data, attr) {
+      var oldlink = document.querySelector(data);
+      var newlink = document.createElement("link");
+      newlink.setAttribute("rel", "stylesheet");
+      newlink.setAttribute("href", cssFile);
+      newlink.dataset.prism = attr;
+      document.head.replaceChild(newlink, oldlink);
+    }
+  </script>
+  
+    
+      
+      
+      
+      
+        
+        
+        
+        <script>
+          function prismThemeChange() {
+            if(document.getElementById('theme-color').dataset.mode === 'dark') {
+              if(document.querySelector('[data-prism]')) {
+                changeCSS('/js/lib/prism/prism-tomorrow.min.css', '[data-prism]', 'prism-tomorrow');
+              } else {
+                loadCSS('/js/lib/prism/prism-tomorrow.min.css', 'prism', 'prism-tomorrow');
+              }
+            } else {
+              if(document.querySelector('[data-prism]')) {
+                changeCSS('/js/lib/prism/prism.min.css', '[data-prism]', 'prism');
+              } else {
+                loadCSS('/js/lib/prism/prism.min.css', 'prism', 'prism');
+              }
+            }
+          }
+          prismThemeChange()
+        </script>
+      
+      
+        
+        <link rel="stylesheet" href="/js/lib/prism/prism-line-numbers.min.css">
+      
+    
+  
+  <script>
+    // control reverse button
+    var reverseDarkList = {
+      dark: 'light',
+      light: 'dark'
+    };
+    var themeColor = {
+      dark: '#1c1c1e',
+      light: '#fff'
+    }
+    // get the data of css prefers-color-scheme
+    var getCssMediaQuery = function() {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    };
+    // reverse current darkmode setting function
+    var reverseDarkModeSetting = function() {
+      var setting = localStorage.getItem('user-color-scheme');
+      if(reverseDarkList[setting]) {
+        setting = reverseDarkList[setting];
+      } else if(setting === null) {
+        setting = reverseDarkList[getCssMediaQuery()];
+      } else {
+        return;
+      }
+      localStorage.setItem('user-color-scheme', setting);
+      return setting;
+    };
+    // apply current darkmode setting
+  </script>
+  
+    <script>
+      var setDarkmode = function(mode) {
+      var setting = mode || localStorage.getItem('user-color-scheme');
+      if(setting === getCssMediaQuery()) {
+        document.documentElement.removeAttribute('data-user-color-scheme');
+        localStorage.removeItem('user-color-scheme');
+        document.getElementById('theme-color').content = themeColor[setting];
+        document.getElementById('theme-color').dataset.mode = setting;
+        prismThemeChange();
+      } else if(reverseDarkList[setting]) {
+        document.documentElement.setAttribute('data-user-color-scheme', setting);
+        document.getElementById('theme-color').content = themeColor[setting];
+        document.getElementById('theme-color').dataset.mode = setting;
+        prismThemeChange();
+      } else {
+        document.documentElement.removeAttribute('data-user-color-scheme');
+        localStorage.removeItem('user-color-scheme');
+        document.getElementById('theme-color').content = themeColor[getCssMediaQuery()];
+        document.getElementById('theme-color').dataset.mode = getCssMediaQuery();
+        prismThemeChange();
+      }
+    };
+    setDarkmode();
+    </script>
+  
+  
+  
+    <link rel="preload" href="/js/lib/lightbox/baguetteBox.min.js" as="script">
+    <link rel="preload" href="/js/lib/lightbox/baguetteBox.min.css" as="style" >
+  
+  
+    <link rel="preload" href="/js/lib/lozad.min.js" as="script">
+  
+  
+  
+  
+  
+  
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+  <body>
+    <div class="wrapper">
+       
+      <nav class="navbar">
+  <div class="navbar-logo">
+    <a class="navbar-logo-main" href="/">
+      
+      <span class="navbar-logo-dsc">简单且极端</span>
+      </a>
+  </div>
+  <div class="navbar-menu">
+    
+      <a 
+        href="/" 
+        class="navbar-menu-item">
+        
+          首页
+        
+      </a>
+    
+      <a 
+        href="/archives" 
+        class="navbar-menu-item">
+        
+          归档
+        
+      </a>
+    
+      <a 
+        href="/tags" 
+        class="navbar-menu-item">
+        
+          标签
+        
+      </a>
+    
+      <a 
+        href="/categories" 
+        class="navbar-menu-item">
+        
+          分类
+        
+      </a>
+    
+    <button 
+      class="navbar-menu-item darknavbar navbar-menu-btn" 
+      aria-label="Toggle dark mode"
+      id="dark">
+      <i class="iconfont icon-weather"></i>
+    </button>
+    <button 
+      class="navbar-menu-item searchnavbar navbar-menu-btn" 
+      aria-label="Toggle search"
+      id="search">
+      <!-- <i 
+        class="iconfont icon-search" 
+        style="font-size: 1.2rem; font-weight: 400;">
+      </i> -->
+      <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img"
+        class="iconify iconify--ion" width="28" height="28" preserveAspectRatio="xMidYMid meet" viewBox="0 0 512 512">
+        <path fill="none" stroke="currentColor" stroke-miterlimit="10" stroke-width="28"
+          d="M256 80a176 176 0 1 0 176 176A176 176 0 0 0 256 80Z"></path>
+        <path fill="none" stroke="currentColor" stroke-miterlimit="10" stroke-width="28"
+          d="M232 160a72 72 0 1 0 72 72a72 72 0 0 0-72-72Z"></path>
+        <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="28"
+          d="M283.64 283.64L336 336"></path>
+      </svg>
+    </button>
+  </div>
+</nav> 
+      
+      <div 
+        id="local-search" 
+        style="display: none">
+        <input
+          class="navbar-menu-item"
+          id="search-input"
+          placeholder="请输入搜索内容..." />
+        <div id="search-content"></div>
+      </div>
+      
+      <div class="section-wrap">
+        <div class="container">
+          <div class="columns">
+            <aside class="left-column">
+              
+              <div class="card card-author">
+                
+  <img 
+    src="https://img.songhn.com/img/Y67gdd.png" 
+    class="author-img"
+    width="88"
+    height="88"
+    alt="author avatar">
+
+<p class="author-name">简单且极端</p>
+<p class="author-description">designed by theme-kaze</p>
+<div class="author-message">
+  <a 
+    class="author-posts-count" 
+    href="/archives">
+    <span>8</span>
+    <span>文章</span>
+  </a>
+  <a 
+    class="author-categories-count" 
+    href="/categories">
+    <span>1</span>
+    <span>分类</span>
+  </a>
+  <a 
+    class="author-tags-count" 
+    href="/tags">
+    <span>1</span>
+    <span>标签</span>
+  </a>
+</div>
+
+              </div>
+               <div class="sticky-tablet">
+  
+  
+    <article class="display-when-two-columns spacer">
+      <div class="card card-content toc-card">
+        <div class="toc-header">
+  <i 
+    class="iconfont icon-menu" 
+    style="padding-right: 2px;">
+  </i>目录
+</div>
+<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Factory-Method-%E6%A8%A1%E5%BC%8F"><span class="toc-text">Factory Method 模式</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E4%BE%8B%E7%B1%BB%E5%9B%BE"><span class="toc-text">实例类图</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E4%BE%8B%E7%A8%8B%E5%BA%8F"><span class="toc-text">实例程序</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Product%E7%B1%BB"><span class="toc-text">Product类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Factory%E7%B1%BB"><span class="toc-text">Factory类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#IDCard-%E7%B1%BB"><span class="toc-text">IDCard 类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#IDCardFactory-%E7%B1%BB"><span class="toc-text">IDCardFactory 类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Main-%E7%B1%BB"><span class="toc-text">Main 类</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Factory-Method-%E6%A8%A1%E5%BC%8F%E4%B8%AD%E7%9A%84%E7%99%BB%E5%9C%BA%E8%A7%92%E8%89%B2"><span class="toc-text">Factory Method 模式中的登场角色</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Product%EF%BC%88%E4%BA%A7%E5%93%81%EF%BC%89"><span class="toc-text">Product（产品）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Creator%EF%BC%88%E5%88%9B%E5%BB%BA%E8%80%85%EF%BC%89"><span class="toc-text">Creator（创建者）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ConcreteProduct%EF%BC%88%E5%85%B7%E4%BD%93%E7%9A%84%E4%BA%A7%E5%93%81%EF%BC%89"><span class="toc-text">ConcreteProduct（具体的产品）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ConcreteCreator%EF%BC%88%E5%85%B7%E4%BD%93%E7%9A%84%E5%88%9B%E5%BB%BA%E8%80%85%EF%BC%89"><span class="toc-text">ConcreteCreator（具体的创建者）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8B%93%E5%B1%95%E6%80%9D%E8%B7%AF%E8%A6%81%E7%82%B9"><span class="toc-text">拓展思路要点</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A1%86%E6%9E%B6%E4%B8%8E%E5%85%B7%E4%BD%93%E5%8A%A0%E5%B7%A5"><span class="toc-text">框架与具体加工</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%94%9F%E6%88%90%E5%AE%9E%E4%BE%8B%E2%80%94%E2%80%94%E6%96%B9%E6%B3%95%E7%9A%84%E4%B8%89%E7%A7%8D%E5%AE%9E%E7%8E%B0%E6%96%B9%E5%BC%8F"><span class="toc-text">生成实例——方法的三种实现方式</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#%E6%8C%87%E5%AE%9A%E4%B8%BA%E6%8A%BD%E8%B1%A1%E6%96%B9%E6%B3%95"><span class="toc-text">指定为抽象方法</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%E4%B8%BA%E5%85%B6%E5%AE%9E%E7%8E%B0%E9%BB%98%E8%AE%A4%E5%A4%84%E7%90%86"><span class="toc-text">为其实现默认处理</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8%E6%A8%A1%E5%BC%8F%E4%B8%8E%E5%BC%80%E5%8F%91%E4%BA%BA%E5%91%98%E4%B9%8B%E9%97%B4%E7%9A%84%E6%B2%9F%E9%80%9A"><span class="toc-text">使用模式与开发人员之间的沟通</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%89%80%E5%AD%A6%E7%9F%A5%E8%AF%86"><span class="toc-text">所学知识</span></a></li></ol></li></ol>
+      </div>
+    </article>
+  
+  
+  <article class="card card-content categories-widget">
+    <div class="categories-card">
+  <div class="categories-header">
+    <i 
+      class="iconfont icon-fenlei" 
+      style="padding-right: 2px;">
+    </i>分类
+  </div>
+  <div class="categories-list">
+    
+      <a href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">
+        <div class="categories-list-item">
+          设计模式
+          <span class="categories-list-item-badge">8</span>
+        </div>
+      </a>
+    
+  </div>
+</div>
+  </article>
+  
+  <article class="card card-content tags-widget">
+    <div class="tags-card">
+  <div class="tags-header">
+    <i 
+      class="iconfont icon-biaoqian" 
+      style="padding-right: 2px;">
+    </i>热门标签
+  </div>
+  <div class="tags-list">
+    
+      <a 
+        href="/tags/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" 
+        title="设计模式">
+        <div class="tags-list-item">设计模式</div>
+      </a>
+    
+  </div>
+</div>
+  </article>
+  
+  
+</div>
+            </aside>
+            <main class="main-column">
+              
+<article class="card card-content">
+  <header>
+    <h1 class="post-title">
+      工厂方法模式
+    </h1>
+  </header>
+  <div class="post-meta post-show-meta">
+    <time datetime="2022-08-15T07:21:29.170Z">
+      <i 
+        class="iconfont icon-calendar" 
+        style="margin-right: 2px;">
+      </i>
+      <span>2022-08-15</span>
+    </time>
+    
+      <span class="dot"></span>
+      
+        <a 
+          href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" 
+          class="post-meta-link">
+          设计模式
+        </a>
+      
+    
+    
+      <span class="dot"></span>
+      <span>1.8k 字</span>
+    
+  </div>
+  
+    <div 
+      class="post-meta post-show-meta" 
+      style="margin-top: -10px;">
+      <div style="display: flex; align-items: center;">
+        <i 
+          class="iconfont icon-biaoqian" 
+          style="margin-right: 2px; font-size: 1.15rem;">
+        </i>
+        
+          
+          <a 
+            href="/tags/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" 
+            class="post-meta-link">
+            设计模式
+          </a>
+        
+      </div>
+    </div>
+  
+  </header>
+  <div 
+    id="section" 
+    class="post-content">
+    <h1 id="Factory-Method-模式"><a href="#Factory-Method-模式" class="headerlink" title="Factory Method 模式"></a>Factory Method 模式</h1><blockquote>
+<p>在 <strong>Temlate Method 模式</strong> 中，我们在父类中规定处理的流程，在子类中实现具体处理。如果我们将该模式用于生成实例，它就演变为 <strong>Factory Method 模式</strong>。</p>
+<p>Factory有“工厂”的意思。用 <strong>Temlate Method 模式</strong> 来构建生成实例的工厂，这就是 <strong>Factory Method 模式</strong>。</p>
+<p>在 <strong>Factory Method 模式</strong>中，父类决定实例的生成方式，但并不决定所要生成的具体的类，具体的处理全部交给子类负责。这样就可以将生成实例的框架（framework）和实际负责生成实例的类解耦。</p>
+</blockquote>
+<h2 id="实例类图"><a href="#实例类图" class="headerlink" title="实例类图"></a>实例类图</h2><blockquote>
+<p><img src="/2022/08/15/FactoryMethodPatten/image-20220815165438039.png" alt="image-20220815165438039" srcset="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20300%20300'%3E%3C/svg%3E" data-src="/2022/08/15/FactoryMethodPatten/image-20220815165438039.png" class="lozad post-image"></p>
+</blockquote>
+<h2 id="实例程序"><a href="#实例程序" class="headerlink" title="实例程序"></a>实例程序</h2><blockquote>
+<h3 id="Product类"><a href="#Product类" class="headerlink" title="Product类"></a>Product类</h3><p>framework包中的Product类是用来表示“产品”的类。在该类中仅声明了use抽象方法。</p>
+<p>use方法的实现则交给了Product类的子类负责。</p>
+<p>在这个框架中，定义了产品是“任意的可以use的”东西。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">abstract</span> <span class="token keyword">class</span> <span class="token class-name">Product</span> <span class="token punctuation">&#123;</span>
+       <span class="token comment">/**
+     * use 方法
+     */</span>
+    <span class="token keyword">public</span> <span class="token keyword">abstract</span> <span class="token keyword">void</span> <span class="token function">use</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="Factory类"><a href="#Factory类" class="headerlink" title="Factory类"></a>Factory类</h3><p>在framework包中的Factory类中，我们使用了Template Method 模式。该类还声明了用于“生成产品”的createProduct抽象方法和用于“注册商品”的registerProduct抽象方法。“生成产品”和“注册商品”的具体处理则被交给了Factory类的子类负责。</p>
+<p>在这个框架中，我们定义了工厂是用来“调用create方法生成Product实例”的。而create方法的实现是先调用createProduct生成产品，接着调用registerProduct注册产品。</p>
+<p>具体的实现内容根据 <strong>Factory Method 模式</strong> 适用的场景不同而不同。但是，只要是Factory Method 模式，在生成实例时就一定会使用到 Template Method 模式。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">abstract</span> <span class="token keyword">class</span> <span class="token class-name">Factory</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">public</span> <span class="token keyword">final</span> <span class="token class-name">Product</span> <span class="token function">create</span><span class="token punctuation">(</span><span class="token class-name">String</span> owner<span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+        <span class="token class-name">Product</span> p <span class="token operator">=</span> <span class="token function">createProduct</span><span class="token punctuation">(</span>owner<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token function">registerProduct</span><span class="token punctuation">(</span>p<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> p<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+    <span class="token keyword">protected</span> <span class="token keyword">abstract</span> <span class="token class-name">Product</span> <span class="token function">createProduct</span><span class="token punctuation">(</span><span class="token class-name">String</span> owner<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">protected</span> <span class="token keyword">abstract</span> <span class="token keyword">void</span> <span class="token function">registerProduct</span><span class="token punctuation">(</span><span class="token class-name">Product</span> product<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="IDCard-类"><a href="#IDCard-类" class="headerlink" title="IDCard 类"></a>IDCard 类</h3><pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">IDCard</span> <span class="token keyword">extends</span> <span class="token class-name">Product</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">private</span> <span class="token class-name">String</span> owner<span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> <span class="token class-name">IDCard</span><span class="token punctuation">(</span><span class="token class-name">String</span> owner<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">" 制作 "</span> <span class="token operator">+</span> owner <span class="token operator">+</span> <span class="token string">" 的 ID 卡。"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>owner <span class="token operator">=</span> owner<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">use</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">" 使用 "</span> <span class="token operator">+</span> owner <span class="token operator">+</span> <span class="token string">" 的 ID 卡。"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token keyword">public</span> <span class="token class-name">String</span> <span class="token function">getOwner</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> owner<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="IDCardFactory-类"><a href="#IDCardFactory-类" class="headerlink" title="IDCardFactory 类"></a>IDCardFactory 类</h3><pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">IDCardFactory</span> <span class="token keyword">extends</span> <span class="token class-name">Factory</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">private</span> <span class="token class-name">List</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">String</span><span class="token punctuation">></span></span> owners <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">ArrayList</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">protected</span> <span class="token class-name">Product</span> <span class="token function">createProduct</span><span class="token punctuation">(</span><span class="token class-name">String</span> owner<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> <span class="token keyword">new</span> <span class="token class-name">IDCard</span><span class="token punctuation">(</span>owner<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">protected</span> <span class="token keyword">void</span> <span class="token function">registerProduct</span><span class="token punctuation">(</span><span class="token class-name">Product</span> product<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        owners<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token class-name">IDCard</span><span class="token punctuation">)</span>product<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">getOwner</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+    <span class="token keyword">public</span> <span class="token class-name">List</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">String</span><span class="token punctuation">></span></span> <span class="token function">getOwners</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> owners<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="Main-类"><a href="#Main-类" class="headerlink" title="Main 类"></a>Main 类</h3><pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">Main</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token class-name">String</span><span class="token punctuation">[</span><span class="token punctuation">]</span> args<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token class-name">Factory</span> factory <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">IDCardFactory</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">Product</span> card1 <span class="token operator">=</span> factory<span class="token punctuation">.</span><span class="token function">create</span><span class="token punctuation">(</span><span class="token string">" 小明 "</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">Product</span> card2 <span class="token operator">=</span> factory<span class="token punctuation">.</span><span class="token function">create</span><span class="token punctuation">(</span><span class="token string">" 小红 "</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">Product</span> card3 <span class="token operator">=</span> factory<span class="token punctuation">.</span><span class="token function">create</span><span class="token punctuation">(</span><span class="token string">" 小刚 "</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        card1<span class="token punctuation">.</span><span class="token function">use</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        card2<span class="token punctuation">.</span><span class="token function">use</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        card3<span class="token punctuation">.</span><span class="token function">use</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+</blockquote>
+<h2 id="Factory-Method-模式中的登场角色"><a href="#Factory-Method-模式中的登场角色" class="headerlink" title="Factory Method 模式中的登场角色"></a>Factory Method 模式中的登场角色</h2><p><img src="/2022/08/15/FactoryMethodPatten/image-20220815173106137.png" alt="image-20220815173106137" srcset="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20300%20300'%3E%3C/svg%3E" data-src="/2022/08/15/FactoryMethodPatten/image-20220815173106137.png" class="lozad post-image"></p>
+<ul>
+<li><h3 id="Product（产品）"><a href="#Product（产品）" class="headerlink" title="Product（产品）"></a>Product（产品）</h3><blockquote>
+<p>Product角色属于框架这一方，是一个抽象类。它定义了在Factory Method 模式中生成的那些实例所持有的接口，但具体的处理则由子类ConcreteProduct角色决定。示例程序中，由Product类扮演此角色。</p>
+</blockquote>
+</li>
+<li><h3 id="Creator（创建者）"><a href="#Creator（创建者）" class="headerlink" title="Creator（创建者）"></a>Creator（创建者）</h3><blockquote>
+<p>Creator角色属于框架这一方，它是负责生成Product角色的抽象类，但具体的处理则由子类ConcreateCreator角色决定。示例程序中，由Factory类扮演此角色。</p>
+<p>Creator角色对于实例负责生成实例的ConcreteCreator角色一无所知，它唯一知道的就是，只要调用Product角色和生成实例的方法，就可以生成Product的示例。示例程序中，createProduct方法是用于生成实例的方法。</p>
+<p><strong>不用new关键字来生成实例，而是调用生成实例的专用方法来生成实例，这样就可以防止父类与其他具体的类耦合。</strong></p>
+</blockquote>
+</li>
+<li><h3 id="ConcreteProduct（具体的产品）"><a href="#ConcreteProduct（具体的产品）" class="headerlink" title="ConcreteProduct（具体的产品）"></a>ConcreteProduct（具体的产品）</h3><blockquote>
+<p>ConcreteProduct角色属于具体加工的这一方，它决定了具体的产品。示例程序中，由IDCard类扮演此角色。</p>
+</blockquote>
+</li>
+<li><h3 id="ConcreteCreator（具体的创建者）"><a href="#ConcreteCreator（具体的创建者）" class="headerlink" title="ConcreteCreator（具体的创建者）"></a>ConcreteCreator（具体的创建者）</h3><blockquote>
+<p>ConcreteCreator角色属于具体加工这一方，它负责生成具体的商品。示例程序中，有IDCardFactory类扮演此角色。</p>
+</blockquote>
+</li>
+</ul>
+<h2 id="拓展思路要点"><a href="#拓展思路要点" class="headerlink" title="拓展思路要点"></a>拓展思路要点</h2><ul>
+<li><h3 id="框架与具体加工"><a href="#框架与具体加工" class="headerlink" title="框架与具体加工"></a>框架与具体加工</h3><blockquote>
+<p>至此，我们分别学习了“框架”与“具体加工” 这两方面的内容。他们分别被封装在framework包和idcard包中。</p>
+<p>这里，让我们用相同的框架创建出其他的“产品”和“工厂”。例如，我们这次要创建表示电视机的类Televison和表示TelevisonFactory。这时，我们只需要引入（import）framework包就可以编写televison包。</p>
+<p>请注意这里没有修改，也根本没有必要需要framework包中的任何内容，就可以创建出其他的“产品”和“工厂”。</p>
+<p>在framework包中我们并没有引入idcard包。在Product类和Factory类中，并没有出现IDCard和IDCardFactory等具体类的名字。因此，即使用已有的框架生成全新的类时，也完全不需要framework进行修改，即不需要“将televison包引入到框架中”。关于这一点，称作是“framework包不依赖于idcard包”。</p>
+</blockquote>
+</li>
+<li><h3 id="生成实例——方法的三种实现方式"><a href="#生成实例——方法的三种实现方式" class="headerlink" title="生成实例——方法的三种实现方式"></a>生成实例——方法的三种实现方式</h3><blockquote>
+<p>示例程序中，Factory类的createProduct方法是抽象方法，也就是说需要在子类中实现该方法。</p>
+<p>createProduct方法的实现方式一般有以下3种。</p>
+<ul>
+<li><h5 id="指定为抽象方法"><a href="#指定为抽象方法" class="headerlink" title="指定为抽象方法"></a>指定为抽象方法</h5><p>指定为抽象方法。一旦将createProduct指定为抽象方法后，子类就必须实现该方法。如果不实现该方法，编译器将会报告编译错误。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">abstract</span> <span class="token keyword">class</span> <span class="token class-name">Factory</span> <span class="token punctuation">&#123;</span>
+	<span class="token keyword">public</span> <span class="token keyword">abstract</span> <span class="token class-name">Product</span> <span class="token function">createProduct</span><span class="token punctuation">(</span><span class="token class-name">String</span> name<span class="token punctuation">)</span><span class="token punctuation">;</span>
+	……
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
+</li>
+<li><h5 id="为其实现默认处理"><a href="#为其实现默认处理" class="headerlink" title="为其实现默认处理"></a>为其实现默认处理</h5><p>为其实现默认处理。实现默认处理后，如果子类没有实现该方法，将进行默认处理。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">class</span> <span class="token class-name">Factory</span> <span class="token punctuation">&#123;</span>
+  <span class="token keyword">public</span> <span class="token class-name">Product</span> <span class="token function">createProduct</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+    <span class="token keyword">return</span> <span class="token keyword">new</span> <span class="token class-name">Proudct</span><span class="token punctuation">(</span>name<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">&#125;</span>
+  ……
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>不过，这时是使用new关键字创建出实例，因此不能将Product类定义为抽象类。</p>
+</li>
+<li><p>在其中抛出异常</p>
+<p>在其中抛出异常的方法。createProduct方法的默认处理为抛出异常，这样以来，如果未在子类中实现该方法，程序就会在运行时出错（报错，告知开发人员没有实现createProduct方法）。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">class</span> <span class="token class-name">Factory</span> <span class="token punctuation">&#123;</span>
+  <span class="token keyword">public</span> <span class="token class-name">Product</span> <span class="token function">createProduct</span><span class="token punctuation">(</span><span class="token class-name">String</span> name<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">FactoryMethodRuntimeException</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">&#125;</span>
+  ……
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>不过，需要另外编写FactoryMethodRuntimeException 异常类。</p>
+</li>
+</ul>
+</blockquote>
+</li>
+<li><h3 id="使用模式与开发人员之间的沟通"><a href="#使用模式与开发人员之间的沟通" class="headerlink" title="使用模式与开发人员之间的沟通"></a>使用模式与开发人员之间的沟通</h3><blockquote>
+<p>不论是 <strong>Template Method 模式</strong>还是 <strong>Factory Method 模式</strong> ，在实际工作中使用时，都会让我们感受到比较困难。这是因为，如果仅阅读一个类的代码，是很难理解这个类的行为的。必须要理解父类中所定义的处理的框架和它里面所使用的抽象方法，然后阅读代码，了解这些抽象方法在子类中的实现才行。</p>
+<p>通常，使用设计模式设计类时，必须要向维护这些类的开发人员正确地传达设计这些设计模式的意图。否则，维护人员在修改设计时可能会违背设计者最初的意图。</p>
+<p>这时，我们建议在程序注释中和开发文档中记录所使用的设计模式的名称和意图。</p>
+</blockquote>
+</li>
+</ul>
+<h2 id="所学知识"><a href="#所学知识" class="headerlink" title="所学知识"></a>所学知识</h2><blockquote>
+<p>学习了使用 <strong>Template Method 模式</strong>生成实例的 <strong>Factory Method 模式</strong>。</p>
+<p>在设计模式中，多个类和接口扮演各自的角色，互相协作进行工作。在分析设计模式时，不应当将其中一个类单独拿出来分析，必须着眼于类和接口之间的<strong>相互关系</strong>。</p>
+</blockquote>
+
+  </div>
+  <div>
+    
+      <div 
+        class="post-note note-warning copyright" 
+        style="margin-top: 42px">
+        <p>
+          <span style="font-weight: bold;">作者：</span><a 
+            target="_blank" 
+            rel="nofollow noopener noreferrer" 
+            href="/about">
+            简单且极端
+          </a>
+        </p>
+        <p>
+          <span style="font-weight: bold;">文章链接：</span><a 
+            target="_blank" 
+            rel="nofollow noopener noreferrer" 
+            href="https://extremelys.github.io/2022/08/15/FactoryMethodPatten/">
+            https://extremelys.github.io/2022/08/15/FactoryMethodPatten/
+          </a>
+        </p>
+        <p><span style="font-weight: bold;">版权声明：</span>本博客所有文章除特别声明外，均采用<a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">CC BY-NC-SA 4.0 协议</a>。转载请注明出处！</p>
+      </div>
+    
+  </div>
+</article>
+<div class="nav">
+  
+    <div class="nav-item-prev">
+      <a 
+        href="/2022/08/16/SingletonPattern/" 
+        class="nav-link">
+        <i class="iconfont icon-left nav-prev-icon"></i>
+        <div>
+          <div class="nav-label">上一篇</div>
+          
+            <div class="nav-title">单例模式 </div>
+          
+        </div>
+      </a>
+    </div>
+  
+  
+    <div class="nav-item-next">
+      <a 
+        href="/2022/08/15/TemplateMethodPattern/" 
+        class="nav-link">
+        <div>
+          <div class="nav-label">下一篇</div>
+          
+            <div class="nav-title">模版方法模式 </div>
+          
+        </div>
+        <i class="iconfont icon-right nav-next-icon"></i>
+      </a>
+    </div>
+  
+</div>
+
+<div 
+  class="card card-content toc-card" 
+  id="mobiletoc">
+  <div class="toc-header">
+  <i 
+    class="iconfont icon-menu" 
+    style="padding-right: 2px;">
+  </i>目录
+</div>
+<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Factory-Method-%E6%A8%A1%E5%BC%8F"><span class="toc-text">Factory Method 模式</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E4%BE%8B%E7%B1%BB%E5%9B%BE"><span class="toc-text">实例类图</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E4%BE%8B%E7%A8%8B%E5%BA%8F"><span class="toc-text">实例程序</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Product%E7%B1%BB"><span class="toc-text">Product类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Factory%E7%B1%BB"><span class="toc-text">Factory类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#IDCard-%E7%B1%BB"><span class="toc-text">IDCard 类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#IDCardFactory-%E7%B1%BB"><span class="toc-text">IDCardFactory 类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Main-%E7%B1%BB"><span class="toc-text">Main 类</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Factory-Method-%E6%A8%A1%E5%BC%8F%E4%B8%AD%E7%9A%84%E7%99%BB%E5%9C%BA%E8%A7%92%E8%89%B2"><span class="toc-text">Factory Method 模式中的登场角色</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Product%EF%BC%88%E4%BA%A7%E5%93%81%EF%BC%89"><span class="toc-text">Product（产品）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Creator%EF%BC%88%E5%88%9B%E5%BB%BA%E8%80%85%EF%BC%89"><span class="toc-text">Creator（创建者）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ConcreteProduct%EF%BC%88%E5%85%B7%E4%BD%93%E7%9A%84%E4%BA%A7%E5%93%81%EF%BC%89"><span class="toc-text">ConcreteProduct（具体的产品）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ConcreteCreator%EF%BC%88%E5%85%B7%E4%BD%93%E7%9A%84%E5%88%9B%E5%BB%BA%E8%80%85%EF%BC%89"><span class="toc-text">ConcreteCreator（具体的创建者）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8B%93%E5%B1%95%E6%80%9D%E8%B7%AF%E8%A6%81%E7%82%B9"><span class="toc-text">拓展思路要点</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A1%86%E6%9E%B6%E4%B8%8E%E5%85%B7%E4%BD%93%E5%8A%A0%E5%B7%A5"><span class="toc-text">框架与具体加工</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%94%9F%E6%88%90%E5%AE%9E%E4%BE%8B%E2%80%94%E2%80%94%E6%96%B9%E6%B3%95%E7%9A%84%E4%B8%89%E7%A7%8D%E5%AE%9E%E7%8E%B0%E6%96%B9%E5%BC%8F"><span class="toc-text">生成实例——方法的三种实现方式</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#%E6%8C%87%E5%AE%9A%E4%B8%BA%E6%8A%BD%E8%B1%A1%E6%96%B9%E6%B3%95"><span class="toc-text">指定为抽象方法</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%E4%B8%BA%E5%85%B6%E5%AE%9E%E7%8E%B0%E9%BB%98%E8%AE%A4%E5%A4%84%E7%90%86"><span class="toc-text">为其实现默认处理</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8%E6%A8%A1%E5%BC%8F%E4%B8%8E%E5%BC%80%E5%8F%91%E4%BA%BA%E5%91%98%E4%B9%8B%E9%97%B4%E7%9A%84%E6%B2%9F%E9%80%9A"><span class="toc-text">使用模式与开发人员之间的沟通</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%89%80%E5%AD%A6%E7%9F%A5%E8%AF%86"><span class="toc-text">所学知识</span></a></li></ol></li></ol>
+</div>
+            </main>
+            <aside class="right-column">
+              <div class="sticky-widescreen">
+  
+  
+    <article class="card card-content toc-card">
+      <div class="toc-header">
+  <i 
+    class="iconfont icon-menu" 
+    style="padding-right: 2px;">
+  </i>目录
+</div>
+<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Factory-Method-%E6%A8%A1%E5%BC%8F"><span class="toc-text">Factory Method 模式</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E4%BE%8B%E7%B1%BB%E5%9B%BE"><span class="toc-text">实例类图</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E4%BE%8B%E7%A8%8B%E5%BA%8F"><span class="toc-text">实例程序</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Product%E7%B1%BB"><span class="toc-text">Product类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Factory%E7%B1%BB"><span class="toc-text">Factory类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#IDCard-%E7%B1%BB"><span class="toc-text">IDCard 类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#IDCardFactory-%E7%B1%BB"><span class="toc-text">IDCardFactory 类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Main-%E7%B1%BB"><span class="toc-text">Main 类</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Factory-Method-%E6%A8%A1%E5%BC%8F%E4%B8%AD%E7%9A%84%E7%99%BB%E5%9C%BA%E8%A7%92%E8%89%B2"><span class="toc-text">Factory Method 模式中的登场角色</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Product%EF%BC%88%E4%BA%A7%E5%93%81%EF%BC%89"><span class="toc-text">Product（产品）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Creator%EF%BC%88%E5%88%9B%E5%BB%BA%E8%80%85%EF%BC%89"><span class="toc-text">Creator（创建者）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ConcreteProduct%EF%BC%88%E5%85%B7%E4%BD%93%E7%9A%84%E4%BA%A7%E5%93%81%EF%BC%89"><span class="toc-text">ConcreteProduct（具体的产品）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ConcreteCreator%EF%BC%88%E5%85%B7%E4%BD%93%E7%9A%84%E5%88%9B%E5%BB%BA%E8%80%85%EF%BC%89"><span class="toc-text">ConcreteCreator（具体的创建者）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8B%93%E5%B1%95%E6%80%9D%E8%B7%AF%E8%A6%81%E7%82%B9"><span class="toc-text">拓展思路要点</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A1%86%E6%9E%B6%E4%B8%8E%E5%85%B7%E4%BD%93%E5%8A%A0%E5%B7%A5"><span class="toc-text">框架与具体加工</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%94%9F%E6%88%90%E5%AE%9E%E4%BE%8B%E2%80%94%E2%80%94%E6%96%B9%E6%B3%95%E7%9A%84%E4%B8%89%E7%A7%8D%E5%AE%9E%E7%8E%B0%E6%96%B9%E5%BC%8F"><span class="toc-text">生成实例——方法的三种实现方式</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#%E6%8C%87%E5%AE%9A%E4%B8%BA%E6%8A%BD%E8%B1%A1%E6%96%B9%E6%B3%95"><span class="toc-text">指定为抽象方法</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%E4%B8%BA%E5%85%B6%E5%AE%9E%E7%8E%B0%E9%BB%98%E8%AE%A4%E5%A4%84%E7%90%86"><span class="toc-text">为其实现默认处理</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8%E6%A8%A1%E5%BC%8F%E4%B8%8E%E5%BC%80%E5%8F%91%E4%BA%BA%E5%91%98%E4%B9%8B%E9%97%B4%E7%9A%84%E6%B2%9F%E9%80%9A"><span class="toc-text">使用模式与开发人员之间的沟通</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%89%80%E5%AD%A6%E7%9F%A5%E8%AF%86"><span class="toc-text">所学知识</span></a></li></ol></li></ol>
+    </article>
+  
+  
+  <article class="card card-content">
+    <div class="recent-posts-card">
+  <div class="recent-posts-header">
+    <i 
+      class="iconfont icon-wenzhang_huaban" 
+      style="padding-right: 2px;">
+    </i>最近文章
+  </div>
+  <div class="recent-posts-list">
+    
+      <div class="recent-posts-item">
+        <div class="recent-posts-item-title">2022-08-22</div>
+        <a href="/2022/08/22/AbstractFactoryPattern/"><div class="recent-posts-item-content">抽象工厂模式</div></a>
+      </div>
+    
+      <div class="recent-posts-item">
+        <div class="recent-posts-item-title">2022-08-22</div>
+        <a href="/2022/08/22/BuilderPattern/"><div class="recent-posts-item-content">建造者模式</div></a>
+      </div>
+    
+      <div class="recent-posts-item">
+        <div class="recent-posts-item-title">2022-08-17</div>
+        <a href="/2022/08/17/PrototypePattern/"><div class="recent-posts-item-content">原型模式</div></a>
+      </div>
+    
+      <div class="recent-posts-item">
+        <div class="recent-posts-item-title">2022-08-16</div>
+        <a href="/2022/08/16/SingletonPattern/"><div class="recent-posts-item-content">单例模式</div></a>
+      </div>
+    
+  </div>
+</div>
+  </article>
+  
+  
+</div>
+            </aside>
+          </div>
+        </div>
+      </div>
+    </div>
+     
+    <footer class="footer">
+  <div class="footer-container">
+    <div>
+      <div class="footer-dsc">
+        <span>
+          Copyright ©
+          
+            2022
+          
+          
+        </span>
+        &nbsp;
+        <a 
+          href="/" 
+          class="footer-link">
+          简单且极端
+        </a>
+      </div>
+    </div>
+
+    
+      <div class="footer-dsc">
+        
+          Powered by
+          <a 
+            href="https://hexo.io/" 
+            class="footer-link" 
+            target="_blank" 
+            rel="nofollow noopener noreferrer">
+            &nbsp;Hexo
+          </a>
+        
+        
+          <span>&nbsp;|&nbsp;</span>
+        
+        
+          Theme -
+          <a 
+            href="https://github.com/theme-kaze" 
+            class="footer-link" 
+            target="_blank"
+            rel="nofollow noopener noreferrer">
+            &nbsp;Kaze
+          </a>
+        
+      </div>
+    
+    
+    
+    
+</footer>
+ 
+    
+  <a 
+    role="button" 
+    id="scrollbutton" 
+    class="basebutton" 
+    aria-label="回到顶部">
+    <i class="iconfont icon-arrowleft button-icon"></i>
+  </a>
+
+<a 
+  role="button" 
+  id="menubutton"
+  aria-label="menu button"
+  class="basebutton">
+  <i class="iconfont icon-menu button-icon"></i>
+</a>
+<a 
+  role="button" 
+  id="popbutton" 
+  class="basebutton" 
+  aria-label="控制中心">
+  <i class="iconfont icon-expand button-icon"></i>
+</a>
+<a 
+  role="button" 
+  id="darkbutton" 
+  class="basebutton darkwidget" 
+  aria-label="夜色模式">
+  <i class="iconfont icon-weather button-icon"></i>
+</a>
+<a 
+  role="button" 
+  id="searchbutton" 
+  class="basebutton searchwidget" 
+  aria-label="搜索">
+  <i class="iconfont icon-search button-icon"></i>
+</a> 
+     
+     
+     
+      <script>
+  var addImgLayout = function () {
+    var img = document.querySelectorAll('.post-content img')
+    var i
+    for (i = 0; i < img.length; i++) {
+      var wrapper = document.createElement('a')
+      wrapper.setAttribute('href', img[i].getAttribute('data-src'))
+      wrapper.setAttribute('aria-label', 'illustration')
+      wrapper.style.cssText =
+        'width: 100%; display: flex; justify-content: center;'
+      if (img[i].alt) wrapper.dataset.caption = img[i].alt
+      wrapper.dataset.nolink = true
+      img[i].before(wrapper)
+      wrapper.append(img[i])
+      var divWrap = document.createElement('div')
+      divWrap.classList.add('gallery')
+      wrapper.before(divWrap)
+      divWrap.append(wrapper)
+    }
+    baguetteBox.run('.gallery')
+  }
+</script>
+<script>
+  loadScript(
+    "/js/lib/lightbox/baguetteBox.min.js",
+    addImgLayout
+  )
+</script>
+ 
+     
+     
+    <script src="/js/main.js"></script> 
+     
+    
+      <script>
+        var addLazyload = function () {
+          var observer = lozad('.lozad', {
+            load: function (el) {
+              el.srcset = el.getAttribute('data-src')
+            },
+            loaded: function (el) {
+              el.classList.add('loaded')
+            },
+          })
+          observer.observe()
+        }
+      </script>
+      <script>
+        loadScript('/js/lib/lozad.min.js', addLazyload)
+      </script>
+    
+    <script src="//instant.page/5.1.0" type="module"
+      integrity="sha384-by67kQnR+pyfy8yWP4kPO12fHKRLHZPfEsiSXR8u2IKcTdxD805MGUXBzVPnkLHw"></script>
+    
+    
+  </body>
+</html>

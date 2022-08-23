@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+  <meta charset="UTF-8">
+  <meta 
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+  <meta 
+    http-equiv="X-UA-Compatible" 
+    content="ie=edge">
+  <meta 
+    name="theme-color" 
+    content="#fff" 
+    id="theme-color">
+  <meta 
+    name="description" 
+    content="Hexo">
+  <link 
+    rel="icon" 
+    href="/">
+  <title>建造者模式</title>
+  
+    
+      <meta 
+        property="og:title" 
+        content="建造者模式">
+    
+    
+      <meta 
+        property="og:url" 
+        content="https://extremelys.github.io/2022/08/22/BuilderPattern/index.html">
+    
+    
+      <meta 
+        property="og:img" 
+        content="https://img.songhn.com/img/Y67gdd.png">
+    
+    
+    
+      <meta 
+        property="og:type" 
+        content="article">
+      <meta 
+        property="og:article:published_time" 
+        content="2022-08-22">
+      <meta 
+        property="og:article:modified_time" 
+        content="2022-08-22">
+      <meta 
+        property="og:article:author" 
+        content="简单且极端">
+      
+        
+          <meta 
+            property="og:article:tag" 
+            content="设计模式">
+        
+      
+    
+  
+  
+  <link rel="preload" href="//at.alicdn.com/t/font_1946621_i1kgafibvw.css" as="style" >
+  <link rel="preload" href="//at.alicdn.com/t/font_1952792_89b4ac4k4up.css" as="style" >
+  <link rel="preload" href="/css/main.css" as="style" >
+  
+  <link rel="modulepreload" href="//instant.page/5.1.0">
+  
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1946621_i1kgafibvw.css">
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1952792_89b4ac4k4up.css">
+  
+  
+  
+    <link rel="stylesheet" href="/js/lib/lightbox/baguetteBox.min.css">
+  
+  <script>
+    function loadScript(url, cb) {
+      var script = document.createElement('script');
+      script.src = url;
+      if (cb) script.onload = cb;
+      script.async = true;
+      document.body.appendChild(script);
+    }
+    function loadCSS(href, data, attr) {
+      var sheet = document.createElement('link');
+      sheet.ref = 'stylesheet';
+      sheet.href = href;
+      sheet.dataset[data] = attr;
+      document.head.appendChild(sheet);
+    }
+    function changeCSS(cssFile, data, attr) {
+      var oldlink = document.querySelector(data);
+      var newlink = document.createElement("link");
+      newlink.setAttribute("rel", "stylesheet");
+      newlink.setAttribute("href", cssFile);
+      newlink.dataset.prism = attr;
+      document.head.replaceChild(newlink, oldlink);
+    }
+  </script>
+  
+    
+      
+      
+      
+      
+        
+        
+        
+        <script>
+          function prismThemeChange() {
+            if(document.getElementById('theme-color').dataset.mode === 'dark') {
+              if(document.querySelector('[data-prism]')) {
+                changeCSS('/js/lib/prism/prism-tomorrow.min.css', '[data-prism]', 'prism-tomorrow');
+              } else {
+                loadCSS('/js/lib/prism/prism-tomorrow.min.css', 'prism', 'prism-tomorrow');
+              }
+            } else {
+              if(document.querySelector('[data-prism]')) {
+                changeCSS('/js/lib/prism/prism.min.css', '[data-prism]', 'prism');
+              } else {
+                loadCSS('/js/lib/prism/prism.min.css', 'prism', 'prism');
+              }
+            }
+          }
+          prismThemeChange()
+        </script>
+      
+      
+        
+        <link rel="stylesheet" href="/js/lib/prism/prism-line-numbers.min.css">
+      
+    
+  
+  <script>
+    // control reverse button
+    var reverseDarkList = {
+      dark: 'light',
+      light: 'dark'
+    };
+    var themeColor = {
+      dark: '#1c1c1e',
+      light: '#fff'
+    }
+    // get the data of css prefers-color-scheme
+    var getCssMediaQuery = function() {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    };
+    // reverse current darkmode setting function
+    var reverseDarkModeSetting = function() {
+      var setting = localStorage.getItem('user-color-scheme');
+      if(reverseDarkList[setting]) {
+        setting = reverseDarkList[setting];
+      } else if(setting === null) {
+        setting = reverseDarkList[getCssMediaQuery()];
+      } else {
+        return;
+      }
+      localStorage.setItem('user-color-scheme', setting);
+      return setting;
+    };
+    // apply current darkmode setting
+  </script>
+  
+    <script>
+      var setDarkmode = function(mode) {
+      var setting = mode || localStorage.getItem('user-color-scheme');
+      if(setting === getCssMediaQuery()) {
+        document.documentElement.removeAttribute('data-user-color-scheme');
+        localStorage.removeItem('user-color-scheme');
+        document.getElementById('theme-color').content = themeColor[setting];
+        document.getElementById('theme-color').dataset.mode = setting;
+        prismThemeChange();
+      } else if(reverseDarkList[setting]) {
+        document.documentElement.setAttribute('data-user-color-scheme', setting);
+        document.getElementById('theme-color').content = themeColor[setting];
+        document.getElementById('theme-color').dataset.mode = setting;
+        prismThemeChange();
+      } else {
+        document.documentElement.removeAttribute('data-user-color-scheme');
+        localStorage.removeItem('user-color-scheme');
+        document.getElementById('theme-color').content = themeColor[getCssMediaQuery()];
+        document.getElementById('theme-color').dataset.mode = getCssMediaQuery();
+        prismThemeChange();
+      }
+    };
+    setDarkmode();
+    </script>
+  
+  
+  
+    <link rel="preload" href="/js/lib/lightbox/baguetteBox.min.js" as="script">
+    <link rel="preload" href="/js/lib/lightbox/baguetteBox.min.css" as="style" >
+  
+  
+    <link rel="preload" href="/js/lib/lozad.min.js" as="script">
+  
+  
+  
+  
+  
+  
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+  <body>
+    <div class="wrapper">
+       
+      <nav class="navbar">
+  <div class="navbar-logo">
+    <a class="navbar-logo-main" href="/">
+      
+      <span class="navbar-logo-dsc">简单且极端</span>
+      </a>
+  </div>
+  <div class="navbar-menu">
+    
+      <a 
+        href="/" 
+        class="navbar-menu-item">
+        
+          首页
+        
+      </a>
+    
+      <a 
+        href="/archives" 
+        class="navbar-menu-item">
+        
+          归档
+        
+      </a>
+    
+      <a 
+        href="/tags" 
+        class="navbar-menu-item">
+        
+          标签
+        
+      </a>
+    
+      <a 
+        href="/categories" 
+        class="navbar-menu-item">
+        
+          分类
+        
+      </a>
+    
+    <button 
+      class="navbar-menu-item darknavbar navbar-menu-btn" 
+      aria-label="Toggle dark mode"
+      id="dark">
+      <i class="iconfont icon-weather"></i>
+    </button>
+    <button 
+      class="navbar-menu-item searchnavbar navbar-menu-btn" 
+      aria-label="Toggle search"
+      id="search">
+      <!-- <i 
+        class="iconfont icon-search" 
+        style="font-size: 1.2rem; font-weight: 400;">
+      </i> -->
+      <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img"
+        class="iconify iconify--ion" width="28" height="28" preserveAspectRatio="xMidYMid meet" viewBox="0 0 512 512">
+        <path fill="none" stroke="currentColor" stroke-miterlimit="10" stroke-width="28"
+          d="M256 80a176 176 0 1 0 176 176A176 176 0 0 0 256 80Z"></path>
+        <path fill="none" stroke="currentColor" stroke-miterlimit="10" stroke-width="28"
+          d="M232 160a72 72 0 1 0 72 72a72 72 0 0 0-72-72Z"></path>
+        <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="28"
+          d="M283.64 283.64L336 336"></path>
+      </svg>
+    </button>
+  </div>
+</nav> 
+      
+      <div 
+        id="local-search" 
+        style="display: none">
+        <input
+          class="navbar-menu-item"
+          id="search-input"
+          placeholder="请输入搜索内容..." />
+        <div id="search-content"></div>
+      </div>
+      
+      <div class="section-wrap">
+        <div class="container">
+          <div class="columns">
+            <aside class="left-column">
+              
+              <div class="card card-author">
+                
+  <img 
+    src="https://img.songhn.com/img/Y67gdd.png" 
+    class="author-img"
+    width="88"
+    height="88"
+    alt="author avatar">
+
+<p class="author-name">简单且极端</p>
+<p class="author-description">designed by theme-kaze</p>
+<div class="author-message">
+  <a 
+    class="author-posts-count" 
+    href="/archives">
+    <span>8</span>
+    <span>文章</span>
+  </a>
+  <a 
+    class="author-categories-count" 
+    href="/categories">
+    <span>1</span>
+    <span>分类</span>
+  </a>
+  <a 
+    class="author-tags-count" 
+    href="/tags">
+    <span>1</span>
+    <span>标签</span>
+  </a>
+</div>
+
+              </div>
+               <div class="sticky-tablet">
+  
+  
+    <article class="display-when-two-columns spacer">
+      <div class="card card-content toc-card">
+        <div class="toc-header">
+  <i 
+    class="iconfont icon-menu" 
+    style="padding-right: 2px;">
+  </i>目录
+</div>
+<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%BB%BA%E9%80%A0%E8%80%85%E6%A8%A1%E5%BC%8F%EF%BC%88Builder%E6%A8%A1%E5%BC%8F%EF%BC%89"><span class="toc-text">建造者模式（Builder模式）</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E7%B1%BB%E5%9B%BE"><span class="toc-text">示例类图</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E7%A8%8B%E5%BA%8F"><span class="toc-text">示例程序</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Builder%E7%B1%BB"><span class="toc-text">Builder类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Director-%E7%B1%BB"><span class="toc-text">Director 类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#TextBuilder%E7%B1%BB"><span class="toc-text">TextBuilder类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#HTMLBuilder%E7%B1%BB"><span class="toc-text">HTMLBuilder类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Main%E7%B1%BB"><span class="toc-text">Main类</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Builder%E6%A8%A1%E5%BC%8F%E4%B8%AD%E7%9A%84%E7%99%BB%E5%9C%BA%E8%A7%92%E8%89%B2"><span class="toc-text">Builder模式中的登场角色</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Builder%E6%A8%A1%E5%BC%8F%E7%B1%BB%E5%9B%BE"><span class="toc-text">Builder模式类图</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Builder%E6%A8%A1%E5%BC%8F%E6%97%B6%E5%BA%8F%E5%9B%BE"><span class="toc-text">Builder模式时序图</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%9D%E8%B7%AF%E8%A6%81%E7%82%B9"><span class="toc-text">思路要点</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%B0%81%E7%9F%A5%E9%81%93%E4%BB%80%E4%B9%88"><span class="toc-text">谁知道什么</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%AE%BE%E8%AE%A1%E6%97%B6%E8%83%BD%E5%A4%9F%E5%86%B3%E5%AE%9A%E7%9A%84%E4%BA%8B%E6%83%85%E5%92%8C%E4%B8%8D%E8%83%BD%E5%86%B3%E5%AE%9A%E7%9A%84%E4%BA%8B%E6%83%85"><span class="toc-text">设计时能够决定的事情和不能决定的事情</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BB%A3%E7%A0%81%E7%9A%84%E9%98%85%E8%AF%BB%E6%96%B9%E6%B3%95%E5%92%8C%E4%BF%AE%E6%94%B9%E6%96%B9%E6%B3%95"><span class="toc-text">代码的阅读方法和修改方法</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%89%80%E5%AD%A6%E7%9F%A5%E8%AF%86"><span class="toc-text">所学知识</span></a></li></ol></li></ol>
+      </div>
+    </article>
+  
+  
+  <article class="card card-content categories-widget">
+    <div class="categories-card">
+  <div class="categories-header">
+    <i 
+      class="iconfont icon-fenlei" 
+      style="padding-right: 2px;">
+    </i>分类
+  </div>
+  <div class="categories-list">
+    
+      <a href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">
+        <div class="categories-list-item">
+          设计模式
+          <span class="categories-list-item-badge">8</span>
+        </div>
+      </a>
+    
+  </div>
+</div>
+  </article>
+  
+  <article class="card card-content tags-widget">
+    <div class="tags-card">
+  <div class="tags-header">
+    <i 
+      class="iconfont icon-biaoqian" 
+      style="padding-right: 2px;">
+    </i>热门标签
+  </div>
+  <div class="tags-list">
+    
+      <a 
+        href="/tags/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" 
+        title="设计模式">
+        <div class="tags-list-item">设计模式</div>
+      </a>
+    
+  </div>
+</div>
+  </article>
+  
+  
+</div>
+            </aside>
+            <main class="main-column">
+              
+<article class="card card-content">
+  <header>
+    <h1 class="post-title">
+      建造者模式
+    </h1>
+  </header>
+  <div class="post-meta post-show-meta">
+    <time datetime="2022-08-22T01:36:36.916Z">
+      <i 
+        class="iconfont icon-calendar" 
+        style="margin-right: 2px;">
+      </i>
+      <span>2022-08-22</span>
+    </time>
+    
+      <span class="dot"></span>
+      
+        <a 
+          href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" 
+          class="post-meta-link">
+          设计模式
+        </a>
+      
+    
+    
+      <span class="dot"></span>
+      <span>2.5k 字</span>
+    
+  </div>
+  
+    <div 
+      class="post-meta post-show-meta" 
+      style="margin-top: -10px;">
+      <div style="display: flex; align-items: center;">
+        <i 
+          class="iconfont icon-biaoqian" 
+          style="margin-right: 2px; font-size: 1.15rem;">
+        </i>
+        
+          
+          <a 
+            href="/tags/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" 
+            class="post-meta-link">
+            设计模式
+          </a>
+        
+      </div>
+    </div>
+  
+  </header>
+  <div 
+    id="section" 
+    class="post-content">
+    <h1 id="建造者模式（Builder模式）"><a href="#建造者模式（Builder模式）" class="headerlink" title="建造者模式（Builder模式）"></a>建造者模式（Builder模式）</h1><blockquote>
+<p> 大都市中林立者许多高楼大厦，这些高楼大厦都是具有建筑结构的大型建筑。通常，建筑和构建这种具有建筑结构的大型物体在英文中称为Build。</p>
+<p>在建造大楼时，需要先打牢地基，搭建框架，然后自下而上地一层一层盖起来。通常，在建造这种具有复杂结构的物体时，很难一气呵成。我们需要首先建造组成这个物体的各个部分，然后分阶段将它们组装起来。</p>
+</blockquote>
+<h2 id="示例类图"><a href="#示例类图" class="headerlink" title="示例类图"></a>示例类图</h2><blockquote>
+<p><img src="/2022/08/22/BuilderPattern/image-20220822140822402.png" alt="image-20220822140822402" srcset="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20300%20300'%3E%3C/svg%3E" data-src="/2022/08/22/BuilderPattern/image-20220822140822402.png" class="lozad post-image"></p>
+</blockquote>
+<h2 id="示例程序"><a href="#示例程序" class="headerlink" title="示例程序"></a>示例程序</h2><blockquote>
+<h3 id="Builder类"><a href="#Builder类" class="headerlink" title="Builder类"></a>Builder类</h3><p>Builder类是一个声明了编写文档的方法的抽象类。makeTitle、makeString、makeItems方法分别是编写标题、字符串、条目的方法。close方法是完成文档编写的方法。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">abstract</span> <span class="token keyword">class</span> <span class="token class-name">Builder</span> <span class="token punctuation">&#123;</span>
+    <span class="token comment">/**
+     * 编写标题
+     * @param title 标题
+     */</span>
+    <span class="token keyword">public</span> <span class="token keyword">abstract</span> <span class="token keyword">void</span> <span class="token function">makeTitle</span><span class="token punctuation">(</span><span class="token class-name">String</span> title<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token comment">/**
+     * 编写字符串
+     * @param str 字符串
+     */</span>
+    <span class="token keyword">public</span> <span class="token keyword">abstract</span> <span class="token keyword">void</span> <span class="token function">makeString</span><span class="token punctuation">(</span><span class="token class-name">String</span> str<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token comment">/**
+     * 编写条目
+     * @param items 条目
+     */</span>
+    <span class="token keyword">public</span> <span class="token keyword">abstract</span> <span class="token keyword">void</span> <span class="token function">makeItems</span><span class="token punctuation">(</span><span class="token class-name">String</span><span class="token punctuation">[</span><span class="token punctuation">]</span> items<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token comment">/**
+     * 完成文档编写
+     */</span>
+    <span class="token keyword">public</span> <span class="token keyword">abstract</span> <span class="token keyword">void</span> <span class="token function">close</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="Director-类"><a href="#Director-类" class="headerlink" title="Director 类"></a>Director 类</h3><p>Director类使用 Builder 类中声明的方法来编写文档。</p>
+<p>Director类的构造函数的参数是Builder类型的。但是实际上我们并不会讲Builder类的实例作为参数传递给Director类。这是因为Builder类是抽象类，是无法生成其实例的。实际上传递给Director类的是Builder类的子类（即后面会讲到的TextBuilder类和HTMLBuilder类）的实例。而是这些Builder类的子类决定了编写出的文档的形式。</p>
+<p>construct方法是编写文档的方法。调用这个方法后就会编写文档。construct方法中所使用的方法都是在Builder类中声明的方法（construct的意思是“构建”）。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">Director</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">private</span> <span class="token class-name">Builder</span> builder<span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> <span class="token class-name">Director</span><span class="token punctuation">(</span><span class="token class-name">Builder</span> builder<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>builder <span class="token operator">=</span> builder<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">construct</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        builder<span class="token punctuation">.</span><span class="token function">makeTitle</span><span class="token punctuation">(</span><span class="token string">"Greeting"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        builder<span class="token punctuation">.</span><span class="token function">makeString</span><span class="token punctuation">(</span><span class="token string">"从早上至下午"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        builder<span class="token punctuation">.</span><span class="token function">makeItems</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">String</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">&#123;</span>
+                <span class="token string">"早上好。"</span><span class="token punctuation">,</span>
+                <span class="token string">"下午好。"</span>
+        <span class="token punctuation">&#125;</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        builder<span class="token punctuation">.</span><span class="token function">makeString</span><span class="token punctuation">(</span><span class="token string">"晚上"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        builder<span class="token punctuation">.</span><span class="token function">makeItems</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">String</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">&#123;</span>
+                <span class="token string">"晚上好。"</span><span class="token punctuation">,</span>
+                <span class="token string">"晚安。"</span><span class="token punctuation">,</span>
+                <span class="token string">"再见。"</span>
+        <span class="token punctuation">&#125;</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        builder<span class="token punctuation">.</span><span class="token function">close</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="TextBuilder类"><a href="#TextBuilder类" class="headerlink" title="TextBuilder类"></a>TextBuilder类</h3><p>TextBuilder类是Builder类的子类，它的功能是使用纯文本编写文档，并以String返回结果。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">TextBuilder</span> <span class="token keyword">extends</span> <span class="token class-name">Builder</span><span class="token punctuation">&#123;</span>
+    <span class="token keyword">private</span> <span class="token class-name">StringBuffer</span> buffer <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">StringBuffer</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token comment">/**
+     * 编写标题
+     * @param title 标题
+     */</span>
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">makeTitle</span><span class="token punctuation">(</span><span class="token class-name">String</span> title<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        buffer<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span><span class="token string">"==========================\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        buffer<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span><span class="token string">"「"</span> <span class="token operator">+</span> title <span class="token operator">+</span> <span class="token string">"」"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        buffer<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span><span class="token string">"\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 编写字符串
+     * @param str 字符串
+     */</span>
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">makeString</span><span class="token punctuation">(</span><span class="token class-name">String</span> str<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        buffer<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span><span class="token string">"◼︎"</span> <span class="token operator">+</span> str <span class="token operator">+</span> <span class="token string">"\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        buffer<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span><span class="token string">"\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 编写条目
+     * @param items 条目
+     */</span>
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">makeItems</span><span class="token punctuation">(</span><span class="token class-name">String</span><span class="token punctuation">[</span><span class="token punctuation">]</span> items<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">int</span> i <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> items<span class="token punctuation">.</span>length<span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            buffer<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span><span class="token string">"·"</span> <span class="token operator">+</span> items<span class="token punctuation">[</span>i<span class="token punctuation">]</span> <span class="token operator">+</span> <span class="token string">"\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+        buffer<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span><span class="token string">"\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 完成文档编写
+     */</span>
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">close</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        buffer<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span><span class="token string">"==========================\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 完成的文档
+     * @return String
+     */</span>
+    <span class="token keyword">public</span> <span class="token class-name">String</span> <span class="token function">getResult</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> buffer<span class="token punctuation">.</span><span class="token function">toString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="HTMLBuilder类"><a href="#HTMLBuilder类" class="headerlink" title="HTMLBuilder类"></a>HTMLBuilder类</h3><p>HTMLBuilder类也是Builder类的子类，它的功能是使用HTML编写文档，其返回结果是HTML文件的名字。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">HTMLBuilder</span> <span class="token keyword">extends</span> <span class="token class-name">Builder</span><span class="token punctuation">&#123;</span>
+    <span class="token comment">/**
+     * 文件名
+     */</span>
+    <span class="token keyword">private</span> <span class="token class-name">String</span> filename<span class="token punctuation">;</span>
+    <span class="token comment">/**
+     * 用于编写文件的 PrintWriter
+     */</span>
+    <span class="token keyword">private</span> <span class="token class-name">PrintWriter</span> writer<span class="token punctuation">;</span>
+
+    <span class="token comment">/**
+     * 编写标题
+     * @param title 标题
+     */</span>
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">makeTitle</span><span class="token punctuation">(</span><span class="token class-name">String</span> title<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token comment">// 标题作为文件名</span>
+        filename <span class="token operator">=</span> title <span class="token operator">+</span> <span class="token string">".html"</span><span class="token punctuation">;</span>
+        <span class="token keyword">try</span> <span class="token punctuation">&#123;</span>
+            <span class="token comment">// 生成 PrintWriter</span>
+            writer <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">PrintWriter</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">FileWriter</span><span class="token punctuation">(</span>filename<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">IOException</span> e<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            e<span class="token punctuation">.</span><span class="token function">printStackTrace</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+        writer<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"&lt;html>&lt;head>&lt;meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        writer<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"&lt;title>"</span> <span class="token operator">+</span> title <span class="token operator">+</span> <span class="token string">"&lt;/title>&lt;/head>&lt;body>"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        writer<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"&lt;h1>"</span> <span class="token operator">+</span> title <span class="token operator">+</span> <span class="token string">"&lt;/h1>"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * HTML 文件中输出的字符串
+     * 用&lt;p>标签输出
+     * @param str 字符串
+     */</span>
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">makeString</span><span class="token punctuation">(</span><span class="token class-name">String</span> str<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        writer<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"&lt;p>"</span> <span class="token operator">+</span> str <span class="token operator">+</span> <span class="token string">"&lt;/p>"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * HTML 文件中的条目
+     * 用 &lt;ul> 和 &lt;li> 输出
+     * @param items 字符串数组
+     */</span>
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">makeItems</span><span class="token punctuation">(</span><span class="token class-name">String</span><span class="token punctuation">[</span><span class="token punctuation">]</span> items<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        writer<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"&lt;ul>"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">int</span> i <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> items<span class="token punctuation">.</span>length<span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            writer<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"&lt;li>"</span> <span class="token operator">+</span> items<span class="token punctuation">[</span>i<span class="token punctuation">]</span> <span class="token operator">+</span> <span class="token string">"&lt;/li>"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+        writer<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"&lt;/ul>"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 完成文档
+     * 关闭标签
+     * 关闭文件
+     */</span>
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">close</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        writer<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"&lt;/body>&lt;/html>"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        writer<span class="token punctuation">.</span><span class="token function">close</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 编写完成的文档
+     * 返回文件名
+     * @return 文件名
+     */</span>
+    <span class="token keyword">public</span> <span class="token class-name">String</span> <span class="token function">getResult</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> filename<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="Main类"><a href="#Main类" class="headerlink" title="Main类"></a>Main类</h3><p>Main类是Builder模式的测试程序。我们可以使用如下命令编写相应格式的文档：</p>
+<ul>
+<li>java Main plain：编写纯文本文档</li>
+<li>java Main html：编写html格式的文档</li>
+</ul>
+<p>当我们在执行命令中指定参数为plain的时候，会将TextBuilder类的实例作为参数传递至Director类的构造函数中；而若是在命令行中指定参数为html的时候，则会将HTMLBuilder类的实例作为参数传递至Director类的构造函数中。</p>
+<p>由于TextBuilder和HTMLBuilder都是Builder的子类，因此Director仅仅使用Builder的方法即可编写文档。也就是说，Director并不关心实际编写文档的到底是TextBuilder还是HTMLBuilder。</p>
+<p>正因为如此，我们必须Builder中声明足够多的方法，以实现编写文档的功能，但并不包括TextBuilder和HTMLBuilder中持有的方法。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">Main</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token class-name">String</span><span class="token punctuation">[</span><span class="token punctuation">]</span> args<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>args<span class="token punctuation">.</span>length <span class="token operator">!=</span> <span class="token number">1</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token function">usage</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token class-name">System</span><span class="token punctuation">.</span><span class="token function">exit</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>args<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">.</span><span class="token function">equals</span><span class="token punctuation">(</span><span class="token string">"plain"</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token class-name">TextBuilder</span> textBuilder <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">TextBuilder</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token class-name">Director</span> director <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Director</span><span class="token punctuation">(</span>textBuilder<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            director<span class="token punctuation">.</span><span class="token function">construct</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token class-name">String</span> result <span class="token operator">=</span> textBuilder<span class="token punctuation">.</span><span class="token function">getResult</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span>result<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token keyword">if</span> <span class="token punctuation">(</span>args<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">.</span><span class="token function">equals</span><span class="token punctuation">(</span><span class="token string">"html"</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token class-name">HTMLBuilder</span> htmlBuilder <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">HTMLBuilder</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token class-name">Director</span> director <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Director</span><span class="token punctuation">(</span>htmlBuilder<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            director<span class="token punctuation">.</span><span class="token function">construct</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token class-name">String</span> filename <span class="token operator">=</span> htmlBuilder<span class="token punctuation">.</span><span class="token function">getResult</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span>filename <span class="token operator">+</span> <span class="token string">"文件编写完成。"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token punctuation">&#123;</span>
+            <span class="token function">usage</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token class-name">System</span><span class="token punctuation">.</span><span class="token function">exit</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+    <span class="token punctuation">&#125;</span>
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">usage</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+        <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"Usage: java Main Plain     编写纯文本文档"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"Usage: java Main HTML      编写纯HTML文档"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+</blockquote>
+<h2 id="Builder模式中的登场角色"><a href="#Builder模式中的登场角色" class="headerlink" title="Builder模式中的登场角色"></a>Builder模式中的登场角色</h2><ul>
+<li><p>Builder（建造者）</p>
+<blockquote>
+<p>Builder角色负责定义用于生成实例的接口（API）。Builder角色中准备了用于生成实例的方法。</p>
+<p>在示例程序中，由Builder类扮演此角色。</p>
+</blockquote>
+</li>
+<li><p>ConcreteBuilder（具体的建造者）</p>
+<blockquote>
+<p>ConcreteBuilder角色是负责实现Builder角色的接口的类（API）。这里定义了在生成实例时实际被调用的方法。此外，在ConcreteBuilder角色中还定义了获取最终生成结果的方法。</p>
+<p>在示例程序中，由TextBuilder类和HTMLBuilder类扮演此角色。</p>
+</blockquote>
+</li>
+<li><p>Director（监工）</p>
+<blockquote>
+<p>Director角色负责使用Builder角色的接口（API）来生成实例。它并不依赖于ConcreteBuilder角色。为了确保不论ConcreteBuilder角色是如何被定义的，Director角色都能正常工作，它<strong>只调用在Builder角色中被定义的方法</strong>。</p>
+<p>在示例程序中，由Director类扮演此角色。</p>
+</blockquote>
+</li>
+<li><p>Client（使用者）</p>
+<blockquote>
+<p>该角色使用了Builder模式。</p>
+<p>在示例程序中，在Main类扮演此角色。</p>
+</blockquote>
+</li>
+</ul>
+<h3 id="Builder模式类图"><a href="#Builder模式类图" class="headerlink" title="Builder模式类图"></a>Builder模式类图</h3><blockquote>
+<p><img src="/2022/08/22/BuilderPattern/image-20220822144943377.png" alt="image-20220822144943377" srcset="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20300%20300'%3E%3C/svg%3E" data-src="/2022/08/22/BuilderPattern/image-20220822144943377.png" class="lozad post-image"></p>
+</blockquote>
+<h3 id="Builder模式时序图"><a href="#Builder模式时序图" class="headerlink" title="Builder模式时序图"></a>Builder模式时序图</h3><blockquote>
+<p><img src="/2022/08/22/BuilderPattern/image-20220822145220971.png" alt="image-20220822145220971" srcset="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20300%20300'%3E%3C/svg%3E" data-src="/2022/08/22/BuilderPattern/image-20220822145220971.png" class="lozad post-image"></p>
+</blockquote>
+<h2 id="思路要点"><a href="#思路要点" class="headerlink" title="思路要点"></a>思路要点</h2><ul>
+<li><h3 id="谁知道什么"><a href="#谁知道什么" class="headerlink" title="谁知道什么"></a><strong>谁知道什么</strong></h3><blockquote>
+<p>在面向对象编程中，“谁知道什么”是非常重要的。也就是说，我们需要在编程时注意哪个类可以使用哪个方法以及使用这个方法到底好不好。</p>
+<p>Main类并不知道（没有调用）Builder类，它只是调用了Direct类的construct方法。这样，Director类就会开始工作（Main类对此一无所知），并完成文档的编写。</p>
+<p>另一方面，Director类知道Builder类，它调用Builder类的方法来编写文档，但是它并不知道它“真正”使用的是哪个类。也就是说它并不知道它所使用的类到底是TextBuilder类、HTMLBuilder类还是其他Builder类的子类。不过也没有必要知道，因为Director类只使用了Builder类的方法，而Builder类的子类都已经实现了哪些方法。</p>
+<p>Director类不知道自己使用的究竟是Builder类的那个子类也好。这是因为<strong>“只有不知道子类才能替换”</strong>。不论是将TextBuilder的示例传递给Director，还是将HTMLBuilder类的实例传递给Director，它都可以正常工作，原因正是Director类不知道Builder类的具体子类。</p>
+<p>正是因为不知道才能够替换，正是因为可以替换，组建才具有高价值。作为设计人员我们必须是个关注这种<strong>“可替换性”</strong>。</p>
+</blockquote>
+</li>
+<li><h3 id="设计时能够决定的事情和不能决定的事情"><a href="#设计时能够决定的事情和不能决定的事情" class="headerlink" title="设计时能够决定的事情和不能决定的事情"></a><strong>设计时能够决定的事情和不能决定的事情</strong></h3><blockquote>
+<p>在Builder类中，需要声明编辑文档（实现功能）所必需的所有方法。Director类中使用的方法都是Builder类提供的。因此，在Builder类中应当应以哪些方法是非常重要的。</p>
+<p>而且，Builder类还必需能够应对将来子类可能增加的需求。在示例程序中，我们只编写了支持纯文本文档的子类和支持HTML文件的子类。但是将来可能还会希望能够编写其他形式（例如XXXX形式）的文档。那时候，到底能不能编写出支持XXXX形式的XXXXBuilder类呢？应该不需要新的方法吧？</p>
+<p>虽然类的设计者并不是神仙，他们无法准确的预测到将来可能发生的变化。但是，我们还是有不要让设计出的类能够尽可能灵活的应对近期可能发生的变化。</p>
+</blockquote>
+</li>
+<li><h3 id="代码的阅读方法和修改方法"><a href="#代码的阅读方法和修改方法" class="headerlink" title="代码的阅读方法和修改方法"></a><strong>代码的阅读方法和修改方法</strong></h3><blockquote>
+<p>在编程时，虽然有时需要从零开始编写代码，但更对时候我们都是在现有代码的基础上进行增加和修改。</p>
+<p>这时，我们需要先阅读现有代码。不过，只是阅读抽象类的代码时无法获取很多信息的（虽然可以从方法名中获得线索）。</p>
+<p>让我们再回顾一下示例程序。即使理解了Builder抽象类，也无法理解程序整体。至少必须阅读了Director的代码后才能理解Builder类的使用方法（Builder类的方法和调用方法）。然后再去看看TextBuilder类和HTMLBuilder类的代码，就可以明白调用Builder类的方法后具体会进行什么样的处理。</p>
+<p>如果没有理解各个的角色就动手增加和修改代码，在判断到底应该修改哪个类时，就会很容易出错。例如，如果修改Builder类，那么就会对Director类中调用Builder类方法的地方和Builder类的子类产生影响。或是如果不小心修改了Director，在其内部调用了TextBuilder类的特有的方法，则会导致其失去作为可服用组件的独立性，而且当将子类替换为HTMLBuilder时，程序可能会无法正常工作。</p>
+</blockquote>
+</li>
+</ul>
+<h2 id="所学知识"><a href="#所学知识" class="headerlink" title="所学知识"></a>所学知识</h2><blockquote>
+<p>学习了用于组装具有复杂结构的实例的Builder模式。组长的具体过程则被隐藏在Director角色中。</p>
+</blockquote>
+
+  </div>
+  <div>
+    
+      <div 
+        class="post-note note-warning copyright" 
+        style="margin-top: 42px">
+        <p>
+          <span style="font-weight: bold;">作者：</span><a 
+            target="_blank" 
+            rel="nofollow noopener noreferrer" 
+            href="/about">
+            简单且极端
+          </a>
+        </p>
+        <p>
+          <span style="font-weight: bold;">文章链接：</span><a 
+            target="_blank" 
+            rel="nofollow noopener noreferrer" 
+            href="https://extremelys.github.io/2022/08/22/BuilderPattern/">
+            https://extremelys.github.io/2022/08/22/BuilderPattern/
+          </a>
+        </p>
+        <p><span style="font-weight: bold;">版权声明：</span>本博客所有文章除特别声明外，均采用<a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">CC BY-NC-SA 4.0 协议</a>。转载请注明出处！</p>
+      </div>
+    
+  </div>
+</article>
+<div class="nav">
+  
+    <div class="nav-item-prev">
+      <a 
+        href="/2022/08/22/AbstractFactoryPattern/" 
+        class="nav-link">
+        <i class="iconfont icon-left nav-prev-icon"></i>
+        <div>
+          <div class="nav-label">上一篇</div>
+          
+            <div class="nav-title">抽象工厂模式 </div>
+          
+        </div>
+      </a>
+    </div>
+  
+  
+    <div class="nav-item-next">
+      <a 
+        href="/2022/08/17/PrototypePattern/" 
+        class="nav-link">
+        <div>
+          <div class="nav-label">下一篇</div>
+          
+            <div class="nav-title">原型模式 </div>
+          
+        </div>
+        <i class="iconfont icon-right nav-next-icon"></i>
+      </a>
+    </div>
+  
+</div>
+
+<div 
+  class="card card-content toc-card" 
+  id="mobiletoc">
+  <div class="toc-header">
+  <i 
+    class="iconfont icon-menu" 
+    style="padding-right: 2px;">
+  </i>目录
+</div>
+<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%BB%BA%E9%80%A0%E8%80%85%E6%A8%A1%E5%BC%8F%EF%BC%88Builder%E6%A8%A1%E5%BC%8F%EF%BC%89"><span class="toc-text">建造者模式（Builder模式）</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E7%B1%BB%E5%9B%BE"><span class="toc-text">示例类图</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E7%A8%8B%E5%BA%8F"><span class="toc-text">示例程序</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Builder%E7%B1%BB"><span class="toc-text">Builder类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Director-%E7%B1%BB"><span class="toc-text">Director 类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#TextBuilder%E7%B1%BB"><span class="toc-text">TextBuilder类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#HTMLBuilder%E7%B1%BB"><span class="toc-text">HTMLBuilder类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Main%E7%B1%BB"><span class="toc-text">Main类</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Builder%E6%A8%A1%E5%BC%8F%E4%B8%AD%E7%9A%84%E7%99%BB%E5%9C%BA%E8%A7%92%E8%89%B2"><span class="toc-text">Builder模式中的登场角色</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Builder%E6%A8%A1%E5%BC%8F%E7%B1%BB%E5%9B%BE"><span class="toc-text">Builder模式类图</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Builder%E6%A8%A1%E5%BC%8F%E6%97%B6%E5%BA%8F%E5%9B%BE"><span class="toc-text">Builder模式时序图</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%9D%E8%B7%AF%E8%A6%81%E7%82%B9"><span class="toc-text">思路要点</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%B0%81%E7%9F%A5%E9%81%93%E4%BB%80%E4%B9%88"><span class="toc-text">谁知道什么</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%AE%BE%E8%AE%A1%E6%97%B6%E8%83%BD%E5%A4%9F%E5%86%B3%E5%AE%9A%E7%9A%84%E4%BA%8B%E6%83%85%E5%92%8C%E4%B8%8D%E8%83%BD%E5%86%B3%E5%AE%9A%E7%9A%84%E4%BA%8B%E6%83%85"><span class="toc-text">设计时能够决定的事情和不能决定的事情</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BB%A3%E7%A0%81%E7%9A%84%E9%98%85%E8%AF%BB%E6%96%B9%E6%B3%95%E5%92%8C%E4%BF%AE%E6%94%B9%E6%96%B9%E6%B3%95"><span class="toc-text">代码的阅读方法和修改方法</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%89%80%E5%AD%A6%E7%9F%A5%E8%AF%86"><span class="toc-text">所学知识</span></a></li></ol></li></ol>
+</div>
+            </main>
+            <aside class="right-column">
+              <div class="sticky-widescreen">
+  
+  
+    <article class="card card-content toc-card">
+      <div class="toc-header">
+  <i 
+    class="iconfont icon-menu" 
+    style="padding-right: 2px;">
+  </i>目录
+</div>
+<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%BB%BA%E9%80%A0%E8%80%85%E6%A8%A1%E5%BC%8F%EF%BC%88Builder%E6%A8%A1%E5%BC%8F%EF%BC%89"><span class="toc-text">建造者模式（Builder模式）</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E7%B1%BB%E5%9B%BE"><span class="toc-text">示例类图</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E7%A8%8B%E5%BA%8F"><span class="toc-text">示例程序</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Builder%E7%B1%BB"><span class="toc-text">Builder类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Director-%E7%B1%BB"><span class="toc-text">Director 类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#TextBuilder%E7%B1%BB"><span class="toc-text">TextBuilder类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#HTMLBuilder%E7%B1%BB"><span class="toc-text">HTMLBuilder类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Main%E7%B1%BB"><span class="toc-text">Main类</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Builder%E6%A8%A1%E5%BC%8F%E4%B8%AD%E7%9A%84%E7%99%BB%E5%9C%BA%E8%A7%92%E8%89%B2"><span class="toc-text">Builder模式中的登场角色</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Builder%E6%A8%A1%E5%BC%8F%E7%B1%BB%E5%9B%BE"><span class="toc-text">Builder模式类图</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Builder%E6%A8%A1%E5%BC%8F%E6%97%B6%E5%BA%8F%E5%9B%BE"><span class="toc-text">Builder模式时序图</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%9D%E8%B7%AF%E8%A6%81%E7%82%B9"><span class="toc-text">思路要点</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%B0%81%E7%9F%A5%E9%81%93%E4%BB%80%E4%B9%88"><span class="toc-text">谁知道什么</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%AE%BE%E8%AE%A1%E6%97%B6%E8%83%BD%E5%A4%9F%E5%86%B3%E5%AE%9A%E7%9A%84%E4%BA%8B%E6%83%85%E5%92%8C%E4%B8%8D%E8%83%BD%E5%86%B3%E5%AE%9A%E7%9A%84%E4%BA%8B%E6%83%85"><span class="toc-text">设计时能够决定的事情和不能决定的事情</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BB%A3%E7%A0%81%E7%9A%84%E9%98%85%E8%AF%BB%E6%96%B9%E6%B3%95%E5%92%8C%E4%BF%AE%E6%94%B9%E6%96%B9%E6%B3%95"><span class="toc-text">代码的阅读方法和修改方法</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%89%80%E5%AD%A6%E7%9F%A5%E8%AF%86"><span class="toc-text">所学知识</span></a></li></ol></li></ol>
+    </article>
+  
+  
+  <article class="card card-content">
+    <div class="recent-posts-card">
+  <div class="recent-posts-header">
+    <i 
+      class="iconfont icon-wenzhang_huaban" 
+      style="padding-right: 2px;">
+    </i>最近文章
+  </div>
+  <div class="recent-posts-list">
+    
+      <div class="recent-posts-item">
+        <div class="recent-posts-item-title">2022-08-22</div>
+        <a href="/2022/08/22/AbstractFactoryPattern/"><div class="recent-posts-item-content">抽象工厂模式</div></a>
+      </div>
+    
+      <div class="recent-posts-item">
+        <div class="recent-posts-item-title">2022-08-22</div>
+        <a href="/2022/08/22/BuilderPattern/"><div class="recent-posts-item-content">建造者模式</div></a>
+      </div>
+    
+      <div class="recent-posts-item">
+        <div class="recent-posts-item-title">2022-08-17</div>
+        <a href="/2022/08/17/PrototypePattern/"><div class="recent-posts-item-content">原型模式</div></a>
+      </div>
+    
+      <div class="recent-posts-item">
+        <div class="recent-posts-item-title">2022-08-16</div>
+        <a href="/2022/08/16/SingletonPattern/"><div class="recent-posts-item-content">单例模式</div></a>
+      </div>
+    
+  </div>
+</div>
+  </article>
+  
+  
+</div>
+            </aside>
+          </div>
+        </div>
+      </div>
+    </div>
+     
+    <footer class="footer">
+  <div class="footer-container">
+    <div>
+      <div class="footer-dsc">
+        <span>
+          Copyright ©
+          
+            2022
+          
+          
+        </span>
+        &nbsp;
+        <a 
+          href="/" 
+          class="footer-link">
+          简单且极端
+        </a>
+      </div>
+    </div>
+
+    
+      <div class="footer-dsc">
+        
+          Powered by
+          <a 
+            href="https://hexo.io/" 
+            class="footer-link" 
+            target="_blank" 
+            rel="nofollow noopener noreferrer">
+            &nbsp;Hexo
+          </a>
+        
+        
+          <span>&nbsp;|&nbsp;</span>
+        
+        
+          Theme -
+          <a 
+            href="https://github.com/theme-kaze" 
+            class="footer-link" 
+            target="_blank"
+            rel="nofollow noopener noreferrer">
+            &nbsp;Kaze
+          </a>
+        
+      </div>
+    
+    
+    
+    
+</footer>
+ 
+    
+  <a 
+    role="button" 
+    id="scrollbutton" 
+    class="basebutton" 
+    aria-label="回到顶部">
+    <i class="iconfont icon-arrowleft button-icon"></i>
+  </a>
+
+<a 
+  role="button" 
+  id="menubutton"
+  aria-label="menu button"
+  class="basebutton">
+  <i class="iconfont icon-menu button-icon"></i>
+</a>
+<a 
+  role="button" 
+  id="popbutton" 
+  class="basebutton" 
+  aria-label="控制中心">
+  <i class="iconfont icon-expand button-icon"></i>
+</a>
+<a 
+  role="button" 
+  id="darkbutton" 
+  class="basebutton darkwidget" 
+  aria-label="夜色模式">
+  <i class="iconfont icon-weather button-icon"></i>
+</a>
+<a 
+  role="button" 
+  id="searchbutton" 
+  class="basebutton searchwidget" 
+  aria-label="搜索">
+  <i class="iconfont icon-search button-icon"></i>
+</a> 
+     
+     
+     
+      <script>
+  var addImgLayout = function () {
+    var img = document.querySelectorAll('.post-content img')
+    var i
+    for (i = 0; i < img.length; i++) {
+      var wrapper = document.createElement('a')
+      wrapper.setAttribute('href', img[i].getAttribute('data-src'))
+      wrapper.setAttribute('aria-label', 'illustration')
+      wrapper.style.cssText =
+        'width: 100%; display: flex; justify-content: center;'
+      if (img[i].alt) wrapper.dataset.caption = img[i].alt
+      wrapper.dataset.nolink = true
+      img[i].before(wrapper)
+      wrapper.append(img[i])
+      var divWrap = document.createElement('div')
+      divWrap.classList.add('gallery')
+      wrapper.before(divWrap)
+      divWrap.append(wrapper)
+    }
+    baguetteBox.run('.gallery')
+  }
+</script>
+<script>
+  loadScript(
+    "/js/lib/lightbox/baguetteBox.min.js",
+    addImgLayout
+  )
+</script>
+ 
+     
+     
+    <script src="/js/main.js"></script> 
+     
+    
+      <script>
+        var addLazyload = function () {
+          var observer = lozad('.lozad', {
+            load: function (el) {
+              el.srcset = el.getAttribute('data-src')
+            },
+            loaded: function (el) {
+              el.classList.add('loaded')
+            },
+          })
+          observer.observe()
+        }
+      </script>
+      <script>
+        loadScript('/js/lib/lozad.min.js', addLazyload)
+      </script>
+    
+    <script src="//instant.page/5.1.0" type="module"
+      integrity="sha384-by67kQnR+pyfy8yWP4kPO12fHKRLHZPfEsiSXR8u2IKcTdxD805MGUXBzVPnkLHw"></script>
+    
+    
+  </body>
+</html>

@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+  <meta charset="UTF-8">
+  <meta 
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+  <meta 
+    http-equiv="X-UA-Compatible" 
+    content="ie=edge">
+  <meta 
+    name="theme-color" 
+    content="#fff" 
+    id="theme-color">
+  <meta 
+    name="description" 
+    content="Hexo">
+  <link 
+    rel="icon" 
+    href="/">
+  <title>原型模式</title>
+  
+    
+      <meta 
+        property="og:title" 
+        content="原型模式">
+    
+    
+      <meta 
+        property="og:url" 
+        content="https://extremelys.github.io/2022/08/17/PrototypePattern/index.html">
+    
+    
+      <meta 
+        property="og:img" 
+        content="https://img.songhn.com/img/Y67gdd.png">
+    
+    
+    
+      <meta 
+        property="og:type" 
+        content="article">
+      <meta 
+        property="og:article:published_time" 
+        content="2022-08-17">
+      <meta 
+        property="og:article:modified_time" 
+        content="2022-08-22">
+      <meta 
+        property="og:article:author" 
+        content="简单且极端">
+      
+        
+          <meta 
+            property="og:article:tag" 
+            content="设计模式">
+        
+      
+    
+  
+  
+  <link rel="preload" href="//at.alicdn.com/t/font_1946621_i1kgafibvw.css" as="style" >
+  <link rel="preload" href="//at.alicdn.com/t/font_1952792_89b4ac4k4up.css" as="style" >
+  <link rel="preload" href="/css/main.css" as="style" >
+  
+  <link rel="modulepreload" href="//instant.page/5.1.0">
+  
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1946621_i1kgafibvw.css">
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1952792_89b4ac4k4up.css">
+  
+  
+  
+    <link rel="stylesheet" href="/js/lib/lightbox/baguetteBox.min.css">
+  
+  <script>
+    function loadScript(url, cb) {
+      var script = document.createElement('script');
+      script.src = url;
+      if (cb) script.onload = cb;
+      script.async = true;
+      document.body.appendChild(script);
+    }
+    function loadCSS(href, data, attr) {
+      var sheet = document.createElement('link');
+      sheet.ref = 'stylesheet';
+      sheet.href = href;
+      sheet.dataset[data] = attr;
+      document.head.appendChild(sheet);
+    }
+    function changeCSS(cssFile, data, attr) {
+      var oldlink = document.querySelector(data);
+      var newlink = document.createElement("link");
+      newlink.setAttribute("rel", "stylesheet");
+      newlink.setAttribute("href", cssFile);
+      newlink.dataset.prism = attr;
+      document.head.replaceChild(newlink, oldlink);
+    }
+  </script>
+  
+    
+      
+      
+      
+      
+        
+        
+        
+        <script>
+          function prismThemeChange() {
+            if(document.getElementById('theme-color').dataset.mode === 'dark') {
+              if(document.querySelector('[data-prism]')) {
+                changeCSS('/js/lib/prism/prism-tomorrow.min.css', '[data-prism]', 'prism-tomorrow');
+              } else {
+                loadCSS('/js/lib/prism/prism-tomorrow.min.css', 'prism', 'prism-tomorrow');
+              }
+            } else {
+              if(document.querySelector('[data-prism]')) {
+                changeCSS('/js/lib/prism/prism.min.css', '[data-prism]', 'prism');
+              } else {
+                loadCSS('/js/lib/prism/prism.min.css', 'prism', 'prism');
+              }
+            }
+          }
+          prismThemeChange()
+        </script>
+      
+      
+        
+        <link rel="stylesheet" href="/js/lib/prism/prism-line-numbers.min.css">
+      
+    
+  
+  <script>
+    // control reverse button
+    var reverseDarkList = {
+      dark: 'light',
+      light: 'dark'
+    };
+    var themeColor = {
+      dark: '#1c1c1e',
+      light: '#fff'
+    }
+    // get the data of css prefers-color-scheme
+    var getCssMediaQuery = function() {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    };
+    // reverse current darkmode setting function
+    var reverseDarkModeSetting = function() {
+      var setting = localStorage.getItem('user-color-scheme');
+      if(reverseDarkList[setting]) {
+        setting = reverseDarkList[setting];
+      } else if(setting === null) {
+        setting = reverseDarkList[getCssMediaQuery()];
+      } else {
+        return;
+      }
+      localStorage.setItem('user-color-scheme', setting);
+      return setting;
+    };
+    // apply current darkmode setting
+  </script>
+  
+    <script>
+      var setDarkmode = function(mode) {
+      var setting = mode || localStorage.getItem('user-color-scheme');
+      if(setting === getCssMediaQuery()) {
+        document.documentElement.removeAttribute('data-user-color-scheme');
+        localStorage.removeItem('user-color-scheme');
+        document.getElementById('theme-color').content = themeColor[setting];
+        document.getElementById('theme-color').dataset.mode = setting;
+        prismThemeChange();
+      } else if(reverseDarkList[setting]) {
+        document.documentElement.setAttribute('data-user-color-scheme', setting);
+        document.getElementById('theme-color').content = themeColor[setting];
+        document.getElementById('theme-color').dataset.mode = setting;
+        prismThemeChange();
+      } else {
+        document.documentElement.removeAttribute('data-user-color-scheme');
+        localStorage.removeItem('user-color-scheme');
+        document.getElementById('theme-color').content = themeColor[getCssMediaQuery()];
+        document.getElementById('theme-color').dataset.mode = getCssMediaQuery();
+        prismThemeChange();
+      }
+    };
+    setDarkmode();
+    </script>
+  
+  
+  
+    <link rel="preload" href="/js/lib/lightbox/baguetteBox.min.js" as="script">
+    <link rel="preload" href="/js/lib/lightbox/baguetteBox.min.css" as="style" >
+  
+  
+    <link rel="preload" href="/js/lib/lozad.min.js" as="script">
+  
+  
+  
+  
+  
+  
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+  <body>
+    <div class="wrapper">
+       
+      <nav class="navbar">
+  <div class="navbar-logo">
+    <a class="navbar-logo-main" href="/">
+      
+      <span class="navbar-logo-dsc">简单且极端</span>
+      </a>
+  </div>
+  <div class="navbar-menu">
+    
+      <a 
+        href="/" 
+        class="navbar-menu-item">
+        
+          首页
+        
+      </a>
+    
+      <a 
+        href="/archives" 
+        class="navbar-menu-item">
+        
+          归档
+        
+      </a>
+    
+      <a 
+        href="/tags" 
+        class="navbar-menu-item">
+        
+          标签
+        
+      </a>
+    
+      <a 
+        href="/categories" 
+        class="navbar-menu-item">
+        
+          分类
+        
+      </a>
+    
+    <button 
+      class="navbar-menu-item darknavbar navbar-menu-btn" 
+      aria-label="Toggle dark mode"
+      id="dark">
+      <i class="iconfont icon-weather"></i>
+    </button>
+    <button 
+      class="navbar-menu-item searchnavbar navbar-menu-btn" 
+      aria-label="Toggle search"
+      id="search">
+      <!-- <i 
+        class="iconfont icon-search" 
+        style="font-size: 1.2rem; font-weight: 400;">
+      </i> -->
+      <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img"
+        class="iconify iconify--ion" width="28" height="28" preserveAspectRatio="xMidYMid meet" viewBox="0 0 512 512">
+        <path fill="none" stroke="currentColor" stroke-miterlimit="10" stroke-width="28"
+          d="M256 80a176 176 0 1 0 176 176A176 176 0 0 0 256 80Z"></path>
+        <path fill="none" stroke="currentColor" stroke-miterlimit="10" stroke-width="28"
+          d="M232 160a72 72 0 1 0 72 72a72 72 0 0 0-72-72Z"></path>
+        <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="28"
+          d="M283.64 283.64L336 336"></path>
+      </svg>
+    </button>
+  </div>
+</nav> 
+      
+      <div 
+        id="local-search" 
+        style="display: none">
+        <input
+          class="navbar-menu-item"
+          id="search-input"
+          placeholder="请输入搜索内容..." />
+        <div id="search-content"></div>
+      </div>
+      
+      <div class="section-wrap">
+        <div class="container">
+          <div class="columns">
+            <aside class="left-column">
+              
+              <div class="card card-author">
+                
+  <img 
+    src="https://img.songhn.com/img/Y67gdd.png" 
+    class="author-img"
+    width="88"
+    height="88"
+    alt="author avatar">
+
+<p class="author-name">简单且极端</p>
+<p class="author-description">designed by theme-kaze</p>
+<div class="author-message">
+  <a 
+    class="author-posts-count" 
+    href="/archives">
+    <span>8</span>
+    <span>文章</span>
+  </a>
+  <a 
+    class="author-categories-count" 
+    href="/categories">
+    <span>1</span>
+    <span>分类</span>
+  </a>
+  <a 
+    class="author-tags-count" 
+    href="/tags">
+    <span>1</span>
+    <span>标签</span>
+  </a>
+</div>
+
+              </div>
+               <div class="sticky-tablet">
+  
+  
+    <article class="display-when-two-columns spacer">
+      <div class="card card-content toc-card">
+        <div class="toc-header">
+  <i 
+    class="iconfont icon-menu" 
+    style="padding-right: 2px;">
+  </i>目录
+</div>
+<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Prototype%E6%A8%A1%E5%BC%8F%EF%BC%88%E5%8E%9F%E5%9E%8B%E6%A8%A1%E5%BC%8F%EF%BC%89"><span class="toc-text">Prototype模式（原型模式）</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E4%BE%8B%E7%B1%BB%E5%9B%BE"><span class="toc-text">实例类图</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E4%BE%8B%E7%A8%8B%E5%BA%8F"><span class="toc-text">实例程序</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Product%E6%8E%A5%E5%8F%A3"><span class="toc-text">Product接口</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Manage-%E7%B1%BB"><span class="toc-text">Manage 类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#MessageBox-%E7%B1%BB"><span class="toc-text">MessageBox 类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#UnderlinePen-%E7%B1%BB"><span class="toc-text">UnderlinePen 类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Main-%E7%B1%BB"><span class="toc-text">Main 类</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Prototype-%E6%A8%A1%E5%BC%8F%E4%B8%AD%E7%99%BB%E5%9C%BA%E7%9A%84%E8%A7%92%E8%89%B2"><span class="toc-text">Prototype 模式中登场的角色</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Prototype%EF%BC%88%E5%8E%9F%E5%9E%8B%EF%BC%89"><span class="toc-text">Prototype（原型）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ConcretePrototype%EF%BC%88%E5%85%B7%E4%BD%93%E7%9A%84%E5%8E%9F%E5%9E%8B%EF%BC%89"><span class="toc-text">ConcretePrototype（具体的原型）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Client%EF%BC%88%E4%BD%BF%E7%94%A8%E8%80%85%EF%BC%89"><span class="toc-text">Client（使用者）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Prototype%E6%A8%A1%E5%BC%8F%E7%9A%84%E7%B1%BB%E5%9B%BE"><span class="toc-text">Prototype模式的类图</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%9D%E8%B7%AF%E8%A6%81%E7%82%B9"><span class="toc-text">思路要点</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%8D%E8%83%BD%E6%A0%B9%E6%8D%AE%E7%B1%BB%E6%9D%A5%E7%94%9F%E6%88%90%E5%AE%9E%E4%BE%8B%E5%90%97"><span class="toc-text">不能根据类来生成实例吗</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%B1%BB%E5%90%8D%E6%98%AF%E6%9D%9F%E7%BC%9A%E5%90%97"><span class="toc-text">类名是束缚吗</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%BB%B6%E4%BC%B8%E9%98%85%E8%AF%BB%EF%BC%9Aclone%E6%96%B9%E6%B3%95%E5%92%8C-java-lang-clonable-%E6%8E%A5%E5%8F%A3"><span class="toc-text">延伸阅读：clone方法和 java.lang.clonable 接口</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Java-%E8%AF%AD%E8%A8%80%E7%9A%84-clone"><span class="toc-text">Java 语言的 clone</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#clone-%E6%96%B9%E6%B3%95%E6%97%B6%E5%93%AA%E9%87%8C%E5%AE%9A%E4%B9%89%E7%9A%84"><span class="toc-text">clone 方法时哪里定义的</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%9C%80%E8%A6%81%E5%AE%9E%E7%8E%B0-Cloneable-%E7%9A%84%E5%93%AA%E4%BA%9B%E6%96%B9%E6%B3%95"><span class="toc-text">需要实现 Cloneable 的哪些方法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#clone-%E6%96%B9%E6%B3%95%E8%BF%9B%E8%A1%8C%E7%9A%84%E6%98%AF%E6%B5%85%E5%A4%8D%E5%88%B6"><span class="toc-text">clone 方法进行的是浅复制</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%89%80%E5%AD%A6%E7%9F%A5%E8%AF%86"><span class="toc-text">所学知识</span></a></li></ol></li></ol>
+      </div>
+    </article>
+  
+  
+  <article class="card card-content categories-widget">
+    <div class="categories-card">
+  <div class="categories-header">
+    <i 
+      class="iconfont icon-fenlei" 
+      style="padding-right: 2px;">
+    </i>分类
+  </div>
+  <div class="categories-list">
+    
+      <a href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">
+        <div class="categories-list-item">
+          设计模式
+          <span class="categories-list-item-badge">8</span>
+        </div>
+      </a>
+    
+  </div>
+</div>
+  </article>
+  
+  <article class="card card-content tags-widget">
+    <div class="tags-card">
+  <div class="tags-header">
+    <i 
+      class="iconfont icon-biaoqian" 
+      style="padding-right: 2px;">
+    </i>热门标签
+  </div>
+  <div class="tags-list">
+    
+      <a 
+        href="/tags/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" 
+        title="设计模式">
+        <div class="tags-list-item">设计模式</div>
+      </a>
+    
+  </div>
+</div>
+  </article>
+  
+  
+</div>
+            </aside>
+            <main class="main-column">
+              
+<article class="card card-content">
+  <header>
+    <h1 class="post-title">
+      原型模式
+    </h1>
+  </header>
+  <div class="post-meta post-show-meta">
+    <time datetime="2022-08-17T02:27:04.867Z">
+      <i 
+        class="iconfont icon-calendar" 
+        style="margin-right: 2px;">
+      </i>
+      <span>2022-08-17</span>
+    </time>
+    
+      <span class="dot"></span>
+      
+        <a 
+          href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" 
+          class="post-meta-link">
+          设计模式
+        </a>
+      
+    
+    
+      <span class="dot"></span>
+      <span>3.1k 字</span>
+    
+  </div>
+  
+    <div 
+      class="post-meta post-show-meta" 
+      style="margin-top: -10px;">
+      <div style="display: flex; align-items: center;">
+        <i 
+          class="iconfont icon-biaoqian" 
+          style="margin-right: 2px; font-size: 1.15rem;">
+        </i>
+        
+          
+          <a 
+            href="/tags/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" 
+            class="post-meta-link">
+            设计模式
+          </a>
+        
+      </div>
+    </div>
+  
+  </header>
+  <div 
+    id="section" 
+    class="post-content">
+    <h1 id="Prototype模式（原型模式）"><a href="#Prototype模式（原型模式）" class="headerlink" title="Prototype模式（原型模式）"></a>Prototype模式（原型模式）</h1><blockquote>
+<p>在java中，我们可以使用new关键字知道类名来生成类的实例。像这样使用new来生成实例时，是必须指定类名的。但是，开发过程中，有时也会有“在不指定类名的前提下生成实例”的需求。例如在一下情况下，我们不能根据类来生成实例，而要根据现有的实例来生成新的实例。</p>
+<ol>
+<li><p><strong>对象种类繁多，无法将他们整合到一个类中时</strong></p>
+<p>第一种情况时需要处理的对象太多如果将它们分作为一个类，必须要编写很多个类文件。</p>
+</li>
+<li><p><strong>难以根据类生成实例时</strong><br>第二种情况时生成实例的过程太过复杂，很难根据类来生成实例。例如，我们假设这里有一个实例，即表示用户在图形编辑器中使用鼠标制作出的图形的实例。想在程序中创建这样的实例是非常困难的。通常，在想生成一个和之前用户通过操作所创建出的实例完全一样的实例的时候，我们会事先将用户通过操作所创建出的实例保存起来，然后在需要时通过复制来生成新的实例。</p>
+</li>
+<li><p><strong>想解耦框架与生成的实例时</strong></p>
+<p>第三种情况是想要生成实例的框架不依赖于具体的类。这时，不能指定类名来生成实例，而要事先“注册”一个“原型”实例，然后通过复刻该实例来生成新的实例。</p>
+<p>根据实例生成实例与使用复印机复印文档相类似。即使不知道原来的文档中的内容，我们也可以使用复印机复印出完全相同的文档，无论多少份都行。</p>
+</li>
+</ol>
+</blockquote>
+<h2 id="实例类图"><a href="#实例类图" class="headerlink" title="实例类图"></a>实例类图</h2><blockquote>
+<p><img src="/2022/08/17/PrototypePattern/image-20220818110231948.png" alt="image-20220818110231948" srcset="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20300%20300'%3E%3C/svg%3E" data-src="/2022/08/17/PrototypePattern/image-20220818110231948.png" class="lozad post-image"></p>
+</blockquote>
+<h2 id="实例程序"><a href="#实例程序" class="headerlink" title="实例程序"></a>实例程序</h2><blockquote>
+<h3 id="Product接口"><a href="#Product接口" class="headerlink" title="Product接口"></a>Product接口</h3><p>Product接口是复制功能的接口。该接口继承了java.lang.Cloneable接口。现在大家只需要知道实现了该接口的类的实例可以调用clone方法来自动复制实例即可。</p>
+<p>use方法是用于“使用”的方法。具体怎么“使用”，则被交给子类去实现。</p>
+<p>createClone方法是用于复制实例的方法。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">interface</span> <span class="token class-name">Product</span> <span class="token keyword">extends</span> <span class="token class-name">Cloneable</span> <span class="token punctuation">&#123;</span>
+    <span class="token comment">/**
+     * 使用的方法
+     * @param s 使用
+     */</span>
+    <span class="token keyword">public</span> <span class="token keyword">abstract</span> <span class="token keyword">void</span> <span class="token function">use</span><span class="token punctuation">(</span><span class="token class-name">String</span> s<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token comment">/**
+     * 用于复制实例的方法
+     * @return 实例
+     */</span>
+    <span class="token keyword">public</span> <span class="token keyword">abstract</span> <span class="token class-name">Product</span> <span class="token function">createClone</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="Manage-类"><a href="#Manage-类" class="headerlink" title="Manage 类"></a>Manage 类</h3><p>Manager 类 使用Product 接口来复制实例。</p>
+<p>showcase 字段是 java.util.HashMap 类型，它保存了实例的“名字”和“实例”之间的对应关系。</p>
+<p>register方法会将接收到的1组“名字”和“Product 接口” 注册 showcase 中。这里的 Product 类型的参数 proto 具体是什么呢？现在我们还无法知道 proto 到底是哪个类，但有一点可以确定的是，它肯定是实现了 Product 接口的类的实例（也就是说可以调用它的use方法和createClone方法）。</p>
+<p>请注意，在 Product 接口和 Manager 类的代码中完全没有出现 MessageBox 类 和 UnderlinePen 类 的名字，这也意味着我们可以独立的修改Product 和Manager，不受MessageBox类和 UnderlinePen类的影响。这时非常重要的，因为一旦在类中使用到了别的类名，就意味着该类与其他类紧密的耦合在了一起。在Manager类中，并没有写明具体的类名，仅使用了Product这个接口名。也就是说，Product接口成为了链接Manager类与其他具体类之间的桥梁。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">Manager</span> <span class="token punctuation">&#123;</span>
+    <span class="token comment">/**
+     * 用来保存实例的容器
+     */</span>
+    <span class="token keyword">private</span> <span class="token class-name">HashMap</span> showcase <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">HashMap</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token comment">/**
+     * 将实例保存到容器中
+     * @param name 实例名
+     * @param proto 实例
+     */</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">register</span><span class="token punctuation">(</span><span class="token class-name">String</span> name<span class="token punctuation">,</span> <span class="token class-name">Product</span> proto<span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+        showcase<span class="token punctuation">.</span><span class="token function">put</span><span class="token punctuation">(</span>name<span class="token punctuation">,</span>proto<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * clone新实例
+     * @param protoName 原型名
+     * @return 实例
+     */</span>
+    <span class="token keyword">public</span> <span class="token class-name">Product</span> <span class="token function">create</span><span class="token punctuation">(</span><span class="token class-name">String</span> protoName<span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+        <span class="token class-name">Product</span> p <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token class-name">Product</span><span class="token punctuation">)</span> showcase<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span>protoName<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> p<span class="token punctuation">.</span><span class="token function">createClone</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="MessageBox-类"><a href="#MessageBox-类" class="headerlink" title="MessageBox 类"></a>MessageBox 类</h3><p>MessageBox 类 实现（implements）了Product 接口。</p>
+<p>decochar字段中保存的是像装饰方框那样的环绕着字符串的字符。use方法会使用decochar字段中保存的字符把要展示的字符串框起来。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">MessageBox</span> <span class="token keyword">implements</span> <span class="token class-name">Product</span> <span class="token punctuation">&#123;</span>
+
+    <span class="token keyword">private</span> <span class="token keyword">char</span> decochar<span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> <span class="token class-name">MessageBox</span><span class="token punctuation">(</span><span class="token keyword">char</span> decochar<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>decochar <span class="token operator">=</span> decochar<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">use</span><span class="token punctuation">(</span><span class="token class-name">String</span> s<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">int</span> length <span class="token operator">=</span> s<span class="token punctuation">.</span><span class="token function">getBytes</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span>length<span class="token punctuation">;</span>
+        <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">int</span> i <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> length <span class="token operator">+</span> <span class="token number">4</span><span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">print</span><span class="token punctuation">(</span>decochar<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+        <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">""</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span>decochar <span class="token operator">+</span> <span class="token string">" "</span> <span class="token operator">+</span> s <span class="token operator">+</span> <span class="token string">" "</span> <span class="token operator">+</span> decochar<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">int</span> i <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> length <span class="token operator">+</span> <span class="token number">4</span><span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">print</span><span class="token punctuation">(</span>decochar<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+        <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">""</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token class-name">Product</span> <span class="token function">createClone</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token class-name">Product</span> p <span class="token operator">=</span> <span class="token keyword">null</span><span class="token punctuation">;</span>
+        <span class="token keyword">try</span> <span class="token punctuation">&#123;</span>
+            p <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token class-name">Product</span><span class="token punctuation">)</span> <span class="token function">clone</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">CloneNotSupportedException</span> e<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            e<span class="token punctuation">.</span><span class="token function">printStackTrace</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+        <span class="token keyword">return</span> p<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="UnderlinePen-类"><a href="#UnderlinePen-类" class="headerlink" title="UnderlinePen 类"></a>UnderlinePen 类</h3><p>UnderlinePen类的实现与MessageBox几乎完全相同，不同的实现ulchar字段中保存的是修饰下划线样式的字符。</p>
+<p>use方法的作用是将字符串用双引号括起来显示，并在字符串下面加上下划线。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">UnderlinePen</span> <span class="token keyword">implements</span> <span class="token class-name">Product</span> <span class="token punctuation">&#123;</span>
+
+    <span class="token keyword">private</span> <span class="token keyword">char</span> ulchar<span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> <span class="token class-name">UnderlinePen</span><span class="token punctuation">(</span><span class="token keyword">char</span> ulchar<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>ulchar <span class="token operator">=</span> ulchar<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">use</span><span class="token punctuation">(</span><span class="token class-name">String</span> s<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">int</span> length <span class="token operator">=</span> s<span class="token punctuation">.</span><span class="token function">getBytes</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span>length<span class="token punctuation">;</span>
+        <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"\""</span> <span class="token operator">+</span> s <span class="token operator">+</span> <span class="token string">"\""</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">print</span><span class="token punctuation">(</span><span class="token string">" "</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">int</span> i <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> length<span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">print</span><span class="token punctuation">(</span>ulchar<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+        <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">""</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token class-name">Product</span> <span class="token function">createClone</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token class-name">Product</span> p <span class="token operator">=</span> <span class="token keyword">null</span><span class="token punctuation">;</span>
+        <span class="token keyword">try</span> <span class="token punctuation">&#123;</span>
+            p <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token class-name">Product</span><span class="token punctuation">)</span> <span class="token function">clone</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">CloneNotSupportedException</span> e<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            e<span class="token punctuation">.</span><span class="token function">printStackTrace</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+        <span class="token keyword">return</span> p<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="Main-类"><a href="#Main-类" class="headerlink" title="Main 类"></a>Main 类</h3><p>Main类首先生成了Manager的实例。接着，在Manager实例中注册了UnderlinePen的实例和MessageBox的实例。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">Main</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token class-name">String</span><span class="token punctuation">[</span><span class="token punctuation">]</span> args<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token class-name">Manager</span> manager <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Manager</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">UnderlinePen</span> upen <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">UnderlinePen</span><span class="token punctuation">(</span><span class="token char">'~'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">MessageBox</span> mbox <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">MessageBox</span><span class="token punctuation">(</span><span class="token char">'*'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">MessageBox</span> sBox <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">MessageBox</span><span class="token punctuation">(</span><span class="token char">'/'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        manager<span class="token punctuation">.</span><span class="token function">register</span><span class="token punctuation">(</span><span class="token string">"strong message"</span><span class="token punctuation">,</span> upen<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        manager<span class="token punctuation">.</span><span class="token function">register</span><span class="token punctuation">(</span><span class="token string">"warning box"</span><span class="token punctuation">,</span> mbox<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        manager<span class="token punctuation">.</span><span class="token function">register</span><span class="token punctuation">(</span><span class="token string">"slash box"</span><span class="token punctuation">,</span> sBox<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token class-name">Product</span> p1 <span class="token operator">=</span> manager<span class="token punctuation">.</span><span class="token function">create</span><span class="token punctuation">(</span><span class="token string">"strong message"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        p1<span class="token punctuation">.</span><span class="token function">use</span><span class="token punctuation">(</span><span class="token string">"Hello, world."</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">Product</span> p2 <span class="token operator">=</span> manager<span class="token punctuation">.</span><span class="token function">create</span><span class="token punctuation">(</span><span class="token string">"warning box"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        p2<span class="token punctuation">.</span><span class="token function">use</span><span class="token punctuation">(</span><span class="token string">"Hello, world."</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">Product</span> p3 <span class="token operator">=</span> manager<span class="token punctuation">.</span><span class="token function">create</span><span class="token punctuation">(</span><span class="token string">"slash box"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        p3<span class="token punctuation">.</span><span class="token function">use</span><span class="token punctuation">(</span><span class="token string">"Hello, world."</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+</blockquote>
+<h2 id="Prototype-模式中登场的角色"><a href="#Prototype-模式中登场的角色" class="headerlink" title="Prototype 模式中登场的角色"></a>Prototype 模式中登场的角色</h2><ul>
+<li><h3 id="Prototype（原型）"><a href="#Prototype（原型）" class="headerlink" title="Prototype（原型）"></a>Prototype（原型）</h3><blockquote>
+<p>Product角色负责定义用于复制现有实例来生成新的方法。</p>
+<p>在示例程序中，由Product接口扮演此角色。</p>
+</blockquote>
+</li>
+<li><h3 id="ConcretePrototype（具体的原型）"><a href="#ConcretePrototype（具体的原型）" class="headerlink" title="ConcretePrototype（具体的原型）"></a>ConcretePrototype（具体的原型）</h3><blockquote>
+<p>ConcretePrototype角色负责实现现有实例的方法。</p>
+<p>在示例程序中，由MessageBox 类和UnderlinePen类扮演此角色。</p>
+</blockquote>
+</li>
+<li><h3 id="Client（使用者）"><a href="#Client（使用者）" class="headerlink" title="Client（使用者）"></a>Client（使用者）</h3><blockquote>
+<p>Client角色负责使用复制实例的方法生成新的实例。</p>
+<p>在示例程序中，由Manager类扮演此角色。</p>
+</blockquote>
+</li>
+</ul>
+<h3 id="Prototype模式的类图"><a href="#Prototype模式的类图" class="headerlink" title="Prototype模式的类图"></a>Prototype模式的类图</h3><blockquote>
+<p><img src="/2022/08/17/PrototypePattern/image-20220818144930841.png" alt="image-20220818144930841" srcset="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20300%20300'%3E%3C/svg%3E" data-src="/2022/08/17/PrototypePattern/image-20220818144930841.png" class="lozad post-image"></p>
+</blockquote>
+<h2 id="思路要点"><a href="#思路要点" class="headerlink" title="思路要点"></a>思路要点</h2><ul>
+<li><h3 id="不能根据类来生成实例吗"><a href="#不能根据类来生成实例吗" class="headerlink" title="不能根据类来生成实例吗"></a>不能根据类来生成实例吗</h3><blockquote>
+<p>最初在学习Prototype模式时也曾感觉到迷茫，既然是要创建新的实例，直接用下面这个语句不就好了吗？为什么还需要Prototype模式？</p>
+<p><code>new Something()</code></p>
+<ol>
+<li><p><strong>对象种类繁多，无法将它们整合到一个类中时</strong></p>
+<p>在示例程序中出现了如下3种样式。</p>
+<ul>
+<li>使用‘～’为字符串添加下划线</li>
+<li>使用‘*’为字符串添加边框</li>
+<li>使用‘&#x2F;’为字符串添加边框</li>
+</ul>
+<p>本例比较简单，只生成了3种样式，不过只要想做，不论多少种样式都可以生成。但是请试想一下，如果每种样式都编写为一个类，类的数量将会非常庞大，源程序的管理也会变得非常困难。</p>
+</li>
+<li><p><strong>难以根据类生成实例时</strong></p>
+<p>本例感觉不到这一点。可以试想下要开发一个用户可以使用鼠标进行操作的、类似于图形编辑器的应用程序，这样可能更加容易理解。假设我们想生成一个用户通过一系列鼠标操作所创建出来的实例完全一样的实例。这个时候，与根据类来生成实例相比，根据实例来生成要简单得多。</p>
+</li>
+<li><p><strong>想解耦框架与生成的实例时</strong></p>
+<p>在示例程序中，我们将复制（clone）实例的部分封装在framework包中了。</p>
+<p>在message类和create方法中，我们并没有使用类名，取而代之使用了“strong message”和“slash box”等字符串为生成的实例命名。与Java语言自带的生成实例的new Something() 方式相比，这种方式具有更好的通用性，而且将框架从类名的束缚中解脱出来了。</p>
+</li>
+</ol>
+</blockquote>
+</li>
+<li><h3 id="类名是束缚吗"><a href="#类名是束缚吗" class="headerlink" title="类名是束缚吗"></a>类名是束缚吗</h3><blockquote>
+<p>话说回来，在源程序中使用类名到底会有什么问题呢？在代码中出现要使用的类的名字不是理所当然的吗？</p>
+<p>这里，让我们再回忆一下面相对象编程的目标之一，即“作为组建复用”。</p>
+<p>在代码中出现要使用的类的名字并非总是坏事。不过，<strong>一旦在代码中出现要使用类的名字，就无法与该类分离开来，也就无法实现复用</strong>。</p>
+<p>当然，可以通过替换源代码或是改变类名来解决这个问题。但是，此处说的“作为组建复用”中不包含替换源代码。以Java来时，重要的是当手边只有class文件（.class）时，该类能否被复用。即使没有Java文件（.java）也能复用该类才是关键。</p>
+<p>当多个类必须紧密结合时，代码中出现这些类的名字时没有问题的。但是如果那些需要被独立出来作为组建复用的类的名字出现在代码中，那就有问题了。</p>
+</blockquote>
+</li>
+</ul>
+<h2 id="延伸阅读：clone方法和-java-lang-clonable-接口"><a href="#延伸阅读：clone方法和-java-lang-clonable-接口" class="headerlink" title="延伸阅读：clone方法和 java.lang.clonable 接口"></a>延伸阅读：clone方法和 java.lang.clonable 接口</h2><ul>
+<li><h3 id="Java-语言的-clone"><a href="#Java-语言的-clone" class="headerlink" title="Java 语言的 clone"></a>Java 语言的 clone</h3><blockquote>
+<p>Java语言为我们准备了用于复制实例的clone方法。请主要，想要掉用clone方法，<strong>被复制对象的类必须实现java.lang.Clonable接口</strong>，不论是被复制对象的类实现java.lang.Cloneable接口还是其某个父类实现Cloneable接口，亦或是被复制对象的类实现了Cloneable接口的子接口都可以。在示例程序中，MassageBox 类和 UnderlinePen 类实现了 Product 接口，而 Product 接口则是 Cloneable接口的子接口。</p>
+<p>实现了Cloneable接口的类的实例可以调用clone方法进行复制，clone方法的返回值是复制出的新实例（clone方法内部所进行的处理是分配与要复制的实例同样大小的内存空间，接着将要复制的实例中的字段的值复制到所分配的内存空间中去）。</p>
+<p>如果没有实现Cloneable接口的类的实例调用了clone方法，则会在运行时抛出CloneNotSuppertedException（不支持clone方法）异常。</p>
+<ul>
+<li><p>实现了Cloneable接口的类的实例</p>
+<p>→复制</p>
+</li>
+<li><p>没有实现Cloneable接口的类的实例</p>
+<p>→发生CloneNotSuppertedException异常</p>
+</li>
+</ul>
+<p>此外，java.lang 包是被默认引入的，因此无需显示地引入Java.lang 即可调用 clone 方法</p>
+</blockquote>
+</li>
+<li><h3 id="clone-方法时哪里定义的"><a href="#clone-方法时哪里定义的" class="headerlink" title="clone 方法时哪里定义的"></a>clone 方法时哪里定义的</h3><blockquote>
+<p>clone方法定义在 java.lang.Object 中。因为Object 类是用所有Java类的父类，因此所有的Java类都继承了clone方法。</p>
+</blockquote>
+</li>
+<li><h3 id="需要实现-Cloneable-的哪些方法"><a href="#需要实现-Cloneable-的哪些方法" class="headerlink" title="需要实现 Cloneable 的哪些方法"></a>需要实现 Cloneable 的哪些方法</h3><blockquote>
+<p>提到Cloneable接口，很容易让人误解以为Cloneable接口中声明了clone方法。其实这是错误的。</p>
+<p>在Cloneable接口中并没有声明任何方法。它只是被用来标记“可以使用clone方法进行复制”的。这样的接口被称为<strong>标记接口（marker interface）</strong>。</p>
+</blockquote>
+</li>
+<li><h3 id="clone-方法进行的是浅复制"><a href="#clone-方法进行的是浅复制" class="headerlink" title="clone 方法进行的是浅复制"></a>clone 方法进行的是浅复制</h3><blockquote>
+<p>clone 方法所进行的复制只是<strong>将被复制实例的字段值直接复制到新的实例中</strong>。换言之，它并没有考虑字段中所保存的实例的内容。例如，当字段中保存的是数组时，如果使用clone方法进行复制，则只会复制该数组的引用，并不会一一复制数组中的元素。</p>
+<p>像上面这样的字段对字段的复制（field-to-field-copy）被称为浅复制（shallow copy）。clone方法所进行的复制就是浅复制。</p>
+<p>当使用clone方法进行浅复制无法满足需求时，类的设计者可以实现重写clone方法，实现自己需要的复制功能（重写clone方法时，别忘记了使用super.clone()来调用父类的clone方法）。</p>
+<p>需要注意的是，clone方法只会进行复制，并不会调用被复制实例的构造函数。此外，对于在生成实例时需要进行特殊的初始化处理的类，需要自己去实现clone方法，在其内部进行这项初始化处理。</p>
+</blockquote>
+</li>
+</ul>
+<h2 id="所学知识"><a href="#所学知识" class="headerlink" title="所学知识"></a>所学知识</h2><blockquote>
+<p>本章，学习不了根据类，而是根据实例来生成实例的Prototype模式。此外，我们还学习了clone方法和Cloneable方法。</p>
+</blockquote>
+
+  </div>
+  <div>
+    
+      <div 
+        class="post-note note-warning copyright" 
+        style="margin-top: 42px">
+        <p>
+          <span style="font-weight: bold;">作者：</span><a 
+            target="_blank" 
+            rel="nofollow noopener noreferrer" 
+            href="/about">
+            简单且极端
+          </a>
+        </p>
+        <p>
+          <span style="font-weight: bold;">文章链接：</span><a 
+            target="_blank" 
+            rel="nofollow noopener noreferrer" 
+            href="https://extremelys.github.io/2022/08/17/PrototypePattern/">
+            https://extremelys.github.io/2022/08/17/PrototypePattern/
+          </a>
+        </p>
+        <p><span style="font-weight: bold;">版权声明：</span>本博客所有文章除特别声明外，均采用<a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">CC BY-NC-SA 4.0 协议</a>。转载请注明出处！</p>
+      </div>
+    
+  </div>
+</article>
+<div class="nav">
+  
+    <div class="nav-item-prev">
+      <a 
+        href="/2022/08/22/BuilderPattern/" 
+        class="nav-link">
+        <i class="iconfont icon-left nav-prev-icon"></i>
+        <div>
+          <div class="nav-label">上一篇</div>
+          
+            <div class="nav-title">建造者模式 </div>
+          
+        </div>
+      </a>
+    </div>
+  
+  
+    <div class="nav-item-next">
+      <a 
+        href="/2022/08/16/SingletonPattern/" 
+        class="nav-link">
+        <div>
+          <div class="nav-label">下一篇</div>
+          
+            <div class="nav-title">单例模式 </div>
+          
+        </div>
+        <i class="iconfont icon-right nav-next-icon"></i>
+      </a>
+    </div>
+  
+</div>
+
+<div 
+  class="card card-content toc-card" 
+  id="mobiletoc">
+  <div class="toc-header">
+  <i 
+    class="iconfont icon-menu" 
+    style="padding-right: 2px;">
+  </i>目录
+</div>
+<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Prototype%E6%A8%A1%E5%BC%8F%EF%BC%88%E5%8E%9F%E5%9E%8B%E6%A8%A1%E5%BC%8F%EF%BC%89"><span class="toc-text">Prototype模式（原型模式）</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E4%BE%8B%E7%B1%BB%E5%9B%BE"><span class="toc-text">实例类图</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E4%BE%8B%E7%A8%8B%E5%BA%8F"><span class="toc-text">实例程序</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Product%E6%8E%A5%E5%8F%A3"><span class="toc-text">Product接口</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Manage-%E7%B1%BB"><span class="toc-text">Manage 类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#MessageBox-%E7%B1%BB"><span class="toc-text">MessageBox 类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#UnderlinePen-%E7%B1%BB"><span class="toc-text">UnderlinePen 类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Main-%E7%B1%BB"><span class="toc-text">Main 类</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Prototype-%E6%A8%A1%E5%BC%8F%E4%B8%AD%E7%99%BB%E5%9C%BA%E7%9A%84%E8%A7%92%E8%89%B2"><span class="toc-text">Prototype 模式中登场的角色</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Prototype%EF%BC%88%E5%8E%9F%E5%9E%8B%EF%BC%89"><span class="toc-text">Prototype（原型）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ConcretePrototype%EF%BC%88%E5%85%B7%E4%BD%93%E7%9A%84%E5%8E%9F%E5%9E%8B%EF%BC%89"><span class="toc-text">ConcretePrototype（具体的原型）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Client%EF%BC%88%E4%BD%BF%E7%94%A8%E8%80%85%EF%BC%89"><span class="toc-text">Client（使用者）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Prototype%E6%A8%A1%E5%BC%8F%E7%9A%84%E7%B1%BB%E5%9B%BE"><span class="toc-text">Prototype模式的类图</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%9D%E8%B7%AF%E8%A6%81%E7%82%B9"><span class="toc-text">思路要点</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%8D%E8%83%BD%E6%A0%B9%E6%8D%AE%E7%B1%BB%E6%9D%A5%E7%94%9F%E6%88%90%E5%AE%9E%E4%BE%8B%E5%90%97"><span class="toc-text">不能根据类来生成实例吗</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%B1%BB%E5%90%8D%E6%98%AF%E6%9D%9F%E7%BC%9A%E5%90%97"><span class="toc-text">类名是束缚吗</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%BB%B6%E4%BC%B8%E9%98%85%E8%AF%BB%EF%BC%9Aclone%E6%96%B9%E6%B3%95%E5%92%8C-java-lang-clonable-%E6%8E%A5%E5%8F%A3"><span class="toc-text">延伸阅读：clone方法和 java.lang.clonable 接口</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Java-%E8%AF%AD%E8%A8%80%E7%9A%84-clone"><span class="toc-text">Java 语言的 clone</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#clone-%E6%96%B9%E6%B3%95%E6%97%B6%E5%93%AA%E9%87%8C%E5%AE%9A%E4%B9%89%E7%9A%84"><span class="toc-text">clone 方法时哪里定义的</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%9C%80%E8%A6%81%E5%AE%9E%E7%8E%B0-Cloneable-%E7%9A%84%E5%93%AA%E4%BA%9B%E6%96%B9%E6%B3%95"><span class="toc-text">需要实现 Cloneable 的哪些方法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#clone-%E6%96%B9%E6%B3%95%E8%BF%9B%E8%A1%8C%E7%9A%84%E6%98%AF%E6%B5%85%E5%A4%8D%E5%88%B6"><span class="toc-text">clone 方法进行的是浅复制</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%89%80%E5%AD%A6%E7%9F%A5%E8%AF%86"><span class="toc-text">所学知识</span></a></li></ol></li></ol>
+</div>
+            </main>
+            <aside class="right-column">
+              <div class="sticky-widescreen">
+  
+  
+    <article class="card card-content toc-card">
+      <div class="toc-header">
+  <i 
+    class="iconfont icon-menu" 
+    style="padding-right: 2px;">
+  </i>目录
+</div>
+<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Prototype%E6%A8%A1%E5%BC%8F%EF%BC%88%E5%8E%9F%E5%9E%8B%E6%A8%A1%E5%BC%8F%EF%BC%89"><span class="toc-text">Prototype模式（原型模式）</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E4%BE%8B%E7%B1%BB%E5%9B%BE"><span class="toc-text">实例类图</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E4%BE%8B%E7%A8%8B%E5%BA%8F"><span class="toc-text">实例程序</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Product%E6%8E%A5%E5%8F%A3"><span class="toc-text">Product接口</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Manage-%E7%B1%BB"><span class="toc-text">Manage 类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#MessageBox-%E7%B1%BB"><span class="toc-text">MessageBox 类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#UnderlinePen-%E7%B1%BB"><span class="toc-text">UnderlinePen 类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Main-%E7%B1%BB"><span class="toc-text">Main 类</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Prototype-%E6%A8%A1%E5%BC%8F%E4%B8%AD%E7%99%BB%E5%9C%BA%E7%9A%84%E8%A7%92%E8%89%B2"><span class="toc-text">Prototype 模式中登场的角色</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Prototype%EF%BC%88%E5%8E%9F%E5%9E%8B%EF%BC%89"><span class="toc-text">Prototype（原型）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ConcretePrototype%EF%BC%88%E5%85%B7%E4%BD%93%E7%9A%84%E5%8E%9F%E5%9E%8B%EF%BC%89"><span class="toc-text">ConcretePrototype（具体的原型）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Client%EF%BC%88%E4%BD%BF%E7%94%A8%E8%80%85%EF%BC%89"><span class="toc-text">Client（使用者）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Prototype%E6%A8%A1%E5%BC%8F%E7%9A%84%E7%B1%BB%E5%9B%BE"><span class="toc-text">Prototype模式的类图</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%9D%E8%B7%AF%E8%A6%81%E7%82%B9"><span class="toc-text">思路要点</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%8D%E8%83%BD%E6%A0%B9%E6%8D%AE%E7%B1%BB%E6%9D%A5%E7%94%9F%E6%88%90%E5%AE%9E%E4%BE%8B%E5%90%97"><span class="toc-text">不能根据类来生成实例吗</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%B1%BB%E5%90%8D%E6%98%AF%E6%9D%9F%E7%BC%9A%E5%90%97"><span class="toc-text">类名是束缚吗</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%BB%B6%E4%BC%B8%E9%98%85%E8%AF%BB%EF%BC%9Aclone%E6%96%B9%E6%B3%95%E5%92%8C-java-lang-clonable-%E6%8E%A5%E5%8F%A3"><span class="toc-text">延伸阅读：clone方法和 java.lang.clonable 接口</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Java-%E8%AF%AD%E8%A8%80%E7%9A%84-clone"><span class="toc-text">Java 语言的 clone</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#clone-%E6%96%B9%E6%B3%95%E6%97%B6%E5%93%AA%E9%87%8C%E5%AE%9A%E4%B9%89%E7%9A%84"><span class="toc-text">clone 方法时哪里定义的</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%9C%80%E8%A6%81%E5%AE%9E%E7%8E%B0-Cloneable-%E7%9A%84%E5%93%AA%E4%BA%9B%E6%96%B9%E6%B3%95"><span class="toc-text">需要实现 Cloneable 的哪些方法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#clone-%E6%96%B9%E6%B3%95%E8%BF%9B%E8%A1%8C%E7%9A%84%E6%98%AF%E6%B5%85%E5%A4%8D%E5%88%B6"><span class="toc-text">clone 方法进行的是浅复制</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%89%80%E5%AD%A6%E7%9F%A5%E8%AF%86"><span class="toc-text">所学知识</span></a></li></ol></li></ol>
+    </article>
+  
+  
+  <article class="card card-content">
+    <div class="recent-posts-card">
+  <div class="recent-posts-header">
+    <i 
+      class="iconfont icon-wenzhang_huaban" 
+      style="padding-right: 2px;">
+    </i>最近文章
+  </div>
+  <div class="recent-posts-list">
+    
+      <div class="recent-posts-item">
+        <div class="recent-posts-item-title">2022-08-22</div>
+        <a href="/2022/08/22/AbstractFactoryPattern/"><div class="recent-posts-item-content">抽象工厂模式</div></a>
+      </div>
+    
+      <div class="recent-posts-item">
+        <div class="recent-posts-item-title">2022-08-22</div>
+        <a href="/2022/08/22/BuilderPattern/"><div class="recent-posts-item-content">建造者模式</div></a>
+      </div>
+    
+      <div class="recent-posts-item">
+        <div class="recent-posts-item-title">2022-08-17</div>
+        <a href="/2022/08/17/PrototypePattern/"><div class="recent-posts-item-content">原型模式</div></a>
+      </div>
+    
+      <div class="recent-posts-item">
+        <div class="recent-posts-item-title">2022-08-16</div>
+        <a href="/2022/08/16/SingletonPattern/"><div class="recent-posts-item-content">单例模式</div></a>
+      </div>
+    
+  </div>
+</div>
+  </article>
+  
+  
+</div>
+            </aside>
+          </div>
+        </div>
+      </div>
+    </div>
+     
+    <footer class="footer">
+  <div class="footer-container">
+    <div>
+      <div class="footer-dsc">
+        <span>
+          Copyright ©
+          
+            2022
+          
+          
+        </span>
+        &nbsp;
+        <a 
+          href="/" 
+          class="footer-link">
+          简单且极端
+        </a>
+      </div>
+    </div>
+
+    
+      <div class="footer-dsc">
+        
+          Powered by
+          <a 
+            href="https://hexo.io/" 
+            class="footer-link" 
+            target="_blank" 
+            rel="nofollow noopener noreferrer">
+            &nbsp;Hexo
+          </a>
+        
+        
+          <span>&nbsp;|&nbsp;</span>
+        
+        
+          Theme -
+          <a 
+            href="https://github.com/theme-kaze" 
+            class="footer-link" 
+            target="_blank"
+            rel="nofollow noopener noreferrer">
+            &nbsp;Kaze
+          </a>
+        
+      </div>
+    
+    
+    
+    
+</footer>
+ 
+    
+  <a 
+    role="button" 
+    id="scrollbutton" 
+    class="basebutton" 
+    aria-label="回到顶部">
+    <i class="iconfont icon-arrowleft button-icon"></i>
+  </a>
+
+<a 
+  role="button" 
+  id="menubutton"
+  aria-label="menu button"
+  class="basebutton">
+  <i class="iconfont icon-menu button-icon"></i>
+</a>
+<a 
+  role="button" 
+  id="popbutton" 
+  class="basebutton" 
+  aria-label="控制中心">
+  <i class="iconfont icon-expand button-icon"></i>
+</a>
+<a 
+  role="button" 
+  id="darkbutton" 
+  class="basebutton darkwidget" 
+  aria-label="夜色模式">
+  <i class="iconfont icon-weather button-icon"></i>
+</a>
+<a 
+  role="button" 
+  id="searchbutton" 
+  class="basebutton searchwidget" 
+  aria-label="搜索">
+  <i class="iconfont icon-search button-icon"></i>
+</a> 
+     
+     
+     
+      <script>
+  var addImgLayout = function () {
+    var img = document.querySelectorAll('.post-content img')
+    var i
+    for (i = 0; i < img.length; i++) {
+      var wrapper = document.createElement('a')
+      wrapper.setAttribute('href', img[i].getAttribute('data-src'))
+      wrapper.setAttribute('aria-label', 'illustration')
+      wrapper.style.cssText =
+        'width: 100%; display: flex; justify-content: center;'
+      if (img[i].alt) wrapper.dataset.caption = img[i].alt
+      wrapper.dataset.nolink = true
+      img[i].before(wrapper)
+      wrapper.append(img[i])
+      var divWrap = document.createElement('div')
+      divWrap.classList.add('gallery')
+      wrapper.before(divWrap)
+      divWrap.append(wrapper)
+    }
+    baguetteBox.run('.gallery')
+  }
+</script>
+<script>
+  loadScript(
+    "/js/lib/lightbox/baguetteBox.min.js",
+    addImgLayout
+  )
+</script>
+ 
+     
+     
+    <script src="/js/main.js"></script> 
+     
+    
+      <script>
+        var addLazyload = function () {
+          var observer = lozad('.lozad', {
+            load: function (el) {
+              el.srcset = el.getAttribute('data-src')
+            },
+            loaded: function (el) {
+              el.classList.add('loaded')
+            },
+          })
+          observer.observe()
+        }
+      </script>
+      <script>
+        loadScript('/js/lib/lozad.min.js', addLazyload)
+      </script>
+    
+    <script src="//instant.page/5.1.0" type="module"
+      integrity="sha384-by67kQnR+pyfy8yWP4kPO12fHKRLHZPfEsiSXR8u2IKcTdxD805MGUXBzVPnkLHw"></script>
+    
+    
+  </body>
+</html>

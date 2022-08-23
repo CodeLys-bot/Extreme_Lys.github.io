@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+  <meta charset="UTF-8">
+  <meta 
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+  <meta 
+    http-equiv="X-UA-Compatible" 
+    content="ie=edge">
+  <meta 
+    name="theme-color" 
+    content="#fff" 
+    id="theme-color">
+  <meta 
+    name="description" 
+    content="Hexo">
+  <link 
+    rel="icon" 
+    href="/">
+  <title>抽象工厂模式</title>
+  
+    
+      <meta 
+        property="og:title" 
+        content="抽象工厂模式">
+    
+    
+      <meta 
+        property="og:url" 
+        content="https://extremelys.github.io/2022/08/22/AbstractFactoryPattern/index.html">
+    
+    
+      <meta 
+        property="og:img" 
+        content="https://img.songhn.com/img/Y67gdd.png">
+    
+    
+    
+      <meta 
+        property="og:type" 
+        content="article">
+      <meta 
+        property="og:article:published_time" 
+        content="2022-08-22">
+      <meta 
+        property="og:article:modified_time" 
+        content="2022-08-23">
+      <meta 
+        property="og:article:author" 
+        content="简单且极端">
+      
+        
+          <meta 
+            property="og:article:tag" 
+            content="设计模式">
+        
+      
+    
+  
+  
+  <link rel="preload" href="//at.alicdn.com/t/font_1946621_i1kgafibvw.css" as="style" >
+  <link rel="preload" href="//at.alicdn.com/t/font_1952792_89b4ac4k4up.css" as="style" >
+  <link rel="preload" href="/css/main.css" as="style" >
+  
+  <link rel="modulepreload" href="//instant.page/5.1.0">
+  
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1946621_i1kgafibvw.css">
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1952792_89b4ac4k4up.css">
+  
+  
+  
+    <link rel="stylesheet" href="/js/lib/lightbox/baguetteBox.min.css">
+  
+  <script>
+    function loadScript(url, cb) {
+      var script = document.createElement('script');
+      script.src = url;
+      if (cb) script.onload = cb;
+      script.async = true;
+      document.body.appendChild(script);
+    }
+    function loadCSS(href, data, attr) {
+      var sheet = document.createElement('link');
+      sheet.ref = 'stylesheet';
+      sheet.href = href;
+      sheet.dataset[data] = attr;
+      document.head.appendChild(sheet);
+    }
+    function changeCSS(cssFile, data, attr) {
+      var oldlink = document.querySelector(data);
+      var newlink = document.createElement("link");
+      newlink.setAttribute("rel", "stylesheet");
+      newlink.setAttribute("href", cssFile);
+      newlink.dataset.prism = attr;
+      document.head.replaceChild(newlink, oldlink);
+    }
+  </script>
+  
+    
+      
+      
+      
+      
+        
+        
+        
+        <script>
+          function prismThemeChange() {
+            if(document.getElementById('theme-color').dataset.mode === 'dark') {
+              if(document.querySelector('[data-prism]')) {
+                changeCSS('/js/lib/prism/prism-tomorrow.min.css', '[data-prism]', 'prism-tomorrow');
+              } else {
+                loadCSS('/js/lib/prism/prism-tomorrow.min.css', 'prism', 'prism-tomorrow');
+              }
+            } else {
+              if(document.querySelector('[data-prism]')) {
+                changeCSS('/js/lib/prism/prism.min.css', '[data-prism]', 'prism');
+              } else {
+                loadCSS('/js/lib/prism/prism.min.css', 'prism', 'prism');
+              }
+            }
+          }
+          prismThemeChange()
+        </script>
+      
+      
+        
+        <link rel="stylesheet" href="/js/lib/prism/prism-line-numbers.min.css">
+      
+    
+  
+  <script>
+    // control reverse button
+    var reverseDarkList = {
+      dark: 'light',
+      light: 'dark'
+    };
+    var themeColor = {
+      dark: '#1c1c1e',
+      light: '#fff'
+    }
+    // get the data of css prefers-color-scheme
+    var getCssMediaQuery = function() {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    };
+    // reverse current darkmode setting function
+    var reverseDarkModeSetting = function() {
+      var setting = localStorage.getItem('user-color-scheme');
+      if(reverseDarkList[setting]) {
+        setting = reverseDarkList[setting];
+      } else if(setting === null) {
+        setting = reverseDarkList[getCssMediaQuery()];
+      } else {
+        return;
+      }
+      localStorage.setItem('user-color-scheme', setting);
+      return setting;
+    };
+    // apply current darkmode setting
+  </script>
+  
+    <script>
+      var setDarkmode = function(mode) {
+      var setting = mode || localStorage.getItem('user-color-scheme');
+      if(setting === getCssMediaQuery()) {
+        document.documentElement.removeAttribute('data-user-color-scheme');
+        localStorage.removeItem('user-color-scheme');
+        document.getElementById('theme-color').content = themeColor[setting];
+        document.getElementById('theme-color').dataset.mode = setting;
+        prismThemeChange();
+      } else if(reverseDarkList[setting]) {
+        document.documentElement.setAttribute('data-user-color-scheme', setting);
+        document.getElementById('theme-color').content = themeColor[setting];
+        document.getElementById('theme-color').dataset.mode = setting;
+        prismThemeChange();
+      } else {
+        document.documentElement.removeAttribute('data-user-color-scheme');
+        localStorage.removeItem('user-color-scheme');
+        document.getElementById('theme-color').content = themeColor[getCssMediaQuery()];
+        document.getElementById('theme-color').dataset.mode = getCssMediaQuery();
+        prismThemeChange();
+      }
+    };
+    setDarkmode();
+    </script>
+  
+  
+  
+    <link rel="preload" href="/js/lib/lightbox/baguetteBox.min.js" as="script">
+    <link rel="preload" href="/js/lib/lightbox/baguetteBox.min.css" as="style" >
+  
+  
+    <link rel="preload" href="/js/lib/lozad.min.js" as="script">
+  
+  
+  
+  
+  
+  
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+  <body>
+    <div class="wrapper">
+       
+      <nav class="navbar">
+  <div class="navbar-logo">
+    <a class="navbar-logo-main" href="/">
+      
+      <span class="navbar-logo-dsc">简单且极端</span>
+      </a>
+  </div>
+  <div class="navbar-menu">
+    
+      <a 
+        href="/" 
+        class="navbar-menu-item">
+        
+          首页
+        
+      </a>
+    
+      <a 
+        href="/archives" 
+        class="navbar-menu-item">
+        
+          归档
+        
+      </a>
+    
+      <a 
+        href="/tags" 
+        class="navbar-menu-item">
+        
+          标签
+        
+      </a>
+    
+      <a 
+        href="/categories" 
+        class="navbar-menu-item">
+        
+          分类
+        
+      </a>
+    
+    <button 
+      class="navbar-menu-item darknavbar navbar-menu-btn" 
+      aria-label="Toggle dark mode"
+      id="dark">
+      <i class="iconfont icon-weather"></i>
+    </button>
+    <button 
+      class="navbar-menu-item searchnavbar navbar-menu-btn" 
+      aria-label="Toggle search"
+      id="search">
+      <!-- <i 
+        class="iconfont icon-search" 
+        style="font-size: 1.2rem; font-weight: 400;">
+      </i> -->
+      <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img"
+        class="iconify iconify--ion" width="28" height="28" preserveAspectRatio="xMidYMid meet" viewBox="0 0 512 512">
+        <path fill="none" stroke="currentColor" stroke-miterlimit="10" stroke-width="28"
+          d="M256 80a176 176 0 1 0 176 176A176 176 0 0 0 256 80Z"></path>
+        <path fill="none" stroke="currentColor" stroke-miterlimit="10" stroke-width="28"
+          d="M232 160a72 72 0 1 0 72 72a72 72 0 0 0-72-72Z"></path>
+        <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="28"
+          d="M283.64 283.64L336 336"></path>
+      </svg>
+    </button>
+  </div>
+</nav> 
+      
+      <div 
+        id="local-search" 
+        style="display: none">
+        <input
+          class="navbar-menu-item"
+          id="search-input"
+          placeholder="请输入搜索内容..." />
+        <div id="search-content"></div>
+      </div>
+      
+      <div class="section-wrap">
+        <div class="container">
+          <div class="columns">
+            <aside class="left-column">
+              
+              <div class="card card-author">
+                
+  <img 
+    src="https://img.songhn.com/img/Y67gdd.png" 
+    class="author-img"
+    width="88"
+    height="88"
+    alt="author avatar">
+
+<p class="author-name">简单且极端</p>
+<p class="author-description">designed by theme-kaze</p>
+<div class="author-message">
+  <a 
+    class="author-posts-count" 
+    href="/archives">
+    <span>8</span>
+    <span>文章</span>
+  </a>
+  <a 
+    class="author-categories-count" 
+    href="/categories">
+    <span>1</span>
+    <span>分类</span>
+  </a>
+  <a 
+    class="author-tags-count" 
+    href="/tags">
+    <span>1</span>
+    <span>标签</span>
+  </a>
+</div>
+
+              </div>
+               <div class="sticky-tablet">
+  
+  
+    <article class="display-when-two-columns spacer">
+      <div class="card card-content toc-card">
+        <div class="toc-header">
+  <i 
+    class="iconfont icon-menu" 
+    style="padding-right: 2px;">
+  </i>目录
+</div>
+<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%8A%BD%E8%B1%A1%E5%B7%A5%E5%8E%82%E6%A8%A1%E5%BC%8F%EF%BC%88Abstract-Factory-%E6%A8%A1%E5%BC%8F%EF%BC%89"><span class="toc-text">抽象工厂模式（Abstract Factory 模式）</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E7%B1%BB%E5%9B%BE"><span class="toc-text">示例类图</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E7%A8%8B%E5%BA%8F"><span class="toc-text">示例程序</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8A%BD%E8%B1%A1%E7%B1%BB%E7%9A%84%E9%9B%B6%E4%BB%B6%EF%BC%9AItem-%E7%B1%BB"><span class="toc-text">抽象类的零件：Item 类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8A%BD%E8%B1%A1%E7%9A%84%E9%9B%B6%E4%BB%B6%EF%BC%9ALink%E7%B1%BB"><span class="toc-text">抽象的零件：Link类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8A%BD%E8%B1%A1%E7%9A%84%E9%9B%B6%E4%BB%B6%EF%BC%9ATray%E7%B1%BB"><span class="toc-text">抽象的零件：Tray类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8A%BD%E8%B1%A1%E7%9A%84%E4%BA%A7%E5%93%81%EF%BC%9APage%E7%B1%BB"><span class="toc-text">抽象的产品：Page类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8A%BD%E8%B1%A1%E7%9A%84%E5%B7%A5%E5%8E%82%EF%BC%9AFactory-%E7%B1%BB"><span class="toc-text">抽象的工厂：Factory 类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8%E5%B7%A5%E5%8E%82%E5%B0%86%E9%9B%B6%E4%BB%B6%E7%BB%84%E8%A3%85%E7%A7%B0%E4%B8%BA%E4%BA%A7%E5%93%81%EF%BC%9AMain%E7%B1%BB"><span class="toc-text">使用工厂将零件组装称为产品：Main类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B7%E4%BD%93%E7%9A%84%E5%B7%A5%E5%8E%82%EF%BC%9AListFactory%E7%B1%BB"><span class="toc-text">具体的工厂：ListFactory类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B7%E4%BD%93%E7%9A%84%E9%9B%B6%E4%BB%B6%EF%BC%9AListLink%E7%B1%BB"><span class="toc-text">具体的零件：ListLink类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B7%E4%BD%93%E7%9A%84%E9%9B%B6%E4%BB%B6%EF%BC%9AListTray%E7%B1%BB"><span class="toc-text">具体的零件：ListTray类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B7%E4%BD%93%E7%9A%84%E4%BA%A7%E5%93%81%EF%BC%9AListPage%E7%B1%BB"><span class="toc-text">具体的产品：ListPage类</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%BA%E7%A4%BA%E4%BE%8B%E7%A8%8B%E5%BA%8F%E5%A2%9E%E5%8A%A0%E5%85%B6%E4%BB%96%E5%B7%A5%E5%8E%82"><span class="toc-text">为示例程序增加其他工厂</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B7%E4%BD%93%E7%9A%84%E5%B7%A5%E5%8E%82%EF%BC%9ATableFactory%E7%B1%BB"><span class="toc-text">具体的工厂：TableFactory类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B7%E4%BD%93%E7%9A%84%E9%9B%B6%E4%BB%B6%EF%BC%9ATableLink%E7%B1%BB"><span class="toc-text">具体的零件：TableLink类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B7%E4%BD%93%E7%9A%84%E9%9B%B6%E4%BB%B6%EF%BC%9ATableTray%E7%B1%BB"><span class="toc-text">具体的零件：TableTray类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B7%E4%BD%93%E7%9A%84%E4%BA%A7%E5%93%81%EF%BC%9ATablePage%E7%B1%BB"><span class="toc-text">具体的产品：TablePage类</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Abstract-Factory-%E6%A8%A1%E5%BC%8F%E7%9A%84%E7%B1%BB%E5%9B%BE"><span class="toc-text">Abstract Factory 模式的类图</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Abstract-Factory-%E6%A8%A1%E5%BC%8F%E4%B8%AD%E7%9A%84%E7%99%BB%E5%9C%BA%E8%A7%92%E8%89%B2"><span class="toc-text">Abstract Factory 模式中的登场角色</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#AbstractProduct%EF%BC%88%E6%8A%BD%E8%B1%A1%E4%BA%A7%E5%93%81%EF%BC%89"><span class="toc-text">AbstractProduct（抽象产品）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#AbstractFactory%EF%BC%88%E6%8A%BD%E8%B1%A1%E5%B7%A5%E5%8E%82%EF%BC%89"><span class="toc-text">AbstractFactory（抽象工厂）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Client%EF%BC%88%E5%A7%94%E6%89%98%E8%80%85%EF%BC%89"><span class="toc-text">Client（委托者）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ConcreteProduct%EF%BC%88%E5%85%B7%E4%BD%93%E4%BA%A7%E5%93%81%EF%BC%89"><span class="toc-text">ConcreteProduct（具体产品）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ConcreteFactory%EF%BC%88%E5%85%B7%E4%BD%93%E5%B7%A5%E5%8E%82%EF%BC%89"><span class="toc-text">ConcreteFactory（具体工厂）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%9D%E8%B7%AF%E8%A6%81%E7%82%B9"><span class="toc-text">思路要点</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%98%93%E4%BA%8E%E5%A2%9E%E5%8A%A0%E5%85%B7%E4%BD%93%E7%9A%84%E5%B7%A5%E5%8E%82"><span class="toc-text">易于增加具体的工厂</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%9A%BE%E4%BB%A5%E5%A2%9E%E5%8A%A0%E6%96%B0%E7%9A%84%E9%9B%B6%E4%BB%B6"><span class="toc-text">难以增加新的零件</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%89%80%E5%AD%A6%E7%9F%A5%E8%AF%86"><span class="toc-text">所学知识</span></a></li></ol></li></ol>
+      </div>
+    </article>
+  
+  
+  <article class="card card-content categories-widget">
+    <div class="categories-card">
+  <div class="categories-header">
+    <i 
+      class="iconfont icon-fenlei" 
+      style="padding-right: 2px;">
+    </i>分类
+  </div>
+  <div class="categories-list">
+    
+      <a href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">
+        <div class="categories-list-item">
+          设计模式
+          <span class="categories-list-item-badge">8</span>
+        </div>
+      </a>
+    
+  </div>
+</div>
+  </article>
+  
+  <article class="card card-content tags-widget">
+    <div class="tags-card">
+  <div class="tags-header">
+    <i 
+      class="iconfont icon-biaoqian" 
+      style="padding-right: 2px;">
+    </i>热门标签
+  </div>
+  <div class="tags-list">
+    
+      <a 
+        href="/tags/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" 
+        title="设计模式">
+        <div class="tags-list-item">设计模式</div>
+      </a>
+    
+  </div>
+</div>
+  </article>
+  
+  
+</div>
+            </aside>
+            <main class="main-column">
+              
+<article class="card card-content">
+  <header>
+    <h1 class="post-title">
+      抽象工厂模式
+    </h1>
+  </header>
+  <div class="post-meta post-show-meta">
+    <time datetime="2022-08-22T08:51:37.340Z">
+      <i 
+        class="iconfont icon-calendar" 
+        style="margin-right: 2px;">
+      </i>
+      <span>2022-08-22</span>
+    </time>
+    
+      <span class="dot"></span>
+      
+        <a 
+          href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" 
+          class="post-meta-link">
+          设计模式
+        </a>
+      
+    
+    
+      <span class="dot"></span>
+      <span>4k 字</span>
+    
+  </div>
+  
+    <div 
+      class="post-meta post-show-meta" 
+      style="margin-top: -10px;">
+      <div style="display: flex; align-items: center;">
+        <i 
+          class="iconfont icon-biaoqian" 
+          style="margin-right: 2px; font-size: 1.15rem;">
+        </i>
+        
+          
+          <a 
+            href="/tags/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" 
+            class="post-meta-link">
+            设计模式
+          </a>
+        
+      </div>
+    </div>
+  
+  </header>
+  <div 
+    id="section" 
+    class="post-content">
+    <h1 id="抽象工厂模式（Abstract-Factory-模式）"><a href="#抽象工厂模式（Abstract-Factory-模式）" class="headerlink" title="抽象工厂模式（Abstract Factory 模式）"></a>抽象工厂模式（Abstract Factory 模式）</h1><blockquote>
+<p>学习Abstract Factory 模式。</p>
+<p>Abstract 的意思是“抽象的”，Factory的意思是“工厂”。将它们组合起来我们就可以知道 Abstract Factory 表示“抽象工厂”的意思。</p>
+<p>通常，我们不会将“抽象的”这个词与“工厂”这个词联系到一起。所谓工厂，是将零件组装成产品的地方，这是一项具体的工作。那么“抽象工厂”到底是什么意思？</p>
+<p>因为在Abstract Factory 模式中，不仅有“抽象工厂”，还有“抽象零件”和“抽象产品”。<strong>抽象工厂的工作是将“抽象零件”组装为“抽象产品”</strong>。</p>
+<p>大家先回忆一下面向对象编程中的”抽象“这个词的具体含义。它指的是”不考虑具体怎样实现，而是仅关注接口（API）“的状态。例如，抽象方法（Abstract Method）并不定义方法的具体实现，而是仅仅只确定了方法的名字和签名（参数的类型和个数）。</p>
+<p>关于”忘记方法的具体实现（假装忘记），使用抽象方法进行编程“的设计思想，我们在Template Method 模式和 Builder模式中已经稍微提及了一些。</p>
+<p>在Abstract Factory 模式中将会出现抽象工厂，它会将抽象零件组装为抽象产品。也就是说，我们并不关心零件的具体实现，而是只关心接口（API）。我们仅使用该接口（API）将零件组装成为具体的产品。</p>
+</blockquote>
+<h2 id="示例类图"><a href="#示例类图" class="headerlink" title="示例类图"></a>示例类图</h2><blockquote>
+<p><img src="/2022/08/22/AbstractFactoryPattern/image-20220823140846631.png" alt="image-20220823140846631" srcset="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20300%20300'%3E%3C/svg%3E" data-src="/2022/08/22/AbstractFactoryPattern/image-20220823140846631.png" class="lozad post-image"></p>
+</blockquote>
+<h2 id="示例程序"><a href="#示例程序" class="headerlink" title="示例程序"></a>示例程序</h2><blockquote>
+<p>实例程序中，类被划分为以下3个包。</p>
+<ul>
+<li>factory包：包含抽象工厂、零件、产品的包</li>
+<li>无名包：包含Main类的包</li>
+<li>listfactory包：包含具体工厂、零件、产品的包（这里使用<code>&lt;ul&gt;</code>标签输出为HTML文件）</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>包</th>
+<th>名字</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>factory</td>
+<td>Factory</td>
+<td>表示抽象工厂的类（制作Link、Tray、Page）</td>
+</tr>
+<tr>
+<td>factory</td>
+<td>Item</td>
+<td>方便统一处理Link和Tray的类</td>
+</tr>
+<tr>
+<td>factory</td>
+<td>Link</td>
+<td>抽象零件：表示HTML的链接的类</td>
+</tr>
+<tr>
+<td>factory</td>
+<td>Tray</td>
+<td>抽象零件：表示含有Link和Tray的类</td>
+</tr>
+<tr>
+<td>factory</td>
+<td>Page</td>
+<td>抽象零件：表示HTML页面的类</td>
+</tr>
+<tr>
+<td>无名</td>
+<td>Main</td>
+<td>测试程序行为的类</td>
+</tr>
+<tr>
+<td>listfactory</td>
+<td>ListFactory</td>
+<td>表示具体工厂的类（制作ListLink、ListTray、ListPage）</td>
+</tr>
+<tr>
+<td>listfactory</td>
+<td>ListLink</td>
+<td>具体零件：表示HTML的链接的类</td>
+</tr>
+<tr>
+<td>listfactory</td>
+<td>ListTray</td>
+<td>具体零件：表示含有Link和Tray的类</td>
+</tr>
+<tr>
+<td>listfactory</td>
+<td>ListPage</td>
+<td>具体零件：表示HTML页面的类</td>
+</tr>
+</tbody></table>
+<h3 id="抽象类的零件：Item-类"><a href="#抽象类的零件：Item-类" class="headerlink" title="抽象类的零件：Item 类"></a>抽象类的零件：Item 类</h3><p>Item类是Link类和Tray类的父类（Item有“项目”的意思）。这样，Link类和Tray类就具有可替换性了。</p>
+<p>caption字段表示项目的“标题”</p>
+<p>makeHTML方法是抽象方法，需要子类来实现这个方法。该方法会返回HTML文件的内容（需要子类去实现）。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">abstract</span> <span class="token keyword">class</span> <span class="token class-name">Item</span> <span class="token punctuation">&#123;</span>
+    <span class="token comment">/**
+     * 标题
+     */</span>
+    <span class="token keyword">protected</span> <span class="token class-name">String</span> caption<span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> <span class="token class-name">Item</span><span class="token punctuation">(</span><span class="token class-name">String</span> caption<span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>caption <span class="token operator">=</span> caption<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 返回HTML文件的内容
+     * @return 文件名
+     */</span>
+    <span class="token keyword">public</span> <span class="token keyword">abstract</span> <span class="token class-name">String</span> <span class="token function">makeHTML</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="抽象的零件：Link类"><a href="#抽象的零件：Link类" class="headerlink" title="抽象的零件：Link类"></a>抽象的零件：Link类</h3><p>Link类是抽象地表示HTML的超链接的类</p>
+<p>url字段中保存的是超链接所指向的地址。乍一看，在Link类中好像一个抽象方法都没有，但实际上并非如此。由于Link类中没有实现父类（Item类）的抽象方法（makeHTML），因此它也是抽象类。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">abstract</span> <span class="token keyword">class</span> <span class="token class-name">Link</span> <span class="token keyword">extends</span> <span class="token class-name">Item</span><span class="token punctuation">&#123;</span>
+    <span class="token comment">/**
+     * 超链接的地址
+     */</span>
+    <span class="token keyword">protected</span> <span class="token class-name">String</span> url<span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> <span class="token class-name">Link</span><span class="token punctuation">(</span><span class="token class-name">String</span> caption<span class="token punctuation">,</span> <span class="token class-name">String</span> url<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">super</span><span class="token punctuation">(</span>caption<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>url <span class="token operator">=</span> url<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="抽象的零件：Tray类"><a href="#抽象的零件：Tray类" class="headerlink" title="抽象的零件：Tray类"></a>抽象的零件：Tray类</h3><p>Tray类表示的是一个含有多个Link类和Tray类的容器（Tray有托盘的意思。想象成在托盘上放置着一个一个项目）。</p>
+<p>Tray类使用add方法将Link类和Tray类集合在一起。为了表示集合的对象是“Link类和Tray类”，我们设置add方法的参数为Link类和Tray类的父类Item类。</p>
+<p>虽然Tray类也继承了Item类的抽象方法makeHTML，但它并没有实现该方法。因此，Tray类也是抽象类。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">abstract</span> <span class="token keyword">class</span> <span class="token class-name">Tray</span> <span class="token keyword">extends</span> <span class="token class-name">Item</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">protected</span> <span class="token class-name">ArrayList</span> tray <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">ArrayList</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> <span class="token class-name">Tray</span><span class="token punctuation">(</span><span class="token class-name">String</span> caption<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">super</span><span class="token punctuation">(</span>caption<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">add</span><span class="token punctuation">(</span><span class="token class-name">Item</span> item<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        tray<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>item<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="抽象的产品：Page类"><a href="#抽象的产品：Page类" class="headerlink" title="抽象的产品：Page类"></a>抽象的产品：Page类</h3><p>Page类是抽象地表示HTML页面的类。如果Link和Tray比喻成抽象的“零件”，那么Page类就是抽象的“产品”。title和author分别是表示页面标题和页面作者的字段。作者名字通过参数传递给Page类的构造函数。</p>
+<p>可以使用add方法向页面中增加Item（即Link或Tray）。增加的Item将会在页面中显示出来。</p>
+<p>output方法首先根据页面标题确定文件名，接着调用makeHTML方法将会自身保存的HTML内容写到文件中，</p>
+<p>其中，我们可以去掉如下语句（1）中的this，将其写为如下语句（2）那样。</p>
+<ul>
+<li>writer.write(this.makeHTML());          （1）</li>
+<li>writer.write(makeHTML);                    （2）</li>
+</ul>
+<p>为了强调用的是Page类自己的makeHTML方法，我们显式地加上了this。这里调用的makeHTML方法是一个抽象方法。output方法是一个简单的<strong>Template Method 模式</strong>的方法。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">abstract</span> <span class="token keyword">class</span> <span class="token class-name">Page</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">protected</span> <span class="token class-name">String</span> title<span class="token punctuation">;</span>
+    <span class="token keyword">protected</span> <span class="token class-name">String</span> author<span class="token punctuation">;</span>
+    <span class="token keyword">protected</span> <span class="token class-name">ArrayList</span> content <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">ArrayList</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> <span class="token class-name">Page</span><span class="token punctuation">(</span><span class="token class-name">String</span> title<span class="token punctuation">,</span> <span class="token class-name">String</span> author<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>title <span class="token operator">=</span> title<span class="token punctuation">;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>author <span class="token operator">=</span> author<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">add</span><span class="token punctuation">(</span><span class="token class-name">Item</span> item<span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+        content<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>item<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">output</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">try</span> <span class="token punctuation">&#123;</span>
+            <span class="token class-name">String</span> filename <span class="token operator">=</span> title <span class="token operator">+</span> <span class="token string">".html"</span><span class="token punctuation">;</span>
+            <span class="token class-name">Writer</span> writer <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">FileWriter</span><span class="token punctuation">(</span>filename<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            writer<span class="token punctuation">.</span><span class="token function">write</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">.</span><span class="token function">makeHTML</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            writer<span class="token punctuation">.</span><span class="token function">close</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span>filename <span class="token operator">+</span> <span class="token string">"编写完成。"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">IOException</span> e<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            e<span class="token punctuation">.</span><span class="token function">printStackTrace</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+    <span class="token punctuation">&#125;</span>
+    <span class="token keyword">public</span> <span class="token keyword">abstract</span> <span class="token class-name">String</span> <span class="token function">makeHTML</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="抽象的工厂：Factory-类"><a href="#抽象的工厂：Factory-类" class="headerlink" title="抽象的工厂：Factory 类"></a>抽象的工厂：Factory 类</h3><p>代码中的getFactory方法可以根据知道的类名生成具体工厂的实例。例如，可以像下面这样，将参数classname指定为具体工厂的类名所对应的字符串。</p>
+<p>“listfactory.ListFactory”</p>
+<p>getFactory方法通过<strong>调用Class类的forName方法来动态的读取类信息，接着使用newInstance方法生成该类的实例</strong>，并将其作为返回值返回给调用者。</p>
+<p>Class类属于java.lang包，是用来表示的类。Class类包含与Java的标准类库中。forName是java.lang.Class的类方法（静态方法），newInstance则是java.lang.Class的实例方法。</p>
+<p>请注意，虽然getFactory方法生成的是具体工厂的实例，但是返回值的类型是生成抽象工厂类型。</p>
+<p>createLink、createTray、createPage等方法是用于在抽象工厂中生成零件和产品的方法。这些方法都是抽象方法，具体的实现被交给了Factory类的子类。不过，确定了犯法的名字和签名。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">abstract</span> <span class="token keyword">class</span> <span class="token class-name">Factory</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token class-name">Factory</span> <span class="token function">getFactory</span><span class="token punctuation">(</span><span class="token class-name">String</span> classname<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token class-name">Factory</span> factory <span class="token operator">=</span> <span class="token keyword">null</span><span class="token punctuation">;</span>
+        <span class="token keyword">try</span> <span class="token punctuation">&#123;</span>
+            factory <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token class-name">Factory</span><span class="token punctuation">)</span> <span class="token class-name">Class</span><span class="token punctuation">.</span><span class="token function">forName</span><span class="token punctuation">(</span>classname<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">newInstance</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">ClassNotFoundException</span> e<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"没有找到"</span> <span class="token operator">+</span> classname <span class="token operator">+</span> <span class="token string">"类。"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">Exception</span> e<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            e<span class="token punctuation">.</span><span class="token function">printStackTrace</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+        <span class="token keyword">return</span> factory<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+    <span class="token keyword">public</span> <span class="token keyword">abstract</span> <span class="token class-name">Link</span> <span class="token function">createLink</span><span class="token punctuation">(</span><span class="token class-name">String</span> caption<span class="token punctuation">,</span> <span class="token class-name">String</span> url<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">public</span> <span class="token keyword">abstract</span> <span class="token class-name">Tray</span> <span class="token function">createTray</span><span class="token punctuation">(</span><span class="token class-name">String</span> caption<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">public</span> <span class="token keyword">abstract</span> <span class="token class-name">Page</span> <span class="token function">createPage</span><span class="token punctuation">(</span><span class="token class-name">String</span> title<span class="token punctuation">,</span> <span class="token class-name">String</span> author<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="使用工厂将零件组装称为产品：Main类"><a href="#使用工厂将零件组装称为产品：Main类" class="headerlink" title="使用工厂将零件组装称为产品：Main类"></a>使用工厂将零件组装称为产品：Main类</h3><p>在理解了抽象的零件、产品、工厂的代码后，我们看看Main类的代码Main类使用使用抽象工厂生产零件并将零件组装成产品。Main类中只引入了factory包，从这一点可以看出，<strong>该类并没有使用任何具体零件、产品和工厂</strong>。</p>
+<p>具体工厂的类名是通过命令行来指定的。例如，如果要使用listfactory包中的ListFactory类，可以在命令行中输入命令。</p>
+<ul>
+<li>java Main listfactory.ListFactory</li>
+</ul>
+<p>Main类会使用getFactory方法生成该参数（arg[0]）对应的工厂，并将其保存在factory变量中。</p>
+<p>之后，Main类会使用factory生成Link和Tray，然后将Link和Tray都放入Tray中，最后生成Page并将生成结果输出至文件。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">Main</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token class-name">String</span><span class="token punctuation">[</span><span class="token punctuation">]</span> args<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>args<span class="token punctuation">.</span>length <span class="token operator">!=</span> <span class="token number">1</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"Usage: java Main class.name.of.ConcreteFactory"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token comment">//pers.abstractFactory.sampleCode.listfactory.ListFactory</span>
+            <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"Example 1: java Main listfactory.ListFactory"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"Example 1: java Main tablefactory.TableFactory"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token class-name">System</span><span class="token punctuation">.</span><span class="token function">exit</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+        <span class="token class-name">Factory</span> factory <span class="token operator">=</span> <span class="token class-name">Factory</span><span class="token punctuation">.</span><span class="token function">getFactory</span><span class="token punctuation">(</span>args<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token class-name">Link</span> people <span class="token operator">=</span> factory<span class="token punctuation">.</span><span class="token function">createLink</span><span class="token punctuation">(</span><span class="token string">"人民日报"</span><span class="token punctuation">,</span> <span class="token string">"http://www.people.com.cn/"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">Link</span> gmw <span class="token operator">=</span> factory<span class="token punctuation">.</span><span class="token function">createLink</span><span class="token punctuation">(</span><span class="token string">"光明日报"</span><span class="token punctuation">,</span> <span class="token string">"http://www.gmw.cn/"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token class-name">Link</span> us_yahoo <span class="token operator">=</span> factory<span class="token punctuation">.</span><span class="token function">createLink</span><span class="token punctuation">(</span><span class="token string">"Yahoo!"</span><span class="token punctuation">,</span> <span class="token string">"http://www.people.com.cn/"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">Link</span> jp_yahoo <span class="token operator">=</span> factory<span class="token punctuation">.</span><span class="token function">createLink</span><span class="token punctuation">(</span><span class="token string">"Yahoo!Japan"</span><span class="token punctuation">,</span> <span class="token string">"http://www.yahoo.co.jp/"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">Link</span> excite <span class="token operator">=</span> factory<span class="token punctuation">.</span><span class="token function">createLink</span><span class="token punctuation">(</span><span class="token string">"Excite"</span><span class="token punctuation">,</span> <span class="token string">"http://www.excite.com/"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">Link</span> google <span class="token operator">=</span> factory<span class="token punctuation">.</span><span class="token function">createLink</span><span class="token punctuation">(</span><span class="token string">"Google"</span><span class="token punctuation">,</span> <span class="token string">"http://www.google.com/"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token class-name">Tray</span> trayNews <span class="token operator">=</span> factory<span class="token punctuation">.</span><span class="token function">createTray</span><span class="token punctuation">(</span><span class="token string">"日报"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        trayNews<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>people<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        trayNews<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>gmw<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token class-name">Tray</span> trayYahoo <span class="token operator">=</span> factory<span class="token punctuation">.</span><span class="token function">createTray</span><span class="token punctuation">(</span><span class="token string">"Yahoo"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        trayYahoo<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>us_yahoo<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        trayYahoo<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>jp_yahoo<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token class-name">Tray</span> traySearch <span class="token operator">=</span> factory<span class="token punctuation">.</span><span class="token function">createTray</span><span class="token punctuation">(</span><span class="token string">"检索引擎"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        traySearch<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>trayYahoo<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        traySearch<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>excite<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        traySearch<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>google<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token class-name">Page</span> page <span class="token operator">=</span> factory<span class="token punctuation">.</span><span class="token function">createPage</span><span class="token punctuation">(</span><span class="token string">"LinkPage"</span><span class="token punctuation">,</span> <span class="token string">"杨文轩"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        page<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>trayNews<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        page<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>traySearch<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        page<span class="token punctuation">.</span><span class="token function">output</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="具体的工厂：ListFactory类"><a href="#具体的工厂：ListFactory类" class="headerlink" title="具体的工厂：ListFactory类"></a>具体的工厂：ListFactory类</h3><p>ListFactory类实现了Factory类的createLink方法、createTray方法以及createPage方法。当然，各个方法内部只是分别简单的new出了ListLink类的实例、ListTray类的实例以及ListPage类的实例。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">ListFactory</span> <span class="token keyword">extends</span> <span class="token class-name">Factory</span> <span class="token punctuation">&#123;</span>
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token class-name">Link</span> <span class="token function">createLink</span><span class="token punctuation">(</span><span class="token class-name">String</span> caption<span class="token punctuation">,</span> <span class="token class-name">String</span> url<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> <span class="token keyword">new</span> <span class="token class-name">ListLink</span><span class="token punctuation">(</span>caption<span class="token punctuation">,</span>url<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token class-name">Tray</span> <span class="token function">createTray</span><span class="token punctuation">(</span><span class="token class-name">String</span> caption<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> <span class="token keyword">new</span> <span class="token class-name">ListTray</span><span class="token punctuation">(</span>caption<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token class-name">Page</span> <span class="token function">createPage</span><span class="token punctuation">(</span><span class="token class-name">String</span> title<span class="token punctuation">,</span> <span class="token class-name">String</span> author<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> <span class="token keyword">new</span> <span class="token class-name">ListPage</span><span class="token punctuation">(</span>title<span class="token punctuation">,</span> author<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="具体的零件：ListLink类"><a href="#具体的零件：ListLink类" class="headerlink" title="具体的零件：ListLink类"></a>具体的零件：ListLink类</h3><p>ListLink类是Link类的子类。在ListLink类中必须实现的方法是哪个呢？对了，就是在父类中声明的makeHTML抽象方法。ListLink类使用<code>&lt;li&gt;</code>标签和<code>&lt;a&gt;</code>标签来制作HTML片段。这段HTML片段也可以ListTary和ListPage的结果合并起来，就如同将螺栓和螺母拧在一起一样。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">ListLink</span> <span class="token keyword">extends</span> <span class="token class-name">Link</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">public</span> <span class="token class-name">ListLink</span><span class="token punctuation">(</span><span class="token class-name">String</span> caption<span class="token punctuation">,</span> <span class="token class-name">String</span> url<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">super</span><span class="token punctuation">(</span>caption<span class="token punctuation">,</span> url<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 返回HTML文件的内容
+     * @return 文件名
+     */</span>
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token class-name">String</span> <span class="token function">makeHTML</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> <span class="token string">"&lt;li>&lt;a href = \""</span> <span class="token operator">+</span> url <span class="token operator">+</span> <span class="token string">"\">"</span> <span class="token operator">+</span> caption <span class="token operator">+</span> <span class="token string">"&lt;/a>&lt;/li>\n"</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="具体的零件：ListTray类"><a href="#具体的零件：ListTray类" class="headerlink" title="具体的零件：ListTray类"></a>具体的零件：ListTray类</h3><p>ListTray类是Tray类的子类。这里我们重点看一下makeHTML方法是如何实现的。tray字段中保存了所有需要以HTML格式输出的Item，而负责将它们以HTML格式输出的就是makeHTML方法了。</p>
+<p>makeHTML方法首先使用<li>标签输出标题（caption），接着使用<ul> 和<li>标签输出每个Item。输出的结果先暂时保存在StringBuffer中，最后再通过toString方法将输出结果转换为String类型并返回给调用者。</li></ul></li></p>
+<p>那么每个Item又是如何输出为HTML格式的呢？当然就是调用每个Item的makeHTML方法了。请注意，这里并不关心item中保存的实例究竟是ListLink的实例韩式ListTray的实例，只是简单的调用了item.makeHTML()语句而已。这里不<strong>能使用switch语句或if语句去判断item中保存的实例的类型</strong>，否则就是非面向对象编程了。变量item是Item类型的，而Item类有声明了makeHTML方法，而ListLink类和ListTray类都是Item类的子类，因此可以放心调用了。之后item会帮我们进行处理。至于item究竟进行了什么样的处理，只有item的实例（对象才知道。这就是面向对象的优点。</p>
+<p>这里使用的java.util.Iterator类与我们在Iterator模式中学习的迭代去在功能上是相同的，不过它是Java类库中自带的。为了从java.util.ArrayList类中得到java.util.Iterator,我们调用iterator方法。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">ListTray</span> <span class="token keyword">extends</span> <span class="token class-name">Tray</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">public</span> <span class="token class-name">ListTray</span><span class="token punctuation">(</span><span class="token class-name">String</span> caption<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">super</span><span class="token punctuation">(</span>caption<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 返回HTML文件的内容
+     * @return 文件名
+     */</span>
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token class-name">String</span> <span class="token function">makeHTML</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token class-name">StringBuffer</span> buffer <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">StringBuffer</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        buffer<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span><span class="token string">"&lt;li>\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        buffer<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span>caption <span class="token operator">+</span> <span class="token string">"\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        buffer<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span><span class="token string">"&lt;ul>\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">Iterator</span> it <span class="token operator">=</span> tray<span class="token punctuation">.</span><span class="token function">iterator</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">while</span> <span class="token punctuation">(</span>it<span class="token punctuation">.</span><span class="token function">hasNext</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token class-name">Item</span> item <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token class-name">Item</span><span class="token punctuation">)</span> it<span class="token punctuation">.</span><span class="token function">next</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            buffer<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span>item<span class="token punctuation">.</span><span class="token function">makeHTML</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+        buffer<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span><span class="token string">"&lt;/ul>\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        buffer<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span><span class="token string">"&lt;/li>\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> buffer<span class="token punctuation">.</span><span class="token function">toString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="具体的产品：ListPage类"><a href="#具体的产品：ListPage类" class="headerlink" title="具体的产品：ListPage类"></a>具体的产品：ListPage类</h3><p>ListPage类是Page类的子类。ListPage将字段中保存的内容输出为HTML格式。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">ListPage</span> <span class="token keyword">extends</span> <span class="token class-name">Page</span> <span class="token punctuation">&#123;</span>
+
+    <span class="token keyword">public</span> <span class="token class-name">ListPage</span><span class="token punctuation">(</span><span class="token class-name">String</span> title<span class="token punctuation">,</span> <span class="token class-name">String</span> author<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">super</span><span class="token punctuation">(</span>title<span class="token punctuation">,</span> author<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token class-name">String</span> <span class="token function">makeHTML</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token class-name">StringBuffer</span> buffer <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">StringBuffer</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        buffer<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span><span class="token string">"&lt;html>&lt;head>&lt;meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />&lt;title>"</span> <span class="token operator">+</span> title <span class="token operator">+</span> <span class="token string">"&lt;/title>&lt;/head>\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        buffer<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span><span class="token string">"&lt;body>\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        buffer<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span><span class="token string">"&lt;h1>"</span> <span class="token operator">+</span> title <span class="token operator">+</span> <span class="token string">"&lt;/h1>"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        buffer<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span><span class="token string">"&lt;ul>\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">Iterator</span> it <span class="token operator">=</span> content<span class="token punctuation">.</span><span class="token function">iterator</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">while</span> <span class="token punctuation">(</span>it<span class="token punctuation">.</span><span class="token function">hasNext</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token class-name">Item</span> item <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token class-name">Item</span><span class="token punctuation">)</span> it<span class="token punctuation">.</span><span class="token function">next</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            buffer<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span>item<span class="token punctuation">.</span><span class="token function">makeHTML</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+        buffer<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span><span class="token string">"&lt;/ul>\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        buffer<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span><span class="token string">"&lt;ur>&lt;address>"</span> <span class="token operator">+</span> author <span class="token operator">+</span> <span class="token string">"&lt;/address>"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        buffer<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span><span class="token string">"&lt;/body>&lt;/html>\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> buffer<span class="token punctuation">.</span><span class="token function">toString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+</blockquote>
+<h2 id="为示例程序增加其他工厂"><a href="#为示例程序增加其他工厂" class="headerlink" title="为示例程序增加其他工厂"></a>为示例程序增加其他工厂</h2><blockquote>
+<p>使用tablefactory将超链接以表格形式展示出来。</p>
+<table>
+<thead>
+<tr>
+<th>包</th>
+<th>名字</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>tablefactory</td>
+<td>TableFactory</td>
+<td>表示具体工厂的类（制作TableLink、TableTray、TablePage）</td>
+</tr>
+<tr>
+<td>tablefactory</td>
+<td>TableLink</td>
+<td>具体零件：表示HTML的超链接类</td>
+</tr>
+<tr>
+<td>tablefactory</td>
+<td>TableTray</td>
+<td>具体零件：表示含有Link和Tray的类</td>
+</tr>
+<tr>
+<td>tablefactory</td>
+<td>TablePage</td>
+<td>具体零件：表示HTML页面的类</td>
+</tr>
+</tbody></table>
+<h3 id="具体的工厂：TableFactory类"><a href="#具体的工厂：TableFactory类" class="headerlink" title="具体的工厂：TableFactory类"></a>具体的工厂：TableFactory类</h3><p>TableFactory类是Factory类的子类。createLink方法、createTray方法以及createPage方法的处理是分别生成TableLink、TableTray、TablePage的实例。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">TableFactory</span> <span class="token keyword">extends</span> <span class="token class-name">Factory</span> <span class="token punctuation">&#123;</span>
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token class-name">Link</span> <span class="token function">createLink</span><span class="token punctuation">(</span><span class="token class-name">String</span> caption<span class="token punctuation">,</span> <span class="token class-name">String</span> url<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> <span class="token keyword">new</span> <span class="token class-name">TableLink</span><span class="token punctuation">(</span>caption<span class="token punctuation">,</span>url<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token class-name">Tray</span> <span class="token function">createTray</span><span class="token punctuation">(</span><span class="token class-name">String</span> caption<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> <span class="token keyword">new</span> <span class="token class-name">TableTray</span><span class="token punctuation">(</span>caption<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token class-name">Page</span> <span class="token function">createPage</span><span class="token punctuation">(</span><span class="token class-name">String</span> title<span class="token punctuation">,</span> <span class="token class-name">String</span> author<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> <span class="token keyword">new</span> <span class="token class-name">TablePage</span><span class="token punctuation">(</span>title<span class="token punctuation">,</span>author<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="具体的零件：TableLink类"><a href="#具体的零件：TableLink类" class="headerlink" title="具体的零件：TableLink类"></a>具体的零件：TableLink类</h3><p>TableLink类是Link类的子类。它的makeHTML方法的处理是使用<td>标签创建表格的列。</td></p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">TableLink</span> <span class="token keyword">extends</span> <span class="token class-name">Link</span> <span class="token punctuation">&#123;</span>
+
+    <span class="token keyword">public</span> <span class="token class-name">TableLink</span><span class="token punctuation">(</span><span class="token class-name">String</span> caption<span class="token punctuation">,</span> <span class="token class-name">String</span> url<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">super</span><span class="token punctuation">(</span>caption<span class="token punctuation">,</span> url<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 返回HTML文件的内容
+     *
+     * @return 文件名
+     */</span>
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token class-name">String</span> <span class="token function">makeHTML</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> <span class="token string">"&lt;td>&lt;a href=\""</span> <span class="token operator">+</span> url <span class="token operator">+</span> <span class="token string">"\">"</span> <span class="token operator">+</span> caption <span class="token operator">+</span> <span class="token string">"&lt;/a>&lt;/td>\n"</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="具体的零件：TableTray类"><a href="#具体的零件：TableTray类" class="headerlink" title="具体的零件：TableTray类"></a>具体的零件：TableTray类</h3><p>TableTray类是Tray类的子类，其makeHTML方法的处理是使用<code>&lt;td&gt;</code>和<code>&lt;table&gt;</code>标签输出Item。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">TableTray</span> <span class="token keyword">extends</span> <span class="token class-name">Tray</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">public</span> <span class="token class-name">TableTray</span><span class="token punctuation">(</span><span class="token class-name">String</span> caption<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">super</span><span class="token punctuation">(</span>caption<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 返回HTML文件的内容
+     *
+     * @return 文件名
+     */</span>
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token class-name">String</span> <span class="token function">makeHTML</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token class-name">StringBuffer</span> buffer <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">StringBuffer</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        buffer<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span><span class="token string">"&lt;td>"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        buffer<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span><span class="token string">"&lt;table width=\"100%\" border=\"1\">&lt;tr>"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        buffer<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span><span class="token string">"&lt;td bgcolor=\"#cccccc\" align=\"center\" colspan=\""</span> <span class="token operator">+</span> tray<span class="token punctuation">.</span><span class="token function">size</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">+</span><span class="token string">"\">&lt;b>"</span> <span class="token operator">+</span> caption <span class="token operator">+</span> <span class="token string">"&lt;/b>&lt;/td>"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        buffer<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span><span class="token string">"&lt;/tr>\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        buffer<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span><span class="token string">"&lt;tr>\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">Iterator</span> it <span class="token operator">=</span> tray<span class="token punctuation">.</span><span class="token function">iterator</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">while</span> <span class="token punctuation">(</span>it<span class="token punctuation">.</span><span class="token function">hasNext</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token class-name">Item</span> item <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token class-name">Item</span><span class="token punctuation">)</span> it<span class="token punctuation">.</span><span class="token function">next</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            buffer<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span>item<span class="token punctuation">.</span><span class="token function">makeHTML</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+        buffer<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span><span class="token string">"&lt;/tr>&lt;/table>"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        buffer<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span><span class="token string">"&lt;/td>"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> buffer<span class="token punctuation">.</span><span class="token function">toString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="具体的产品：TablePage类"><a href="#具体的产品：TablePage类" class="headerlink" title="具体的产品：TablePage类"></a>具体的产品：TablePage类</h3><p>TablePage类是Page类的子类。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">TablePage</span> <span class="token keyword">extends</span> <span class="token class-name">Page</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">public</span> <span class="token class-name">TablePage</span><span class="token punctuation">(</span><span class="token class-name">String</span> title<span class="token punctuation">,</span> <span class="token class-name">String</span> author<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">super</span><span class="token punctuation">(</span>title<span class="token punctuation">,</span> author<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token class-name">String</span> <span class="token function">makeHTML</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token class-name">StringBuffer</span> buffer <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">StringBuffer</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        buffer<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span><span class="token string">"&lt;html>&lt;head>&lt;meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />&lt;title>"</span> <span class="token operator">+</span> title <span class="token operator">+</span> <span class="token string">"&lt;/title>&lt;/head>\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        buffer<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span><span class="token string">"&lt;body>\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        buffer<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span><span class="token string">"&lt;h1>"</span> <span class="token operator">+</span> title <span class="token operator">+</span> <span class="token string">"&lt;/h1>\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        buffer<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span><span class="token string">"&lt;table width=\"80%\" border=\"3\" >"</span> <span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">Iterator</span> it <span class="token operator">=</span> content<span class="token punctuation">.</span><span class="token function">iterator</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">while</span> <span class="token punctuation">(</span>it<span class="token punctuation">.</span><span class="token function">hasNext</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token class-name">Item</span> item <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token class-name">Item</span><span class="token punctuation">)</span> it<span class="token punctuation">.</span><span class="token function">next</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            buffer<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span><span class="token string">"&lt;tr>"</span> <span class="token operator">+</span> item<span class="token punctuation">.</span><span class="token function">makeHTML</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token string">"&lt;/tr>"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+        buffer<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span><span class="token string">"&lt;/table>\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        buffer<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span><span class="token string">"&lt;hr>&lt;address>"</span> <span class="token operator">+</span> author <span class="token operator">+</span> <span class="token string">"&lt;/address>"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        buffer<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span><span class="token string">"&lt;/body>&lt;/html>\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> buffer<span class="token punctuation">.</span><span class="token function">toString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+</blockquote>
+<h2 id="Abstract-Factory-模式的类图"><a href="#Abstract-Factory-模式的类图" class="headerlink" title="Abstract Factory 模式的类图"></a>Abstract Factory 模式的类图</h2><blockquote>
+<p><img src="/2022/08/22/AbstractFactoryPattern/image-20220823163743603.png" alt="image-20220823163743603" srcset="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20300%20300'%3E%3C/svg%3E" data-src="/2022/08/22/AbstractFactoryPattern/image-20220823163743603.png" class="lozad post-image"></p>
+</blockquote>
+<h2 id="Abstract-Factory-模式中的登场角色"><a href="#Abstract-Factory-模式中的登场角色" class="headerlink" title="Abstract Factory 模式中的登场角色"></a>Abstract Factory 模式中的登场角色</h2><ul>
+<li><h3 id="AbstractProduct（抽象产品）"><a href="#AbstractProduct（抽象产品）" class="headerlink" title="AbstractProduct（抽象产品）"></a>AbstractProduct（抽象产品）</h3><blockquote>
+<p>AbstractProduct角色负责定义AbstractFactory角色所生成的抽象零件和产品的接口（API）。</p>
+<p>在示例程序中，由Link类、Tray类、和Page类扮演此角色。</p>
+</blockquote>
+</li>
+<li><h3 id="AbstractFactory（抽象工厂）"><a href="#AbstractFactory（抽象工厂）" class="headerlink" title="AbstractFactory（抽象工厂）"></a>AbstractFactory（抽象工厂）</h3><blockquote>
+<p>AbstractFactory角色负责定义用于生产抽象产品的接口（API）。</p>
+<p>在示例程序中，由Factory类扮演此角色。</p>
+</blockquote>
+</li>
+<li><h3 id="Client（委托者）"><a href="#Client（委托者）" class="headerlink" title="Client（委托者）"></a>Client（委托者）</h3><blockquote>
+<p>Client角色仅会调用AbstractFactory角色和AbstractProduct角色的接口（API）来进行工作，对于具体的零件、产品和工厂一无所知。</p>
+<p>在示例程序中，由Main类扮演此角色。</p>
+</blockquote>
+</li>
+<li><h3 id="ConcreteProduct（具体产品）"><a href="#ConcreteProduct（具体产品）" class="headerlink" title="ConcreteProduct（具体产品）"></a>ConcreteProduct（具体产品）</h3><blockquote>
+<p>ConcreteProduct角色负责实现AbstractProduct角色的接口（API）。</p>
+<p>在示例程序中，由以下包中的以下类扮演此角色。</p>
+<ul>
+<li>listfactory包：ListLink类、ListTray类和ListPage类。</li>
+<li>tablefactory包：TableLink类、TableTray类和TablePage类。</li>
+</ul>
+</blockquote>
+</li>
+<li><h3 id="ConcreteFactory（具体工厂）"><a href="#ConcreteFactory（具体工厂）" class="headerlink" title="ConcreteFactory（具体工厂）"></a>ConcreteFactory（具体工厂）</h3><blockquote>
+<p>ConcreteFactory角色负责实现AbstractFactory角色的接口（API）。</p>
+<p>在示例程序中，有以下包中的以下类扮演此角色。</p>
+<ul>
+<li>listfactory包：ListFactory类</li>
+<li>tablefactory包：TableFactory类</li>
+</ul>
+</blockquote>
+</li>
+</ul>
+<h2 id="思路要点"><a href="#思路要点" class="headerlink" title="思路要点"></a>思路要点</h2><ul>
+<li><h3 id="易于增加具体的工厂"><a href="#易于增加具体的工厂" class="headerlink" title="易于增加具体的工厂"></a>易于增加具体的工厂</h3><blockquote>
+<p>在Abstract Factory 模式中增加具体的工厂是非常容易的。这里说的“容易”指的是需要编写哪些类和需要实现哪些方法都非常清楚。</p>
+<p>假设现在我们要在示例程序中增加新的具体工厂，那么需要做的就是编写Factory、Link、Tray、Page这4个类的子类，并实现它们定义的抽象方法。也就是说factory包中的抽象部分全部具体话即可。</p>
+<p>这样一来，无论要增加多少个具体工厂（或是要修改具体工厂的Bug），都无需修改抽象工厂和Main部分。</p>
+</blockquote>
+</li>
+<li><h3 id="难以增加新的零件"><a href="#难以增加新的零件" class="headerlink" title="难以增加新的零件"></a>难以增加新的零件</h3><blockquote>
+<p>请试想一下要在Abstract Factory 模式中增加新的零件时应当如何做。例如，我们要在factory包中增加一个表示图像的Picture零件。这是，我们必须要对所有的具体工厂进行相应的修改才行。例如，在listfactory包中，我们必须要做以下修改。</p>
+<ul>
+<li>在ListFactory中加入createPicture方法</li>
+<li>新增ListPicture类</li>
+</ul>
+<p>已经编写完成的具体工厂越多，修改的工作量就会越大。</p>
+</blockquote>
+</li>
+</ul>
+<h2 id="所学知识"><a href="#所学知识" class="headerlink" title="所学知识"></a>所学知识</h2><blockquote>
+<p>最难理解的就是Abstract Factory 模式了。因为在该模式中，类之间结构复杂，登场角色也多，与只有一个类的Singleton模式相比，它们有很大的区别。如果说Singleton模式时“独舞”，那Abstract Factory模式就是“群舞”了</p>
+</blockquote>
+
+  </div>
+  <div>
+    
+      <div 
+        class="post-note note-warning copyright" 
+        style="margin-top: 42px">
+        <p>
+          <span style="font-weight: bold;">作者：</span><a 
+            target="_blank" 
+            rel="nofollow noopener noreferrer" 
+            href="/about">
+            简单且极端
+          </a>
+        </p>
+        <p>
+          <span style="font-weight: bold;">文章链接：</span><a 
+            target="_blank" 
+            rel="nofollow noopener noreferrer" 
+            href="https://extremelys.github.io/2022/08/22/AbstractFactoryPattern/">
+            https://extremelys.github.io/2022/08/22/AbstractFactoryPattern/
+          </a>
+        </p>
+        <p><span style="font-weight: bold;">版权声明：</span>本博客所有文章除特别声明外，均采用<a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">CC BY-NC-SA 4.0 协议</a>。转载请注明出处！</p>
+      </div>
+    
+  </div>
+</article>
+<div class="nav">
+  
+  
+    <div class="nav-item-next">
+      <a 
+        href="/2022/08/22/BuilderPattern/" 
+        class="nav-link">
+        <div>
+          <div class="nav-label">下一篇</div>
+          
+            <div class="nav-title">建造者模式 </div>
+          
+        </div>
+        <i class="iconfont icon-right nav-next-icon"></i>
+      </a>
+    </div>
+  
+</div>
+
+<div 
+  class="card card-content toc-card" 
+  id="mobiletoc">
+  <div class="toc-header">
+  <i 
+    class="iconfont icon-menu" 
+    style="padding-right: 2px;">
+  </i>目录
+</div>
+<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%8A%BD%E8%B1%A1%E5%B7%A5%E5%8E%82%E6%A8%A1%E5%BC%8F%EF%BC%88Abstract-Factory-%E6%A8%A1%E5%BC%8F%EF%BC%89"><span class="toc-text">抽象工厂模式（Abstract Factory 模式）</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E7%B1%BB%E5%9B%BE"><span class="toc-text">示例类图</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E7%A8%8B%E5%BA%8F"><span class="toc-text">示例程序</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8A%BD%E8%B1%A1%E7%B1%BB%E7%9A%84%E9%9B%B6%E4%BB%B6%EF%BC%9AItem-%E7%B1%BB"><span class="toc-text">抽象类的零件：Item 类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8A%BD%E8%B1%A1%E7%9A%84%E9%9B%B6%E4%BB%B6%EF%BC%9ALink%E7%B1%BB"><span class="toc-text">抽象的零件：Link类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8A%BD%E8%B1%A1%E7%9A%84%E9%9B%B6%E4%BB%B6%EF%BC%9ATray%E7%B1%BB"><span class="toc-text">抽象的零件：Tray类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8A%BD%E8%B1%A1%E7%9A%84%E4%BA%A7%E5%93%81%EF%BC%9APage%E7%B1%BB"><span class="toc-text">抽象的产品：Page类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8A%BD%E8%B1%A1%E7%9A%84%E5%B7%A5%E5%8E%82%EF%BC%9AFactory-%E7%B1%BB"><span class="toc-text">抽象的工厂：Factory 类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8%E5%B7%A5%E5%8E%82%E5%B0%86%E9%9B%B6%E4%BB%B6%E7%BB%84%E8%A3%85%E7%A7%B0%E4%B8%BA%E4%BA%A7%E5%93%81%EF%BC%9AMain%E7%B1%BB"><span class="toc-text">使用工厂将零件组装称为产品：Main类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B7%E4%BD%93%E7%9A%84%E5%B7%A5%E5%8E%82%EF%BC%9AListFactory%E7%B1%BB"><span class="toc-text">具体的工厂：ListFactory类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B7%E4%BD%93%E7%9A%84%E9%9B%B6%E4%BB%B6%EF%BC%9AListLink%E7%B1%BB"><span class="toc-text">具体的零件：ListLink类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B7%E4%BD%93%E7%9A%84%E9%9B%B6%E4%BB%B6%EF%BC%9AListTray%E7%B1%BB"><span class="toc-text">具体的零件：ListTray类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B7%E4%BD%93%E7%9A%84%E4%BA%A7%E5%93%81%EF%BC%9AListPage%E7%B1%BB"><span class="toc-text">具体的产品：ListPage类</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%BA%E7%A4%BA%E4%BE%8B%E7%A8%8B%E5%BA%8F%E5%A2%9E%E5%8A%A0%E5%85%B6%E4%BB%96%E5%B7%A5%E5%8E%82"><span class="toc-text">为示例程序增加其他工厂</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B7%E4%BD%93%E7%9A%84%E5%B7%A5%E5%8E%82%EF%BC%9ATableFactory%E7%B1%BB"><span class="toc-text">具体的工厂：TableFactory类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B7%E4%BD%93%E7%9A%84%E9%9B%B6%E4%BB%B6%EF%BC%9ATableLink%E7%B1%BB"><span class="toc-text">具体的零件：TableLink类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B7%E4%BD%93%E7%9A%84%E9%9B%B6%E4%BB%B6%EF%BC%9ATableTray%E7%B1%BB"><span class="toc-text">具体的零件：TableTray类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B7%E4%BD%93%E7%9A%84%E4%BA%A7%E5%93%81%EF%BC%9ATablePage%E7%B1%BB"><span class="toc-text">具体的产品：TablePage类</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Abstract-Factory-%E6%A8%A1%E5%BC%8F%E7%9A%84%E7%B1%BB%E5%9B%BE"><span class="toc-text">Abstract Factory 模式的类图</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Abstract-Factory-%E6%A8%A1%E5%BC%8F%E4%B8%AD%E7%9A%84%E7%99%BB%E5%9C%BA%E8%A7%92%E8%89%B2"><span class="toc-text">Abstract Factory 模式中的登场角色</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#AbstractProduct%EF%BC%88%E6%8A%BD%E8%B1%A1%E4%BA%A7%E5%93%81%EF%BC%89"><span class="toc-text">AbstractProduct（抽象产品）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#AbstractFactory%EF%BC%88%E6%8A%BD%E8%B1%A1%E5%B7%A5%E5%8E%82%EF%BC%89"><span class="toc-text">AbstractFactory（抽象工厂）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Client%EF%BC%88%E5%A7%94%E6%89%98%E8%80%85%EF%BC%89"><span class="toc-text">Client（委托者）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ConcreteProduct%EF%BC%88%E5%85%B7%E4%BD%93%E4%BA%A7%E5%93%81%EF%BC%89"><span class="toc-text">ConcreteProduct（具体产品）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ConcreteFactory%EF%BC%88%E5%85%B7%E4%BD%93%E5%B7%A5%E5%8E%82%EF%BC%89"><span class="toc-text">ConcreteFactory（具体工厂）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%9D%E8%B7%AF%E8%A6%81%E7%82%B9"><span class="toc-text">思路要点</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%98%93%E4%BA%8E%E5%A2%9E%E5%8A%A0%E5%85%B7%E4%BD%93%E7%9A%84%E5%B7%A5%E5%8E%82"><span class="toc-text">易于增加具体的工厂</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%9A%BE%E4%BB%A5%E5%A2%9E%E5%8A%A0%E6%96%B0%E7%9A%84%E9%9B%B6%E4%BB%B6"><span class="toc-text">难以增加新的零件</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%89%80%E5%AD%A6%E7%9F%A5%E8%AF%86"><span class="toc-text">所学知识</span></a></li></ol></li></ol>
+</div>
+            </main>
+            <aside class="right-column">
+              <div class="sticky-widescreen">
+  
+  
+    <article class="card card-content toc-card">
+      <div class="toc-header">
+  <i 
+    class="iconfont icon-menu" 
+    style="padding-right: 2px;">
+  </i>目录
+</div>
+<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%8A%BD%E8%B1%A1%E5%B7%A5%E5%8E%82%E6%A8%A1%E5%BC%8F%EF%BC%88Abstract-Factory-%E6%A8%A1%E5%BC%8F%EF%BC%89"><span class="toc-text">抽象工厂模式（Abstract Factory 模式）</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E7%B1%BB%E5%9B%BE"><span class="toc-text">示例类图</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E7%A8%8B%E5%BA%8F"><span class="toc-text">示例程序</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8A%BD%E8%B1%A1%E7%B1%BB%E7%9A%84%E9%9B%B6%E4%BB%B6%EF%BC%9AItem-%E7%B1%BB"><span class="toc-text">抽象类的零件：Item 类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8A%BD%E8%B1%A1%E7%9A%84%E9%9B%B6%E4%BB%B6%EF%BC%9ALink%E7%B1%BB"><span class="toc-text">抽象的零件：Link类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8A%BD%E8%B1%A1%E7%9A%84%E9%9B%B6%E4%BB%B6%EF%BC%9ATray%E7%B1%BB"><span class="toc-text">抽象的零件：Tray类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8A%BD%E8%B1%A1%E7%9A%84%E4%BA%A7%E5%93%81%EF%BC%9APage%E7%B1%BB"><span class="toc-text">抽象的产品：Page类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8A%BD%E8%B1%A1%E7%9A%84%E5%B7%A5%E5%8E%82%EF%BC%9AFactory-%E7%B1%BB"><span class="toc-text">抽象的工厂：Factory 类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8%E5%B7%A5%E5%8E%82%E5%B0%86%E9%9B%B6%E4%BB%B6%E7%BB%84%E8%A3%85%E7%A7%B0%E4%B8%BA%E4%BA%A7%E5%93%81%EF%BC%9AMain%E7%B1%BB"><span class="toc-text">使用工厂将零件组装称为产品：Main类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B7%E4%BD%93%E7%9A%84%E5%B7%A5%E5%8E%82%EF%BC%9AListFactory%E7%B1%BB"><span class="toc-text">具体的工厂：ListFactory类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B7%E4%BD%93%E7%9A%84%E9%9B%B6%E4%BB%B6%EF%BC%9AListLink%E7%B1%BB"><span class="toc-text">具体的零件：ListLink类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B7%E4%BD%93%E7%9A%84%E9%9B%B6%E4%BB%B6%EF%BC%9AListTray%E7%B1%BB"><span class="toc-text">具体的零件：ListTray类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B7%E4%BD%93%E7%9A%84%E4%BA%A7%E5%93%81%EF%BC%9AListPage%E7%B1%BB"><span class="toc-text">具体的产品：ListPage类</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%BA%E7%A4%BA%E4%BE%8B%E7%A8%8B%E5%BA%8F%E5%A2%9E%E5%8A%A0%E5%85%B6%E4%BB%96%E5%B7%A5%E5%8E%82"><span class="toc-text">为示例程序增加其他工厂</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B7%E4%BD%93%E7%9A%84%E5%B7%A5%E5%8E%82%EF%BC%9ATableFactory%E7%B1%BB"><span class="toc-text">具体的工厂：TableFactory类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B7%E4%BD%93%E7%9A%84%E9%9B%B6%E4%BB%B6%EF%BC%9ATableLink%E7%B1%BB"><span class="toc-text">具体的零件：TableLink类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B7%E4%BD%93%E7%9A%84%E9%9B%B6%E4%BB%B6%EF%BC%9ATableTray%E7%B1%BB"><span class="toc-text">具体的零件：TableTray类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B7%E4%BD%93%E7%9A%84%E4%BA%A7%E5%93%81%EF%BC%9ATablePage%E7%B1%BB"><span class="toc-text">具体的产品：TablePage类</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Abstract-Factory-%E6%A8%A1%E5%BC%8F%E7%9A%84%E7%B1%BB%E5%9B%BE"><span class="toc-text">Abstract Factory 模式的类图</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Abstract-Factory-%E6%A8%A1%E5%BC%8F%E4%B8%AD%E7%9A%84%E7%99%BB%E5%9C%BA%E8%A7%92%E8%89%B2"><span class="toc-text">Abstract Factory 模式中的登场角色</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#AbstractProduct%EF%BC%88%E6%8A%BD%E8%B1%A1%E4%BA%A7%E5%93%81%EF%BC%89"><span class="toc-text">AbstractProduct（抽象产品）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#AbstractFactory%EF%BC%88%E6%8A%BD%E8%B1%A1%E5%B7%A5%E5%8E%82%EF%BC%89"><span class="toc-text">AbstractFactory（抽象工厂）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Client%EF%BC%88%E5%A7%94%E6%89%98%E8%80%85%EF%BC%89"><span class="toc-text">Client（委托者）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ConcreteProduct%EF%BC%88%E5%85%B7%E4%BD%93%E4%BA%A7%E5%93%81%EF%BC%89"><span class="toc-text">ConcreteProduct（具体产品）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ConcreteFactory%EF%BC%88%E5%85%B7%E4%BD%93%E5%B7%A5%E5%8E%82%EF%BC%89"><span class="toc-text">ConcreteFactory（具体工厂）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%9D%E8%B7%AF%E8%A6%81%E7%82%B9"><span class="toc-text">思路要点</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%98%93%E4%BA%8E%E5%A2%9E%E5%8A%A0%E5%85%B7%E4%BD%93%E7%9A%84%E5%B7%A5%E5%8E%82"><span class="toc-text">易于增加具体的工厂</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%9A%BE%E4%BB%A5%E5%A2%9E%E5%8A%A0%E6%96%B0%E7%9A%84%E9%9B%B6%E4%BB%B6"><span class="toc-text">难以增加新的零件</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%89%80%E5%AD%A6%E7%9F%A5%E8%AF%86"><span class="toc-text">所学知识</span></a></li></ol></li></ol>
+    </article>
+  
+  
+  <article class="card card-content">
+    <div class="recent-posts-card">
+  <div class="recent-posts-header">
+    <i 
+      class="iconfont icon-wenzhang_huaban" 
+      style="padding-right: 2px;">
+    </i>最近文章
+  </div>
+  <div class="recent-posts-list">
+    
+      <div class="recent-posts-item">
+        <div class="recent-posts-item-title">2022-08-22</div>
+        <a href="/2022/08/22/AbstractFactoryPattern/"><div class="recent-posts-item-content">抽象工厂模式</div></a>
+      </div>
+    
+      <div class="recent-posts-item">
+        <div class="recent-posts-item-title">2022-08-22</div>
+        <a href="/2022/08/22/BuilderPattern/"><div class="recent-posts-item-content">建造者模式</div></a>
+      </div>
+    
+      <div class="recent-posts-item">
+        <div class="recent-posts-item-title">2022-08-17</div>
+        <a href="/2022/08/17/PrototypePattern/"><div class="recent-posts-item-content">原型模式</div></a>
+      </div>
+    
+      <div class="recent-posts-item">
+        <div class="recent-posts-item-title">2022-08-16</div>
+        <a href="/2022/08/16/SingletonPattern/"><div class="recent-posts-item-content">单例模式</div></a>
+      </div>
+    
+  </div>
+</div>
+  </article>
+  
+  
+</div>
+            </aside>
+          </div>
+        </div>
+      </div>
+    </div>
+     
+    <footer class="footer">
+  <div class="footer-container">
+    <div>
+      <div class="footer-dsc">
+        <span>
+          Copyright ©
+          
+            2022
+          
+          
+        </span>
+        &nbsp;
+        <a 
+          href="/" 
+          class="footer-link">
+          简单且极端
+        </a>
+      </div>
+    </div>
+
+    
+      <div class="footer-dsc">
+        
+          Powered by
+          <a 
+            href="https://hexo.io/" 
+            class="footer-link" 
+            target="_blank" 
+            rel="nofollow noopener noreferrer">
+            &nbsp;Hexo
+          </a>
+        
+        
+          <span>&nbsp;|&nbsp;</span>
+        
+        
+          Theme -
+          <a 
+            href="https://github.com/theme-kaze" 
+            class="footer-link" 
+            target="_blank"
+            rel="nofollow noopener noreferrer">
+            &nbsp;Kaze
+          </a>
+        
+      </div>
+    
+    
+    
+    
+</footer>
+ 
+    
+  <a 
+    role="button" 
+    id="scrollbutton" 
+    class="basebutton" 
+    aria-label="回到顶部">
+    <i class="iconfont icon-arrowleft button-icon"></i>
+  </a>
+
+<a 
+  role="button" 
+  id="menubutton"
+  aria-label="menu button"
+  class="basebutton">
+  <i class="iconfont icon-menu button-icon"></i>
+</a>
+<a 
+  role="button" 
+  id="popbutton" 
+  class="basebutton" 
+  aria-label="控制中心">
+  <i class="iconfont icon-expand button-icon"></i>
+</a>
+<a 
+  role="button" 
+  id="darkbutton" 
+  class="basebutton darkwidget" 
+  aria-label="夜色模式">
+  <i class="iconfont icon-weather button-icon"></i>
+</a>
+<a 
+  role="button" 
+  id="searchbutton" 
+  class="basebutton searchwidget" 
+  aria-label="搜索">
+  <i class="iconfont icon-search button-icon"></i>
+</a> 
+     
+     
+     
+      <script>
+  var addImgLayout = function () {
+    var img = document.querySelectorAll('.post-content img')
+    var i
+    for (i = 0; i < img.length; i++) {
+      var wrapper = document.createElement('a')
+      wrapper.setAttribute('href', img[i].getAttribute('data-src'))
+      wrapper.setAttribute('aria-label', 'illustration')
+      wrapper.style.cssText =
+        'width: 100%; display: flex; justify-content: center;'
+      if (img[i].alt) wrapper.dataset.caption = img[i].alt
+      wrapper.dataset.nolink = true
+      img[i].before(wrapper)
+      wrapper.append(img[i])
+      var divWrap = document.createElement('div')
+      divWrap.classList.add('gallery')
+      wrapper.before(divWrap)
+      divWrap.append(wrapper)
+    }
+    baguetteBox.run('.gallery')
+  }
+</script>
+<script>
+  loadScript(
+    "/js/lib/lightbox/baguetteBox.min.js",
+    addImgLayout
+  )
+</script>
+ 
+     
+     
+    <script src="/js/main.js"></script> 
+     
+    
+      <script>
+        var addLazyload = function () {
+          var observer = lozad('.lozad', {
+            load: function (el) {
+              el.srcset = el.getAttribute('data-src')
+            },
+            loaded: function (el) {
+              el.classList.add('loaded')
+            },
+          })
+          observer.observe()
+        }
+      </script>
+      <script>
+        loadScript('/js/lib/lozad.min.js', addLazyload)
+      </script>
+    
+    <script src="//instant.page/5.1.0" type="module"
+      integrity="sha384-by67kQnR+pyfy8yWP4kPO12fHKRLHZPfEsiSXR8u2IKcTdxD805MGUXBzVPnkLHw"></script>
+    
+    
+  </body>
+</html>
