@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+  <meta charset="UTF-8">
+  <meta 
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+  <meta 
+    http-equiv="X-UA-Compatible" 
+    content="ie=edge">
+  <meta 
+    name="theme-color" 
+    content="#fff" 
+    id="theme-color">
+  <meta 
+    name="description" 
+    content="Hexo">
+  <link 
+    rel="icon" 
+    href="/">
+  <title>策略模式</title>
+  
+    
+      <meta 
+        property="og:title" 
+        content="策略模式">
+    
+    
+      <meta 
+        property="og:url" 
+        content="https://extremelys.github.io/2022/08/24/StrategyPattern/index.html">
+    
+    
+      <meta 
+        property="og:img" 
+        content="https://img.songhn.com/img/Y67gdd.png">
+    
+    
+    
+      <meta 
+        property="og:type" 
+        content="article">
+      <meta 
+        property="og:article:published_time" 
+        content="2022-08-24">
+      <meta 
+        property="og:article:modified_time" 
+        content="2022-08-25">
+      <meta 
+        property="og:article:author" 
+        content="简单且极端">
+      
+        
+          <meta 
+            property="og:article:tag" 
+            content="设计模式">
+        
+      
+    
+  
+  
+  <link rel="preload" href="//at.alicdn.com/t/font_1946621_i1kgafibvw.css" as="style" >
+  <link rel="preload" href="//at.alicdn.com/t/font_1952792_89b4ac4k4up.css" as="style" >
+  <link rel="preload" href="/css/main.css" as="style" >
+  
+  <link rel="modulepreload" href="//instant.page/5.1.0">
+  
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1946621_i1kgafibvw.css">
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1952792_89b4ac4k4up.css">
+  
+  
+  
+    <link rel="stylesheet" href="/js/lib/lightbox/baguetteBox.min.css">
+  
+  <script>
+    function loadScript(url, cb) {
+      var script = document.createElement('script');
+      script.src = url;
+      if (cb) script.onload = cb;
+      script.async = true;
+      document.body.appendChild(script);
+    }
+    function loadCSS(href, data, attr) {
+      var sheet = document.createElement('link');
+      sheet.ref = 'stylesheet';
+      sheet.href = href;
+      sheet.dataset[data] = attr;
+      document.head.appendChild(sheet);
+    }
+    function changeCSS(cssFile, data, attr) {
+      var oldlink = document.querySelector(data);
+      var newlink = document.createElement("link");
+      newlink.setAttribute("rel", "stylesheet");
+      newlink.setAttribute("href", cssFile);
+      newlink.dataset.prism = attr;
+      document.head.replaceChild(newlink, oldlink);
+    }
+  </script>
+  
+    
+      
+      
+      
+      
+        
+        
+        
+        <script>
+          function prismThemeChange() {
+            if(document.getElementById('theme-color').dataset.mode === 'dark') {
+              if(document.querySelector('[data-prism]')) {
+                changeCSS('/js/lib/prism/prism-tomorrow.min.css', '[data-prism]', 'prism-tomorrow');
+              } else {
+                loadCSS('/js/lib/prism/prism-tomorrow.min.css', 'prism', 'prism-tomorrow');
+              }
+            } else {
+              if(document.querySelector('[data-prism]')) {
+                changeCSS('/js/lib/prism/prism.min.css', '[data-prism]', 'prism');
+              } else {
+                loadCSS('/js/lib/prism/prism.min.css', 'prism', 'prism');
+              }
+            }
+          }
+          prismThemeChange()
+        </script>
+      
+      
+        
+        <link rel="stylesheet" href="/js/lib/prism/prism-line-numbers.min.css">
+      
+    
+  
+  <script>
+    // control reverse button
+    var reverseDarkList = {
+      dark: 'light',
+      light: 'dark'
+    };
+    var themeColor = {
+      dark: '#1c1c1e',
+      light: '#fff'
+    }
+    // get the data of css prefers-color-scheme
+    var getCssMediaQuery = function() {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    };
+    // reverse current darkmode setting function
+    var reverseDarkModeSetting = function() {
+      var setting = localStorage.getItem('user-color-scheme');
+      if(reverseDarkList[setting]) {
+        setting = reverseDarkList[setting];
+      } else if(setting === null) {
+        setting = reverseDarkList[getCssMediaQuery()];
+      } else {
+        return;
+      }
+      localStorage.setItem('user-color-scheme', setting);
+      return setting;
+    };
+    // apply current darkmode setting
+  </script>
+  
+    <script>
+      var setDarkmode = function(mode) {
+      var setting = mode || localStorage.getItem('user-color-scheme');
+      if(setting === getCssMediaQuery()) {
+        document.documentElement.removeAttribute('data-user-color-scheme');
+        localStorage.removeItem('user-color-scheme');
+        document.getElementById('theme-color').content = themeColor[setting];
+        document.getElementById('theme-color').dataset.mode = setting;
+        prismThemeChange();
+      } else if(reverseDarkList[setting]) {
+        document.documentElement.setAttribute('data-user-color-scheme', setting);
+        document.getElementById('theme-color').content = themeColor[setting];
+        document.getElementById('theme-color').dataset.mode = setting;
+        prismThemeChange();
+      } else {
+        document.documentElement.removeAttribute('data-user-color-scheme');
+        localStorage.removeItem('user-color-scheme');
+        document.getElementById('theme-color').content = themeColor[getCssMediaQuery()];
+        document.getElementById('theme-color').dataset.mode = getCssMediaQuery();
+        prismThemeChange();
+      }
+    };
+    setDarkmode();
+    </script>
+  
+  
+  
+    <link rel="preload" href="/js/lib/lightbox/baguetteBox.min.js" as="script">
+    <link rel="preload" href="/js/lib/lightbox/baguetteBox.min.css" as="style" >
+  
+  
+    <link rel="preload" href="/js/lib/lozad.min.js" as="script">
+  
+  
+  
+  
+  
+  
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+  <body>
+    <div class="wrapper">
+       
+      <nav class="navbar">
+  <div class="navbar-logo">
+    <a class="navbar-logo-main" href="/">
+      
+      <span class="navbar-logo-dsc">简单且极端</span>
+      </a>
+  </div>
+  <div class="navbar-menu">
+    
+      <a 
+        href="/" 
+        class="navbar-menu-item">
+        
+          首页
+        
+      </a>
+    
+      <a 
+        href="/archives" 
+        class="navbar-menu-item">
+        
+          归档
+        
+      </a>
+    
+      <a 
+        href="/tags" 
+        class="navbar-menu-item">
+        
+          标签
+        
+      </a>
+    
+      <a 
+        href="/categories" 
+        class="navbar-menu-item">
+        
+          分类
+        
+      </a>
+    
+    <button 
+      class="navbar-menu-item darknavbar navbar-menu-btn" 
+      aria-label="Toggle dark mode"
+      id="dark">
+      <i class="iconfont icon-weather"></i>
+    </button>
+    <button 
+      class="navbar-menu-item searchnavbar navbar-menu-btn" 
+      aria-label="Toggle search"
+      id="search">
+      <!-- <i 
+        class="iconfont icon-search" 
+        style="font-size: 1.2rem; font-weight: 400;">
+      </i> -->
+      <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img"
+        class="iconify iconify--ion" width="28" height="28" preserveAspectRatio="xMidYMid meet" viewBox="0 0 512 512">
+        <path fill="none" stroke="currentColor" stroke-miterlimit="10" stroke-width="28"
+          d="M256 80a176 176 0 1 0 176 176A176 176 0 0 0 256 80Z"></path>
+        <path fill="none" stroke="currentColor" stroke-miterlimit="10" stroke-width="28"
+          d="M232 160a72 72 0 1 0 72 72a72 72 0 0 0-72-72Z"></path>
+        <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="28"
+          d="M283.64 283.64L336 336"></path>
+      </svg>
+    </button>
+  </div>
+</nav> 
+      
+      <div 
+        id="local-search" 
+        style="display: none">
+        <input
+          class="navbar-menu-item"
+          id="search-input"
+          placeholder="请输入搜索内容..." />
+        <div id="search-content"></div>
+      </div>
+      
+      <div class="section-wrap">
+        <div class="container">
+          <div class="columns">
+            <aside class="left-column">
+              
+              <div class="card card-author">
+                
+  <img 
+    src="https://img.songhn.com/img/Y67gdd.png" 
+    class="author-img"
+    width="88"
+    height="88"
+    alt="author avatar">
+
+<p class="author-name">简单且极端</p>
+<p class="author-description">designed by theme-kaze</p>
+<div class="author-message">
+  <a 
+    class="author-posts-count" 
+    href="/archives">
+    <span>10</span>
+    <span>文章</span>
+  </a>
+  <a 
+    class="author-categories-count" 
+    href="/categories">
+    <span>1</span>
+    <span>分类</span>
+  </a>
+  <a 
+    class="author-tags-count" 
+    href="/tags">
+    <span>1</span>
+    <span>标签</span>
+  </a>
+</div>
+
+              </div>
+               <div class="sticky-tablet">
+  
+  
+    <article class="display-when-two-columns spacer">
+      <div class="card card-content toc-card">
+        <div class="toc-header">
+  <i 
+    class="iconfont icon-menu" 
+    style="padding-right: 2px;">
+  </i>目录
+</div>
+<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Strategy%E6%A8%A1%E5%BC%8F%EF%BC%88%E7%AD%96%E7%95%A5%E6%A8%A1%E5%BC%8F%EF%BC%89"><span class="toc-text">Strategy模式（策略模式）</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E7%B1%BB%E5%9B%BE"><span class="toc-text">示例类图</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E7%A8%8B%E5%BA%8F"><span class="toc-text">示例程序</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Hand%E7%B1%BB"><span class="toc-text">Hand类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Strategy-%E6%8E%A5%E5%8F%A3"><span class="toc-text">Strategy 接口</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#WinningStrategy-%E7%B1%BB"><span class="toc-text">WinningStrategy 类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ProbStrategy-%E7%B1%BB"><span class="toc-text">ProbStrategy 类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Player-%E7%B1%BB"><span class="toc-text">Player 类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Main-%E7%B1%BB"><span class="toc-text">Main 类</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Strategy%E6%A8%A1%E5%BC%8F%E4%B8%AD%E7%9A%84%E7%99%BB%E5%9C%BA%E8%A7%92%E8%89%B2"><span class="toc-text">Strategy模式中的登场角色</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Strategy%E6%A8%A1%E5%BC%8F%E7%9A%84%E7%B1%BB%E5%9B%BE"><span class="toc-text">Strategy模式的类图</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Strategy%EF%BC%88%E7%AD%96%E7%95%A5%EF%BC%89"><span class="toc-text">Strategy（策略）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ConcreteStrategy%EF%BC%88%E5%85%B7%E4%BD%93%E7%9A%84%E7%AD%96%E7%95%A5%EF%BC%89"><span class="toc-text">ConcreteStrategy（具体的策略）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Context%EF%BC%88%E4%B8%8A%E4%B8%8B%E6%96%87%EF%BC%89"><span class="toc-text">Context（上下文）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%9D%E8%B7%AF%E8%A6%81%E7%82%B9"><span class="toc-text">思路要点</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81%E7%89%B9%E6%84%8F%E7%BC%96%E5%86%99Strategy%E8%A7%92%E8%89%B2"><span class="toc-text">为什么需要特意编写Strategy角色</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%A8%8B%E5%BA%8F%E8%BF%90%E8%A1%8C%E4%B8%AD%E4%B9%9F%E5%8F%AF%E4%BB%A5%E5%88%87%E6%8D%A2%E7%AD%96%E7%95%A5"><span class="toc-text">程序运行中也可以切换策略</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%89%80%E5%AD%A6%E7%9F%A5%E8%AF%86"><span class="toc-text">所学知识</span></a></li></ol></li></ol>
+      </div>
+    </article>
+  
+  
+  <article class="card card-content categories-widget">
+    <div class="categories-card">
+  <div class="categories-header">
+    <i 
+      class="iconfont icon-fenlei" 
+      style="padding-right: 2px;">
+    </i>分类
+  </div>
+  <div class="categories-list">
+    
+      <a href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">
+        <div class="categories-list-item">
+          设计模式
+          <span class="categories-list-item-badge">10</span>
+        </div>
+      </a>
+    
+  </div>
+</div>
+  </article>
+  
+  <article class="card card-content tags-widget">
+    <div class="tags-card">
+  <div class="tags-header">
+    <i 
+      class="iconfont icon-biaoqian" 
+      style="padding-right: 2px;">
+    </i>热门标签
+  </div>
+  <div class="tags-list">
+    
+      <a 
+        href="/tags/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" 
+        title="设计模式">
+        <div class="tags-list-item">设计模式</div>
+      </a>
+    
+  </div>
+</div>
+  </article>
+  
+  
+</div>
+            </aside>
+            <main class="main-column">
+              
+<article class="card card-content">
+  <header>
+    <h1 class="post-title">
+      策略模式
+    </h1>
+  </header>
+  <div class="post-meta post-show-meta">
+    <time datetime="2022-08-24T08:43:32.886Z">
+      <i 
+        class="iconfont icon-calendar" 
+        style="margin-right: 2px;">
+      </i>
+      <span>2022-08-24</span>
+    </time>
+    
+      <span class="dot"></span>
+      
+        <a 
+          href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" 
+          class="post-meta-link">
+          设计模式
+        </a>
+      
+    
+    
+      <span class="dot"></span>
+      <span>2.6k 字</span>
+    
+  </div>
+  
+    <div 
+      class="post-meta post-show-meta" 
+      style="margin-top: -10px;">
+      <div style="display: flex; align-items: center;">
+        <i 
+          class="iconfont icon-biaoqian" 
+          style="margin-right: 2px; font-size: 1.15rem;">
+        </i>
+        
+          
+          <a 
+            href="/tags/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" 
+            class="post-meta-link">
+            设计模式
+          </a>
+        
+      </div>
+    </div>
+  
+  </header>
+  <div 
+    id="section" 
+    class="post-content">
+    <h1 id="Strategy模式（策略模式）"><a href="#Strategy模式（策略模式）" class="headerlink" title="Strategy模式（策略模式）"></a>Strategy模式（策略模式）</h1><blockquote>
+<p>Strategy 的意思是“策略”，指的是与敌军对垒时行军作战的方法。在编程中，我们可以将它们理解为“算法”。</p>
+<p>无论什么程序，其目的都是解决问题。而是为了解决问题，我们又需要编写特定的算法。使用Strategy模式可以整体地替换算法的实现部分。能够整体地替换算法，能让我们轻松地以不同的算法去解决同一个问题，这种模式就是Strategy。</p>
+</blockquote>
+<h2 id="示例类图"><a href="#示例类图" class="headerlink" title="示例类图"></a>示例类图</h2><blockquote>
+<p><img src="/2022/08/24/StrategyPattern/image-20220825100553924.png" alt="image-20220825100553924" srcset="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20300%20300'%3E%3C/svg%3E" data-src="/2022/08/24/StrategyPattern/image-20220825100553924.png" class="lozad post-image"></p>
+</blockquote>
+<h2 id="示例程序"><a href="#示例程序" class="headerlink" title="示例程序"></a>示例程序</h2><blockquote>
+<h3 id="Hand类"><a href="#Hand类" class="headerlink" title="Hand类"></a>Hand类</h3><pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">Hand</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">final</span> <span class="token keyword">int</span> HANDVALUE_GUU <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> <span class="token comment">//表示石头的值</span>
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">final</span> <span class="token keyword">int</span> HANDVALUE_CHO <span class="token operator">=</span> <span class="token number">1</span><span class="token punctuation">;</span> <span class="token comment">//表示剪刀的值</span>
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">final</span> <span class="token keyword">int</span> HANDVALUE_PAA <span class="token operator">=</span> <span class="token number">2</span><span class="token punctuation">;</span> <span class="token comment">//表示布的值</span>
+    <span class="token comment">/**
+     * 表示猜拳中3种手势的实例
+     */</span>
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">final</span> <span class="token class-name">Hand</span><span class="token punctuation">[</span><span class="token punctuation">]</span> hand <span class="token operator">=</span> <span class="token punctuation">&#123;</span>
+            <span class="token keyword">new</span> <span class="token class-name">Hand</span><span class="token punctuation">(</span>HANDVALUE_GUU<span class="token punctuation">)</span><span class="token punctuation">,</span>
+            <span class="token keyword">new</span> <span class="token class-name">Hand</span><span class="token punctuation">(</span>HANDVALUE_CHO<span class="token punctuation">)</span><span class="token punctuation">,</span>
+            <span class="token keyword">new</span> <span class="token class-name">Hand</span><span class="token punctuation">(</span>HANDVALUE_PAA<span class="token punctuation">)</span>
+    <span class="token punctuation">&#125;</span><span class="token punctuation">;</span>
+    <span class="token comment">/**
+     * 猜拳中手势所对应的字符串
+     */</span>
+    <span class="token keyword">private</span> <span class="token keyword">static</span> <span class="token keyword">final</span> <span class="token class-name">String</span><span class="token punctuation">[</span><span class="token punctuation">]</span> name <span class="token operator">=</span> <span class="token punctuation">&#123;</span>
+            <span class="token string">"石头"</span><span class="token punctuation">,</span><span class="token string">"剪刀"</span><span class="token punctuation">,</span><span class="token string">"布"</span>
+    <span class="token punctuation">&#125;</span><span class="token punctuation">;</span>
+    <span class="token comment">/**
+     * 猜拳中出的手势值
+     */</span>
+    <span class="token keyword">private</span> <span class="token keyword">int</span> handValue<span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> <span class="token class-name">Hand</span><span class="token punctuation">(</span><span class="token keyword">int</span> handValue<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>handValue <span class="token operator">=</span> handValue<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 根据手势的值获取其对应的实例
+     * @param handValue 值
+     * @return 对应的实例
+     */</span>
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token class-name">Hand</span> <span class="token function">getHand</span><span class="token punctuation">(</span><span class="token keyword">int</span> handValue<span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> hand<span class="token punctuation">[</span>handValue<span class="token punctuation">]</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 如果this胜了h则返回true
+     * @param h 实例
+     * @return 胜负
+     */</span>
+    <span class="token keyword">public</span> <span class="token keyword">boolean</span> <span class="token function">isStrongerThen</span><span class="token punctuation">(</span><span class="token class-name">Hand</span> h<span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> <span class="token function">fight</span><span class="token punctuation">(</span>h<span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token number">1</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 如果this输给了h则返回true
+     * @param h 实例
+     * @return 胜负
+     */</span>
+    <span class="token keyword">public</span> <span class="token keyword">boolean</span> <span class="token function">isWeakerThen</span><span class="token punctuation">(</span><span class="token class-name">Hand</span> h<span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> <span class="token function">fight</span><span class="token punctuation">(</span>h<span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 计分：平 0，胜 1，负 -1
+     * @param h
+     * @return
+     */</span>
+    <span class="token keyword">private</span> <span class="token keyword">int</span> <span class="token function">fight</span><span class="token punctuation">(</span><span class="token class-name">Hand</span> h<span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token keyword">this</span> <span class="token operator">==</span> h<span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+            <span class="token keyword">return</span> <span class="token number">0</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">.</span>handValue <span class="token operator">+</span> <span class="token number">1</span><span class="token punctuation">)</span> <span class="token operator">%</span> <span class="token number">3</span> <span class="token operator">==</span> h<span class="token punctuation">.</span>handValue<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token keyword">return</span> <span class="token number">1</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token punctuation">&#123;</span>
+            <span class="token keyword">return</span> <span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 转化为手势值所对应的字符串
+     * @return
+     */</span>
+    <span class="token keyword">public</span> <span class="token class-name">String</span> <span class="token function">toString</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> name<span class="token punctuation">[</span>handValue<span class="token punctuation">]</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="Strategy-接口"><a href="#Strategy-接口" class="headerlink" title="Strategy 接口"></a>Strategy 接口</h3><p>Strategy接口是定义了猜拳策略的抽象方法的接口。</p>
+<p>nextHand方法的作用是“获取下一局要出的手势”。调用该方法后，实现了Strategy接口的类会绞尽脑汁想出下一局出什么手势。</p>
+<p>study方法的作用是学习“上一局的手势是否获胜了”。如果在上一局中调用了nextHand方法获胜了，就接着调用study（true）；如果输了，就接着调用study（false）。这样，Strategy接口的实现类就会改变自己的内部状态，从而为下一次nextHand被调用时究竟是返回“石头” “剪刀” 还是“布”提供判断依据。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">interface</span> <span class="token class-name">Strategy</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">public</span> <span class="token keyword">abstract</span> <span class="token class-name">Hand</span> <span class="token function">nextHand</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">public</span> <span class="token keyword">abstract</span> <span class="token keyword">void</span> <span class="token function">study</span><span class="token punctuation">(</span><span class="token keyword">boolean</span> win<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="WinningStrategy-类"><a href="#WinningStrategy-类" class="headerlink" title="WinningStrategy 类"></a>WinningStrategy 类</h3><p>WinningStrategy类是Strategy接口的实现类之一，它实现了nextHand和study两个方法。</p>
+<p>该类的猜拳策略有些崩，如果上一局的手势获胜了，则下一局的手势就与上局相同（上一局出石头，下一局继续出石头；上一局出布，下一局继续出布）。如果让一局的手势输了，则下一局就随机出手势。</p>
+<p>由于在WinningStrategy类中需要使用随机值，因此我们在random字段中保存了java.util.Random的实例。也可以说，random字段是该类的一个随机数生成器。</p>
+<p>在won字段中保存了上一局猜拳的输赢结果。如果上一局猜拳获胜了，则won值为true；如果输了，则won值为false。</p>
+<p>在prevHand字段中保存的是上一局出的手势。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">WinningStrategy</span> <span class="token keyword">implements</span> <span class="token class-name">Strategy</span><span class="token punctuation">&#123;</span>
+    <span class="token keyword">private</span> <span class="token class-name">Random</span> random<span class="token punctuation">;</span>
+    <span class="token keyword">private</span> <span class="token keyword">boolean</span> won <span class="token operator">=</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+    <span class="token keyword">private</span> <span class="token class-name">Hand</span> prevHand<span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> <span class="token class-name">WinningStrategy</span><span class="token punctuation">(</span><span class="token keyword">int</span> seed<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>random <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Random</span><span class="token punctuation">(</span>seed<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token class-name">Hand</span> <span class="token function">nextHand</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span>won<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            prevHand <span class="token operator">=</span> <span class="token class-name">Hand</span><span class="token punctuation">.</span><span class="token function">getHand</span><span class="token punctuation">(</span>random<span class="token punctuation">.</span><span class="token function">nextInt</span><span class="token punctuation">(</span><span class="token number">3</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+        <span class="token keyword">return</span> prevHand<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">study</span><span class="token punctuation">(</span><span class="token keyword">boolean</span> win<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        won <span class="token operator">=</span> win<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="ProbStrategy-类"><a href="#ProbStrategy-类" class="headerlink" title="ProbStrategy 类"></a>ProbStrategy 类</h3><p>ProbStrategy类是另外一个具体策略，这个策略就需要“动点脑筋”了。虽然它与WinningStrategy类一样，也是随机出手势，但是每一种手势出现的概率会根据疫情的猜拳结果而改变。</p>
+<p>history字段是一个表，被用于根据过去的胜负来进行概率计算。它是一个二维数组，每个数组下标的意思如下。</p>
+<p><code>history[上一局出的手势][这一局所出的手势]</code></p>
+<p>这个表达式的值越大，表示过去的胜率越高。下面稍微讲解下。</p>
+<p><code>history[0][0]</code>两局分别出石头、石头时胜了的次数</p>
+<p><code>history[0][1]</code>两局分别出石头、剪刀时胜了的次数</p>
+<p><code>history[0][2]</code>两局分别出石头、布时胜了的次数</p>
+<p>那么，我们就可以根据<code>history[0][0]</code>、<code>history[0][1]</code>、<code>history[0][2]</code>这3个表达式的值从概率上计算出下一局出声明。简而言之，就是先计算3个表达式的值和（getSun方法），然后再从0与这个之间取一个随机数，并据此决定下一局应该出什么（nextHand方法）。</p>
+<p>例如，如果</p>
+<p><code>history[0][0]</code>是3</p>
+<p><code>history[0][1]</code>是5</p>
+<p><code>history[0][2]</code>是7</p>
+<p>那么，下一局出什么就会以石头、剪刀和布的比率为3:5:7来决定。然后在0至15（不含15，15是3+5+7的和）之间取一个随机数。</p>
+<p><strong>如果该随机数在0至3（不含3）之间，那么出石头</strong></p>
+<p><strong>如果该随机数在3至8（不含8）之间，那么出剪刀</strong></p>
+<p><strong>如果该随机数在8至15（不含15）之间，那么出布</strong></p>
+<p>study方法会根据nextHand方法返回的手势的胜负结果来更新history字段中的值。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">ProbStrategy</span> <span class="token keyword">implements</span> <span class="token class-name">Strategy</span><span class="token punctuation">&#123;</span>
+    <span class="token keyword">private</span> <span class="token class-name">Random</span> random<span class="token punctuation">;</span>
+    <span class="token keyword">private</span> <span class="token keyword">int</span> prevHandValue <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+    <span class="token keyword">private</span> <span class="token keyword">int</span> currentHandValue <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+    <span class="token keyword">private</span> <span class="token keyword">int</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">[</span><span class="token punctuation">]</span> history <span class="token operator">=</span> <span class="token punctuation">&#123;</span>
+            <span class="token punctuation">&#123;</span><span class="token number">1</span><span class="token punctuation">,</span><span class="token number">1</span><span class="token punctuation">,</span><span class="token number">1</span><span class="token punctuation">&#125;</span><span class="token punctuation">,</span>
+            <span class="token punctuation">&#123;</span><span class="token number">1</span><span class="token punctuation">,</span><span class="token number">1</span><span class="token punctuation">,</span><span class="token number">1</span><span class="token punctuation">&#125;</span><span class="token punctuation">,</span>
+            <span class="token punctuation">&#123;</span><span class="token number">1</span><span class="token punctuation">,</span><span class="token number">1</span><span class="token punctuation">,</span><span class="token number">1</span><span class="token punctuation">&#125;</span>
+    <span class="token punctuation">&#125;</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> <span class="token class-name">ProbStrategy</span><span class="token punctuation">(</span><span class="token keyword">int</span> seed<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>random <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Random</span><span class="token punctuation">(</span>seed<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token class-name">Hand</span> <span class="token function">nextHand</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">int</span> bet <span class="token operator">=</span> random<span class="token punctuation">.</span><span class="token function">nextInt</span><span class="token punctuation">(</span><span class="token function">getSum</span><span class="token punctuation">(</span>currentHandValue<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">int</span> handvalue <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span> bet <span class="token operator">&lt;</span> history<span class="token punctuation">[</span>currentHandValue<span class="token punctuation">]</span><span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span> <span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+            handvalue <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token keyword">if</span> <span class="token punctuation">(</span> bet <span class="token operator">&lt;</span> history<span class="token punctuation">[</span>currentHandValue<span class="token punctuation">]</span><span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span> <span class="token operator">+</span> history<span class="token punctuation">[</span>currentHandValue<span class="token punctuation">]</span><span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            handvalue <span class="token operator">=</span> <span class="token number">1</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token punctuation">&#123;</span>
+            handvalue <span class="token operator">=</span> <span class="token number">2</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+        prevHandValue <span class="token operator">=</span> currentHandValue<span class="token punctuation">;</span>
+        currentHandValue <span class="token operator">=</span> handvalue<span class="token punctuation">;</span>
+        <span class="token keyword">return</span> <span class="token class-name">Hand</span><span class="token punctuation">.</span><span class="token function">getHand</span><span class="token punctuation">(</span>handvalue<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token keyword">private</span> <span class="token keyword">int</span> <span class="token function">getSum</span><span class="token punctuation">(</span><span class="token keyword">int</span> hv<span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+        <span class="token keyword">int</span> sum <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+        <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">int</span> i <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> <span class="token number">3</span><span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            sum <span class="token operator">+=</span> history<span class="token punctuation">[</span>hv<span class="token punctuation">]</span><span class="token punctuation">[</span>i<span class="token punctuation">]</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+        <span class="token keyword">return</span> sum<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">study</span><span class="token punctuation">(</span><span class="token keyword">boolean</span> win<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>win<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            history<span class="token punctuation">[</span>prevHandValue<span class="token punctuation">]</span><span class="token punctuation">[</span>currentHandValue<span class="token punctuation">]</span><span class="token operator">++</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token punctuation">&#123;</span>
+            history<span class="token punctuation">[</span>prevHandValue<span class="token punctuation">]</span><span class="token punctuation">[</span><span class="token punctuation">(</span>currentHandValue <span class="token operator">+</span> <span class="token number">1</span><span class="token punctuation">)</span> <span class="token operator">%</span> <span class="token number">3</span><span class="token punctuation">]</span><span class="token operator">++</span><span class="token punctuation">;</span>
+            history<span class="token punctuation">[</span>prevHandValue<span class="token punctuation">]</span><span class="token punctuation">[</span><span class="token punctuation">(</span>currentHandValue <span class="token operator">+</span> <span class="token number">2</span><span class="token punctuation">)</span> <span class="token operator">%</span> <span class="token number">3</span><span class="token punctuation">]</span><span class="token operator">++</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="Player-类"><a href="#Player-类" class="headerlink" title="Player 类"></a>Player 类</h3><p>Player类是表示进行猜拳游戏的选手的类。在生成Player类的实例时，需要向其传递“姓名”和“策略”。nextHand方法是用来获取下一局手势的方法，不过实际上决定下一局手势的是各个策略。Player类的nextHand方法的返回值其实就是策略的nextHand方法的返回值。nextHand方法将自己的工作委托给了Strategy，这就形成了一种委托关系。</p>
+<p>在决定下一局要出的手势时。需要知道之前各局的胜（win）、负（lose）、平（even）等结果，因此Player类会通过strategy字段吊桶study方法，然后study方法会改变策略的内部状态。wincount、losecount和gamecount用于记录选手的猜拳结果。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">Player</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">private</span> <span class="token class-name">String</span> name<span class="token punctuation">;</span>
+    <span class="token keyword">private</span> <span class="token class-name">Strategy</span> strategy<span class="token punctuation">;</span>
+    <span class="token keyword">private</span> <span class="token keyword">int</span> winCount<span class="token punctuation">;</span>
+    <span class="token keyword">private</span> <span class="token keyword">int</span> loseCount<span class="token punctuation">;</span>
+    <span class="token keyword">private</span> <span class="token keyword">int</span> gameCount<span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> <span class="token class-name">Player</span><span class="token punctuation">(</span><span class="token class-name">String</span> name<span class="token punctuation">,</span> <span class="token class-name">Strategy</span> strategy<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>name <span class="token operator">=</span> name<span class="token punctuation">;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>strategy <span class="token operator">=</span> strategy<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token keyword">public</span> <span class="token class-name">Hand</span> <span class="token function">nextHand</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> strategy<span class="token punctuation">.</span><span class="token function">nextHand</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">win</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        strategy<span class="token punctuation">.</span><span class="token function">study</span><span class="token punctuation">(</span><span class="token boolean">true</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        winCount<span class="token operator">++</span><span class="token punctuation">;</span>
+        gameCount<span class="token operator">++</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">lose</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        strategy<span class="token punctuation">.</span><span class="token function">study</span><span class="token punctuation">(</span><span class="token boolean">false</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        loseCount<span class="token operator">++</span><span class="token punctuation">;</span>
+        gameCount<span class="token operator">++</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">even</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        gameCount<span class="token operator">++</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token class-name">String</span> <span class="token function">toString</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> <span class="token string">"["</span> <span class="token operator">+</span> name <span class="token operator">+</span> <span class="token string">":"</span> <span class="token operator">+</span> gameCount <span class="token operator">+</span> <span class="token string">" games,"</span> <span class="token operator">+</span> winCount <span class="token operator">+</span> <span class="token string">" win,"</span> <span class="token operator">+</span> loseCount <span class="token operator">+</span> <span class="token string">" lose"</span> <span class="token operator">+</span> <span class="token string">"]"</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="Main-类"><a href="#Main-类" class="headerlink" title="Main 类"></a>Main 类</h3><p>Main类负责使用以上类让电脑进行猜拳游戏。这里Main类让以下两位选手进行10000局比赛，然后显示比赛结果。</p>
+<ul>
+<li><p><strong>姓名：“Taro”、策略：WinningStrategy</strong></p>
+</li>
+<li><p><strong>姓名：“Hana”、策略：ProbStrategy</strong></p>
+</li>
+</ul>
+<p>此外，“Winner：” + player1 与 “Winner：” + Player1 .toString()的意思是一样的。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">Main</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token class-name">String</span><span class="token punctuation">[</span><span class="token punctuation">]</span> args<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>args<span class="token punctuation">.</span>length <span class="token operator">!=</span> <span class="token number">2</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"Usage: java Main randomseed1 randomseed2"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"Example: java Main 314 15"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token class-name">System</span><span class="token punctuation">.</span><span class="token function">exit</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+        <span class="token keyword">int</span> seed1 <span class="token operator">=</span> <span class="token class-name">Integer</span><span class="token punctuation">.</span><span class="token function">parseInt</span><span class="token punctuation">(</span>args<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">int</span> seed2 <span class="token operator">=</span> <span class="token class-name">Integer</span><span class="token punctuation">.</span><span class="token function">parseInt</span><span class="token punctuation">(</span>args<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">Player</span> player1 <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Player</span><span class="token punctuation">(</span><span class="token string">"Taro"</span><span class="token punctuation">,</span> <span class="token keyword">new</span> <span class="token class-name">WinningStrategy</span><span class="token punctuation">(</span>seed1<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">Player</span> player2 <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Player</span><span class="token punctuation">(</span><span class="token string">"Hana"</span><span class="token punctuation">,</span> <span class="token keyword">new</span> <span class="token class-name">ProbStrategy</span><span class="token punctuation">(</span>seed2<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">int</span> i <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> <span class="token number">10000</span><span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token class-name">Hand</span> nextHand1 <span class="token operator">=</span> player1<span class="token punctuation">.</span><span class="token function">nextHand</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token class-name">Hand</span> nextHand2 <span class="token operator">=</span> player2<span class="token punctuation">.</span><span class="token function">nextHand</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">if</span> <span class="token punctuation">(</span>nextHand1<span class="token punctuation">.</span><span class="token function">isStrongerThen</span><span class="token punctuation">(</span>nextHand2<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"Winner:"</span> <span class="token operator">+</span> player1<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                player1<span class="token punctuation">.</span><span class="token function">win</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                player2<span class="token punctuation">.</span><span class="token function">lose</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token keyword">if</span> <span class="token punctuation">(</span>nextHand2<span class="token punctuation">.</span><span class="token function">isStrongerThen</span><span class="token punctuation">(</span>nextHand1<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"Winner:"</span> <span class="token operator">+</span> player2<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                player1<span class="token punctuation">.</span><span class="token function">lose</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                player2<span class="token punctuation">.</span><span class="token function">win</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token punctuation">&#123;</span>
+                <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"Even..."</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                player1<span class="token punctuation">.</span><span class="token function">even</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                player2<span class="token punctuation">.</span><span class="token function">even</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token punctuation">&#125;</span>
+        <span class="token punctuation">&#125;</span>
+        <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"Total result:"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span>player1<span class="token punctuation">.</span><span class="token function">toString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span>player2<span class="token punctuation">.</span><span class="token function">toString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+
+</blockquote>
+<h2 id="Strategy模式中的登场角色"><a href="#Strategy模式中的登场角色" class="headerlink" title="Strategy模式中的登场角色"></a>Strategy模式中的登场角色</h2><h3 id="Strategy模式的类图"><a href="#Strategy模式的类图" class="headerlink" title="Strategy模式的类图"></a>Strategy模式的类图</h3><blockquote>
+<p><img src="/2022/08/24/StrategyPattern/image-20220825112706578.png" alt="image-20220825112706578" srcset="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20300%20300'%3E%3C/svg%3E" data-src="/2022/08/24/StrategyPattern/image-20220825112706578.png" class="lozad post-image"></p>
+</blockquote>
+<ul>
+<li><h3 id="Strategy（策略）"><a href="#Strategy（策略）" class="headerlink" title="Strategy（策略）"></a>Strategy（策略）</h3><blockquote>
+<p>Strategy角色负责决定实现策略所必需的接口（API）。</p>
+<p>在示例程序中，由Strategy接口扮演此角色。</p>
+</blockquote>
+</li>
+<li><h3 id="ConcreteStrategy（具体的策略）"><a href="#ConcreteStrategy（具体的策略）" class="headerlink" title="ConcreteStrategy（具体的策略）"></a>ConcreteStrategy（具体的策略）</h3><blockquote>
+<p>ConcreteStrategy角色负责实现Strategy角色的接口（API），即负责实现具体的策略（战略、方向、方法和算法）。</p>
+<p>在示例程序中，由WinningStrategy类和ProbStrategy类扮演此角色。</p>
+</blockquote>
+</li>
+<li><h3 id="Context（上下文）"><a href="#Context（上下文）" class="headerlink" title="Context（上下文）"></a>Context（上下文）</h3><blockquote>
+<p>负责使用Strategy角色。Context角色保存了ConcreteStrategy角色的实例，并使用ConcreteStrategy角色去实现需求（总之，还是要调用Strategy 角色的接口（API））。</p>
+<p>在示例程序中，由Player类扮演此角色。</p>
+</blockquote>
+</li>
+</ul>
+<h2 id="思路要点"><a href="#思路要点" class="headerlink" title="思路要点"></a>思路要点</h2><ul>
+<li><h3 id="为什么需要特意编写Strategy角色"><a href="#为什么需要特意编写Strategy角色" class="headerlink" title="为什么需要特意编写Strategy角色"></a>为什么需要特意编写Strategy角色</h3><blockquote>
+<p>通常在编程时算法会被写在具体方法中。Strategy模式却特意将算法与其他部分分离开来，只是定义了与算法相关的接口（API），然后在程序中以委托的方式来使用算法。</p>
+<p>这样看起来程序好像变负责了，其不然。例如，当我们想要通过改善算法来提高算法的处理速度时，如果使用了Strategy模式，就不必修改Strategy角色的接口（API）了，仅仅修改ConcreteStrategy角色即可。而且，<strong>使用委托这种弱关联关系可以很方便的整体替换算法</strong>。例如，如果想比较原来的算法与改进后的算法的处理速度有多大区别，简单的替换下算法即可进行测试。</p>
+<p>使用Strategy模式编写象棋程序时，可以方便的根据棋手的选择切换AI例程的水平。</p>
+</blockquote>
+</li>
+<li><h3 id="程序运行中也可以切换策略"><a href="#程序运行中也可以切换策略" class="headerlink" title="程序运行中也可以切换策略"></a>程序运行中也可以切换策略</h3><blockquote>
+<p>若果使用Strategy模式，在程序进行中也可以切换ConcreteStrategy角色。例如，在内存容量少的运行环境中可以使用SlowButLessMemoryStrategy（速度慢但省内存的策略），而在内存容量多的运行环境中则可以使用FastButMoreMemoryStrategy（速度快但耗内存的策略）。</p>
+<p>此外，还可以用某种算法去“验算”另外一种算法。例如，假设要在某个表格计算软件的开发版本中进行复杂的计算。这时，我们可以准备两种算法，即“高速但计算上可能有Bug的算法”和“低速但计算准确的算法”，然后让后者去验算两者的计算结果。</p>
+</blockquote>
+</li>
+</ul>
+<h2 id="所学知识"><a href="#所学知识" class="headerlink" title="所学知识"></a>所学知识</h2><blockquote>
+<p>借助于委托，算法的替换，特别是动态替换成为了可能。</p>
+</blockquote>
+
+  </div>
+  <div>
+    
+      <div 
+        class="post-note note-warning copyright" 
+        style="margin-top: 42px">
+        <p>
+          <span style="font-weight: bold;">作者：</span><a 
+            target="_blank" 
+            rel="nofollow noopener noreferrer" 
+            href="/about">
+            简单且极端
+          </a>
+        </p>
+        <p>
+          <span style="font-weight: bold;">文章链接：</span><a 
+            target="_blank" 
+            rel="nofollow noopener noreferrer" 
+            href="https://extremelys.github.io/2022/08/24/StrategyPattern/">
+            https://extremelys.github.io/2022/08/24/StrategyPattern/
+          </a>
+        </p>
+        <p><span style="font-weight: bold;">版权声明：</span>本博客所有文章除特别声明外，均采用<a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">CC BY-NC-SA 4.0 协议</a>。转载请注明出处！</p>
+      </div>
+    
+  </div>
+</article>
+<div class="nav">
+  
+  
+    <div class="nav-item-next">
+      <a 
+        href="/2022/08/23/BridgePattern/" 
+        class="nav-link">
+        <div>
+          <div class="nav-label">下一篇</div>
+          
+            <div class="nav-title">桥接模式 </div>
+          
+        </div>
+        <i class="iconfont icon-right nav-next-icon"></i>
+      </a>
+    </div>
+  
+</div>
+
+<div 
+  class="card card-content toc-card" 
+  id="mobiletoc">
+  <div class="toc-header">
+  <i 
+    class="iconfont icon-menu" 
+    style="padding-right: 2px;">
+  </i>目录
+</div>
+<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Strategy%E6%A8%A1%E5%BC%8F%EF%BC%88%E7%AD%96%E7%95%A5%E6%A8%A1%E5%BC%8F%EF%BC%89"><span class="toc-text">Strategy模式（策略模式）</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E7%B1%BB%E5%9B%BE"><span class="toc-text">示例类图</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E7%A8%8B%E5%BA%8F"><span class="toc-text">示例程序</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Hand%E7%B1%BB"><span class="toc-text">Hand类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Strategy-%E6%8E%A5%E5%8F%A3"><span class="toc-text">Strategy 接口</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#WinningStrategy-%E7%B1%BB"><span class="toc-text">WinningStrategy 类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ProbStrategy-%E7%B1%BB"><span class="toc-text">ProbStrategy 类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Player-%E7%B1%BB"><span class="toc-text">Player 类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Main-%E7%B1%BB"><span class="toc-text">Main 类</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Strategy%E6%A8%A1%E5%BC%8F%E4%B8%AD%E7%9A%84%E7%99%BB%E5%9C%BA%E8%A7%92%E8%89%B2"><span class="toc-text">Strategy模式中的登场角色</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Strategy%E6%A8%A1%E5%BC%8F%E7%9A%84%E7%B1%BB%E5%9B%BE"><span class="toc-text">Strategy模式的类图</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Strategy%EF%BC%88%E7%AD%96%E7%95%A5%EF%BC%89"><span class="toc-text">Strategy（策略）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ConcreteStrategy%EF%BC%88%E5%85%B7%E4%BD%93%E7%9A%84%E7%AD%96%E7%95%A5%EF%BC%89"><span class="toc-text">ConcreteStrategy（具体的策略）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Context%EF%BC%88%E4%B8%8A%E4%B8%8B%E6%96%87%EF%BC%89"><span class="toc-text">Context（上下文）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%9D%E8%B7%AF%E8%A6%81%E7%82%B9"><span class="toc-text">思路要点</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81%E7%89%B9%E6%84%8F%E7%BC%96%E5%86%99Strategy%E8%A7%92%E8%89%B2"><span class="toc-text">为什么需要特意编写Strategy角色</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%A8%8B%E5%BA%8F%E8%BF%90%E8%A1%8C%E4%B8%AD%E4%B9%9F%E5%8F%AF%E4%BB%A5%E5%88%87%E6%8D%A2%E7%AD%96%E7%95%A5"><span class="toc-text">程序运行中也可以切换策略</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%89%80%E5%AD%A6%E7%9F%A5%E8%AF%86"><span class="toc-text">所学知识</span></a></li></ol></li></ol>
+</div>
+            </main>
+            <aside class="right-column">
+              <div class="sticky-widescreen">
+  
+  
+    <article class="card card-content toc-card">
+      <div class="toc-header">
+  <i 
+    class="iconfont icon-menu" 
+    style="padding-right: 2px;">
+  </i>目录
+</div>
+<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Strategy%E6%A8%A1%E5%BC%8F%EF%BC%88%E7%AD%96%E7%95%A5%E6%A8%A1%E5%BC%8F%EF%BC%89"><span class="toc-text">Strategy模式（策略模式）</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E7%B1%BB%E5%9B%BE"><span class="toc-text">示例类图</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E7%A8%8B%E5%BA%8F"><span class="toc-text">示例程序</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Hand%E7%B1%BB"><span class="toc-text">Hand类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Strategy-%E6%8E%A5%E5%8F%A3"><span class="toc-text">Strategy 接口</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#WinningStrategy-%E7%B1%BB"><span class="toc-text">WinningStrategy 类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ProbStrategy-%E7%B1%BB"><span class="toc-text">ProbStrategy 类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Player-%E7%B1%BB"><span class="toc-text">Player 类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Main-%E7%B1%BB"><span class="toc-text">Main 类</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Strategy%E6%A8%A1%E5%BC%8F%E4%B8%AD%E7%9A%84%E7%99%BB%E5%9C%BA%E8%A7%92%E8%89%B2"><span class="toc-text">Strategy模式中的登场角色</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Strategy%E6%A8%A1%E5%BC%8F%E7%9A%84%E7%B1%BB%E5%9B%BE"><span class="toc-text">Strategy模式的类图</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Strategy%EF%BC%88%E7%AD%96%E7%95%A5%EF%BC%89"><span class="toc-text">Strategy（策略）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ConcreteStrategy%EF%BC%88%E5%85%B7%E4%BD%93%E7%9A%84%E7%AD%96%E7%95%A5%EF%BC%89"><span class="toc-text">ConcreteStrategy（具体的策略）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Context%EF%BC%88%E4%B8%8A%E4%B8%8B%E6%96%87%EF%BC%89"><span class="toc-text">Context（上下文）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%9D%E8%B7%AF%E8%A6%81%E7%82%B9"><span class="toc-text">思路要点</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81%E7%89%B9%E6%84%8F%E7%BC%96%E5%86%99Strategy%E8%A7%92%E8%89%B2"><span class="toc-text">为什么需要特意编写Strategy角色</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%A8%8B%E5%BA%8F%E8%BF%90%E8%A1%8C%E4%B8%AD%E4%B9%9F%E5%8F%AF%E4%BB%A5%E5%88%87%E6%8D%A2%E7%AD%96%E7%95%A5"><span class="toc-text">程序运行中也可以切换策略</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%89%80%E5%AD%A6%E7%9F%A5%E8%AF%86"><span class="toc-text">所学知识</span></a></li></ol></li></ol>
+    </article>
+  
+  
+  <article class="card card-content">
+    <div class="recent-posts-card">
+  <div class="recent-posts-header">
+    <i 
+      class="iconfont icon-wenzhang_huaban" 
+      style="padding-right: 2px;">
+    </i>最近文章
+  </div>
+  <div class="recent-posts-list">
+    
+      <div class="recent-posts-item">
+        <div class="recent-posts-item-title">2022-08-24</div>
+        <a href="/2022/08/24/StrategyPattern/"><div class="recent-posts-item-content">策略模式</div></a>
+      </div>
+    
+      <div class="recent-posts-item">
+        <div class="recent-posts-item-title">2022-08-23</div>
+        <a href="/2022/08/23/BridgePattern/"><div class="recent-posts-item-content">桥接模式</div></a>
+      </div>
+    
+      <div class="recent-posts-item">
+        <div class="recent-posts-item-title">2022-08-22</div>
+        <a href="/2022/08/22/AbstractFactoryPattern/"><div class="recent-posts-item-content">抽象工厂模式</div></a>
+      </div>
+    
+      <div class="recent-posts-item">
+        <div class="recent-posts-item-title">2022-08-22</div>
+        <a href="/2022/08/22/BuilderPattern/"><div class="recent-posts-item-content">建造者模式</div></a>
+      </div>
+    
+  </div>
+</div>
+  </article>
+  
+  
+</div>
+            </aside>
+          </div>
+        </div>
+      </div>
+    </div>
+     
+    <footer class="footer">
+  <div class="footer-container">
+    <div>
+      <div class="footer-dsc">
+        <span>
+          Copyright ©
+          
+            2022
+          
+          
+        </span>
+        &nbsp;
+        <a 
+          href="/" 
+          class="footer-link">
+          简单且极端
+        </a>
+      </div>
+    </div>
+
+    
+      <div class="footer-dsc">
+        
+          Powered by
+          <a 
+            href="https://hexo.io/" 
+            class="footer-link" 
+            target="_blank" 
+            rel="nofollow noopener noreferrer">
+            &nbsp;Hexo
+          </a>
+        
+        
+          <span>&nbsp;|&nbsp;</span>
+        
+        
+          Theme -
+          <a 
+            href="https://github.com/theme-kaze" 
+            class="footer-link" 
+            target="_blank"
+            rel="nofollow noopener noreferrer">
+            &nbsp;Kaze
+          </a>
+        
+      </div>
+    
+    
+    
+    
+</footer>
+ 
+    
+  <a 
+    role="button" 
+    id="scrollbutton" 
+    class="basebutton" 
+    aria-label="回到顶部">
+    <i class="iconfont icon-arrowleft button-icon"></i>
+  </a>
+
+<a 
+  role="button" 
+  id="menubutton"
+  aria-label="menu button"
+  class="basebutton">
+  <i class="iconfont icon-menu button-icon"></i>
+</a>
+<a 
+  role="button" 
+  id="popbutton" 
+  class="basebutton" 
+  aria-label="控制中心">
+  <i class="iconfont icon-expand button-icon"></i>
+</a>
+<a 
+  role="button" 
+  id="darkbutton" 
+  class="basebutton darkwidget" 
+  aria-label="夜色模式">
+  <i class="iconfont icon-weather button-icon"></i>
+</a>
+<a 
+  role="button" 
+  id="searchbutton" 
+  class="basebutton searchwidget" 
+  aria-label="搜索">
+  <i class="iconfont icon-search button-icon"></i>
+</a> 
+     
+     
+     
+      <script>
+  var addImgLayout = function () {
+    var img = document.querySelectorAll('.post-content img')
+    var i
+    for (i = 0; i < img.length; i++) {
+      var wrapper = document.createElement('a')
+      wrapper.setAttribute('href', img[i].getAttribute('data-src'))
+      wrapper.setAttribute('aria-label', 'illustration')
+      wrapper.style.cssText =
+        'width: 100%; display: flex; justify-content: center;'
+      if (img[i].alt) wrapper.dataset.caption = img[i].alt
+      wrapper.dataset.nolink = true
+      img[i].before(wrapper)
+      wrapper.append(img[i])
+      var divWrap = document.createElement('div')
+      divWrap.classList.add('gallery')
+      wrapper.before(divWrap)
+      divWrap.append(wrapper)
+    }
+    baguetteBox.run('.gallery')
+  }
+</script>
+<script>
+  loadScript(
+    "/js/lib/lightbox/baguetteBox.min.js",
+    addImgLayout
+  )
+</script>
+ 
+     
+     
+    <script src="/js/main.js"></script> 
+     
+    
+      <script>
+        var addLazyload = function () {
+          var observer = lozad('.lozad', {
+            load: function (el) {
+              el.srcset = el.getAttribute('data-src')
+            },
+            loaded: function (el) {
+              el.classList.add('loaded')
+            },
+          })
+          observer.observe()
+        }
+      </script>
+      <script>
+        loadScript('/js/lib/lozad.min.js', addLazyload)
+      </script>
+    
+    <script src="//instant.page/5.1.0" type="module"
+      integrity="sha384-by67kQnR+pyfy8yWP4kPO12fHKRLHZPfEsiSXR8u2IKcTdxD805MGUXBzVPnkLHw"></script>
+    
+    
+  </body>
+</html>
