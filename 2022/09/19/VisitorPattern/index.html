@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+  <meta charset="UTF-8">
+  <meta 
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+  <meta 
+    http-equiv="X-UA-Compatible" 
+    content="ie=edge">
+  <meta 
+    name="theme-color" 
+    content="#fff" 
+    id="theme-color">
+  <meta 
+    name="description" 
+    content="Hexo">
+  <link 
+    rel="icon" 
+    href="/">
+  <title>访问者模式</title>
+  
+    
+      <meta 
+        property="og:title" 
+        content="访问者模式">
+    
+    
+      <meta 
+        property="og:url" 
+        content="https://extremelys.github.io/2022/09/19/VisitorPattern/index.html">
+    
+    
+      <meta 
+        property="og:img" 
+        content="https://img.songhn.com/img/Y67gdd.png">
+    
+    
+    
+      <meta 
+        property="og:type" 
+        content="article">
+      <meta 
+        property="og:article:published_time" 
+        content="2022-09-19">
+      <meta 
+        property="og:article:modified_time" 
+        content="2022-10-13">
+      <meta 
+        property="og:article:author" 
+        content="简单且极端">
+      
+        
+          <meta 
+            property="og:article:tag" 
+            content="设计模式">
+        
+          <meta 
+            property="og:article:tag" 
+            content="访问数据结构">
+        
+      
+    
+  
+  
+  <link rel="preload" href="//at.alicdn.com/t/font_1946621_i1kgafibvw.css" as="style" >
+  <link rel="preload" href="//at.alicdn.com/t/font_1952792_89b4ac4k4up.css" as="style" >
+  <link rel="preload" href="/css/main.css" as="style" >
+  
+  <link rel="modulepreload" href="//instant.page/5.1.0">
+  
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1946621_i1kgafibvw.css">
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1952792_89b4ac4k4up.css">
+  
+  
+  
+    <link rel="stylesheet" href="/js/lib/lightbox/baguetteBox.min.css">
+  
+  <script>
+    function loadScript(url, cb) {
+      var script = document.createElement('script');
+      script.src = url;
+      if (cb) script.onload = cb;
+      script.async = true;
+      document.body.appendChild(script);
+    }
+    function loadCSS(href, data, attr) {
+      var sheet = document.createElement('link');
+      sheet.ref = 'stylesheet';
+      sheet.href = href;
+      sheet.dataset[data] = attr;
+      document.head.appendChild(sheet);
+    }
+    function changeCSS(cssFile, data, attr) {
+      var oldlink = document.querySelector(data);
+      var newlink = document.createElement("link");
+      newlink.setAttribute("rel", "stylesheet");
+      newlink.setAttribute("href", cssFile);
+      newlink.dataset.prism = attr;
+      document.head.replaceChild(newlink, oldlink);
+    }
+  </script>
+  
+    
+      
+      
+      
+      
+        
+        
+        
+        <script>
+          function prismThemeChange() {
+            if(document.getElementById('theme-color').dataset.mode === 'dark') {
+              if(document.querySelector('[data-prism]')) {
+                changeCSS('/js/lib/prism/prism-tomorrow.min.css', '[data-prism]', 'prism-tomorrow');
+              } else {
+                loadCSS('/js/lib/prism/prism-tomorrow.min.css', 'prism', 'prism-tomorrow');
+              }
+            } else {
+              if(document.querySelector('[data-prism]')) {
+                changeCSS('/js/lib/prism/prism.min.css', '[data-prism]', 'prism');
+              } else {
+                loadCSS('/js/lib/prism/prism.min.css', 'prism', 'prism');
+              }
+            }
+          }
+          prismThemeChange()
+        </script>
+      
+      
+        
+        <link rel="stylesheet" href="/js/lib/prism/prism-line-numbers.min.css">
+      
+    
+  
+  <script>
+    // control reverse button
+    var reverseDarkList = {
+      dark: 'light',
+      light: 'dark'
+    };
+    var themeColor = {
+      dark: '#1c1c1e',
+      light: '#fff'
+    }
+    // get the data of css prefers-color-scheme
+    var getCssMediaQuery = function() {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    };
+    // reverse current darkmode setting function
+    var reverseDarkModeSetting = function() {
+      var setting = localStorage.getItem('user-color-scheme');
+      if(reverseDarkList[setting]) {
+        setting = reverseDarkList[setting];
+      } else if(setting === null) {
+        setting = reverseDarkList[getCssMediaQuery()];
+      } else {
+        return;
+      }
+      localStorage.setItem('user-color-scheme', setting);
+      return setting;
+    };
+    // apply current darkmode setting
+  </script>
+  
+    <script>
+      var setDarkmode = function(mode) {
+      var setting = mode || localStorage.getItem('user-color-scheme');
+      if(setting === getCssMediaQuery()) {
+        document.documentElement.removeAttribute('data-user-color-scheme');
+        localStorage.removeItem('user-color-scheme');
+        document.getElementById('theme-color').content = themeColor[setting];
+        document.getElementById('theme-color').dataset.mode = setting;
+        prismThemeChange();
+      } else if(reverseDarkList[setting]) {
+        document.documentElement.setAttribute('data-user-color-scheme', setting);
+        document.getElementById('theme-color').content = themeColor[setting];
+        document.getElementById('theme-color').dataset.mode = setting;
+        prismThemeChange();
+      } else {
+        document.documentElement.removeAttribute('data-user-color-scheme');
+        localStorage.removeItem('user-color-scheme');
+        document.getElementById('theme-color').content = themeColor[getCssMediaQuery()];
+        document.getElementById('theme-color').dataset.mode = getCssMediaQuery();
+        prismThemeChange();
+      }
+    };
+    setDarkmode();
+    </script>
+  
+  
+  
+    <link rel="preload" href="/js/lib/lightbox/baguetteBox.min.js" as="script">
+    <link rel="preload" href="/js/lib/lightbox/baguetteBox.min.css" as="style" >
+  
+  
+    <link rel="preload" href="/js/lib/lozad.min.js" as="script">
+  
+  
+  
+  
+  
+  
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+  <body>
+    <div class="wrapper">
+       
+      <nav class="navbar">
+  <div class="navbar-logo">
+    <a class="navbar-logo-main" href="/">
+      
+      <span class="navbar-logo-dsc">简单且极端</span>
+      </a>
+  </div>
+  <div class="navbar-menu">
+    
+      <a 
+        href="/" 
+        class="navbar-menu-item">
+        
+          首页
+        
+      </a>
+    
+      <a 
+        href="/archives" 
+        class="navbar-menu-item">
+        
+          归档
+        
+      </a>
+    
+      <a 
+        href="/tags" 
+        class="navbar-menu-item">
+        
+          标签
+        
+      </a>
+    
+      <a 
+        href="/categories" 
+        class="navbar-menu-item">
+        
+          分类
+        
+      </a>
+    
+    <button 
+      class="navbar-menu-item darknavbar navbar-menu-btn" 
+      aria-label="Toggle dark mode"
+      id="dark">
+      <i class="iconfont icon-weather"></i>
+    </button>
+    <button 
+      class="navbar-menu-item searchnavbar navbar-menu-btn" 
+      aria-label="Toggle search"
+      id="search">
+      <!-- <i 
+        class="iconfont icon-search" 
+        style="font-size: 1.2rem; font-weight: 400;">
+      </i> -->
+      <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img"
+        class="iconify iconify--ion" width="28" height="28" preserveAspectRatio="xMidYMid meet" viewBox="0 0 512 512">
+        <path fill="none" stroke="currentColor" stroke-miterlimit="10" stroke-width="28"
+          d="M256 80a176 176 0 1 0 176 176A176 176 0 0 0 256 80Z"></path>
+        <path fill="none" stroke="currentColor" stroke-miterlimit="10" stroke-width="28"
+          d="M232 160a72 72 0 1 0 72 72a72 72 0 0 0-72-72Z"></path>
+        <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="28"
+          d="M283.64 283.64L336 336"></path>
+      </svg>
+    </button>
+  </div>
+</nav> 
+      
+      <div 
+        id="local-search" 
+        style="display: none">
+        <input
+          class="navbar-menu-item"
+          id="search-input"
+          placeholder="请输入搜索内容..." />
+        <div id="search-content"></div>
+      </div>
+      
+      <div class="section-wrap">
+        <div class="container">
+          <div class="columns">
+            <aside class="left-column">
+              
+              <div class="card card-author">
+                
+  <img 
+    src="https://img.songhn.com/img/Y67gdd.png" 
+    class="author-img"
+    width="88"
+    height="88"
+    alt="author avatar">
+
+<p class="author-name">简单且极端</p>
+<p class="author-description">只做能力范围之内的事，<br/>那么你将永远不会进步。</p>
+<div class="author-message">
+  <a 
+    class="author-posts-count" 
+    href="/archives">
+    <span>13</span>
+    <span>文章</span>
+  </a>
+  <a 
+    class="author-categories-count" 
+    href="/categories">
+    <span>1</span>
+    <span>分类</span>
+  </a>
+  <a 
+    class="author-tags-count" 
+    href="/tags">
+    <span>7</span>
+    <span>标签</span>
+  </a>
+</div>
+
+              </div>
+               <div class="sticky-tablet">
+  
+  
+    <article class="display-when-two-columns spacer">
+      <div class="card card-content toc-card">
+        <div class="toc-header">
+  <i 
+    class="iconfont icon-menu" 
+    style="padding-right: 2px;">
+  </i>目录
+</div>
+<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Visitor%E6%A8%A1%E5%BC%8F%EF%BC%88%E8%AE%BF%E9%97%AE%E8%80%85%E6%A8%A1%E5%BC%8F%EF%BC%89"><span class="toc-text">Visitor模式（访问者模式）</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Visitor%E6%A8%A1%E5%BC%8F"><span class="toc-text">Visitor模式</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E7%B1%BB%E5%9B%BE"><span class="toc-text">示例类图</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E7%A8%8B%E5%BA%8F"><span class="toc-text">示例程序</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Visitor%E7%B1%BB"><span class="toc-text">Visitor类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Element%E6%8E%A5%E5%8F%A3"><span class="toc-text">Element接口</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Entry%E7%B1%BB"><span class="toc-text">Entry类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#File%E7%B1%BB"><span class="toc-text">File类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Directory%E7%B1%BB"><span class="toc-text">Directory类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ListVisitor%E7%B1%BB"><span class="toc-text">ListVisitor类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#FileTeratmentException%E7%B1%BB"><span class="toc-text">FileTeratmentException类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Main%E7%B1%BB"><span class="toc-text">Main类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Visitor%E4%B8%8EElement%E4%B9%8B%E9%97%B4%E7%9A%84%E7%9B%B8%E4%BA%92%E8%B0%83%E7%94%A8"><span class="toc-text">Visitor与Element之间的相互调用</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E7%A8%8B%E5%BA%8F%E7%9A%84%E6%97%B6%E5%BA%8F%E5%9B%BE"><span class="toc-text">示例程序的时序图</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Visitor%E6%A8%A1%E5%BC%8F%E4%B8%AD%E7%9A%84%E7%99%BB%E5%9C%BA%E8%A7%92%E8%89%B2"><span class="toc-text">Visitor模式中的登场角色</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Visitor%EF%BC%88%E8%AE%BF%E9%97%AE%E8%80%85%EF%BC%89"><span class="toc-text">Visitor（访问者）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ConceteVisitor%EF%BC%88%E5%85%B7%E4%BD%93%E7%9A%84%E8%AE%BF%E9%97%AE%E8%80%85%EF%BC%89"><span class="toc-text">ConceteVisitor（具体的访问者）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Element%EF%BC%88%E5%85%83%E7%B4%A0%EF%BC%89"><span class="toc-text">Element（元素）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ConcreteElement"><span class="toc-text">ConcreteElement</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ObjectStructure%EF%BC%88%E5%AF%B9%E8%B1%A1%E7%BB%93%E6%9E%84%EF%BC%89"><span class="toc-text">ObjectStructure（对象结构）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8B%93%E5%B1%95%E6%80%9D%E8%B7%AF%E8%A6%81%E7%82%B9"><span class="toc-text">拓展思路要点</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8F%8C%E9%87%8D%E5%88%86%E5%8F%91"><span class="toc-text">双重分发</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E5%BC%84%E7%9A%84%E8%BF%99%E4%B9%88%E5%A4%8D%E6%9D%82"><span class="toc-text">为什么要弄的这么复杂</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%BC%80%E9%97%AD%E5%8E%9F%E5%88%99%E2%80%94%E2%80%94%E5%AF%B9%E6%89%A9%E5%B1%95%E5%BC%80%E6%94%BE%EF%BC%8C%E5%AF%B9%E4%BF%AE%E6%94%B9%E5%85%B3%E9%97%AD"><span class="toc-text">开闭原则——对扩展开放，对修改关闭</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%98%93%E4%BA%8E%E5%A2%9E%E5%8A%A0ConcreteVisitor%E8%A7%92%E8%89%B2"><span class="toc-text">易于增加ConcreteVisitor角色</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%9A%BE%E4%BB%A5%E5%A2%9E%E5%8A%A0ConcreteElement%E8%A7%92%E8%89%B2"><span class="toc-text">难以增加ConcreteElement角色</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Visitor%E5%B7%A5%E4%BD%9C%E6%89%80%E9%9C%80%E7%9A%84%E6%9D%A1%E4%BB%B6"><span class="toc-text">Visitor工作所需的条件</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%89%80%E5%AD%A6%E7%9F%A5%E8%AF%86"><span class="toc-text">所学知识</span></a></li></ol></li></ol>
+      </div>
+    </article>
+  
+  
+  <article class="card card-content categories-widget">
+    <div class="categories-card">
+  <div class="categories-header">
+    <i 
+      class="iconfont icon-fenlei" 
+      style="padding-right: 2px;">
+    </i>分类
+  </div>
+  <div class="categories-list">
+    
+      <a href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">
+        <div class="categories-list-item">
+          设计模式
+          <span class="categories-list-item-badge">13</span>
+        </div>
+      </a>
+    
+  </div>
+</div>
+  </article>
+  
+  <article class="card card-content tags-widget">
+    <div class="tags-card">
+  <div class="tags-header">
+    <i 
+      class="iconfont icon-biaoqian" 
+      style="padding-right: 2px;">
+    </i>热门标签
+  </div>
+  <div class="tags-list">
+    
+      <a 
+        href="/tags/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" 
+        title="设计模式">
+        <div class="tags-list-item">设计模式</div>
+      </a>
+    
+      <a 
+        href="/tags/%E7%94%9F%E6%88%90%E5%AE%9E%E4%BE%8B/" 
+        title="生成实例">
+        <div class="tags-list-item">生成实例</div>
+      </a>
+    
+      <a 
+        href="/tags/%E4%BA%A4%E7%BB%99%E5%AD%90%E7%B1%BB/" 
+        title="交给子类">
+        <div class="tags-list-item">交给子类</div>
+      </a>
+    
+      <a 
+        href="/tags/%E5%88%86%E5%BC%80%E8%80%83%E8%99%91/" 
+        title="分开考虑">
+        <div class="tags-list-item">分开考虑</div>
+      </a>
+    
+      <a 
+        href="/tags/%E9%80%82%E5%BA%94%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" 
+        title="适应设计模式">
+        <div class="tags-list-item">适应设计模式</div>
+      </a>
+    
+      <a 
+        href="/tags/%E8%AE%BF%E9%97%AE%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" 
+        title="访问数据结构">
+        <div class="tags-list-item">访问数据结构</div>
+      </a>
+    
+      <a 
+        href="/tags/%E4%B8%80%E8%87%B4%E6%80%A7/" 
+        title="一致性">
+        <div class="tags-list-item">一致性</div>
+      </a>
+    
+  </div>
+</div>
+  </article>
+  
+  
+</div>
+            </aside>
+            <main class="main-column">
+              
+<article class="card card-content">
+  <header>
+    <h1 class="post-title">
+      访问者模式
+    </h1>
+  </header>
+  <div class="post-meta post-show-meta">
+    <time datetime="2022-09-19T07:16:32.692Z">
+      <i 
+        class="iconfont icon-calendar" 
+        style="margin-right: 2px;">
+      </i>
+      <span>2022-09-19</span>
+    </time>
+    
+      <span class="dot"></span>
+      
+        <a 
+          href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" 
+          class="post-meta-link">
+          设计模式
+        </a>
+      
+    
+    
+      <span class="dot"></span>
+      <span>4.2k 字</span>
+    
+  </div>
+  
+    <div 
+      class="post-meta post-show-meta" 
+      style="margin-top: -10px;">
+      <div style="display: flex; align-items: center;">
+        <i 
+          class="iconfont icon-biaoqian" 
+          style="margin-right: 2px; font-size: 1.15rem;">
+        </i>
+        
+          
+          <a 
+            href="/tags/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" 
+            class="post-meta-link">
+            设计模式
+          </a>
+        
+          
+            <span class="dot"></span>
+          
+          <a 
+            href="/tags/%E8%AE%BF%E9%97%AE%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" 
+            class="post-meta-link">
+            访问数据结构
+          </a>
+        
+      </div>
+    </div>
+  
+  </header>
+  <div 
+    id="section" 
+    class="post-content">
+    <h1 id="Visitor模式（访问者模式）"><a href="#Visitor模式（访问者模式）" class="headerlink" title="Visitor模式（访问者模式）"></a>Visitor模式（访问者模式）</h1><h2 id="Visitor模式"><a href="#Visitor模式" class="headerlink" title="Visitor模式"></a>Visitor模式</h2><blockquote>
+<p>Visitor是“访问者”的意思。</p>
+<p>在数据结构中保存着许多元素，我们回对这些元素进行“处理”。这时，“处理”代码放在哪里比较好呢？通常的做法是将它们放在表示数据结构的类中。但是，如果“处理”有许多种呢？这种情况下，每当增加一种处理，我们就不得不去修改表示数据结构的类。</p>
+<p>在Visitor模式中，<strong>数据结构与处理被分离开来</strong>。我们编写一个表示“访问者”的类来访问数据结构中的元素，并把对各元素的处理交给访问者类。这样，当需要增加新的处理时，我们只需要编写新的访问者，然后让数据结构可以接受访问者的访问即可。</p>
+</blockquote>
+<h2 id="示例类图"><a href="#示例类图" class="headerlink" title="示例类图"></a>示例类图</h2><blockquote>
+<p><img src="/2022/09/19/VisitorPattern/image-20220929150614093.png" alt="image-20220929150614093" srcset="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20300%20300'%3E%3C/svg%3E" data-src="/2022/09/19/VisitorPattern/image-20220929150614093.png" class="lozad post-image"></p>
+</blockquote>
+<h2 id="示例程序"><a href="#示例程序" class="headerlink" title="示例程序"></a>示例程序</h2><blockquote>
+<h3 id="Visitor类"><a href="#Visitor类" class="headerlink" title="Visitor类"></a>Visitor类</h3><p>Visitor类是表示访问者的抽象类。访问者依赖于它所访问的数据结构（即File类和Directory类）。</p>
+<p>Visitor类中定义了两个方法，名字都叫visit。不过它们接收的参数不同，一个接收File类型的参数，另一个接收Directory类的参数。从外部调用visit方法时，程序回根据接收的参数的类型自动选择和执行相应的visit方法。通常，我们称这种方式为方法的<strong>重载</strong>。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">abstract</span> <span class="token keyword">class</span> <span class="token class-name">Visitor</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">public</span> <span class="token keyword">abstract</span> <span class="token keyword">void</span> <span class="token function">visitor</span><span class="token punctuation">(</span><span class="token class-name">File</span> file<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">public</span> <span class="token keyword">abstract</span> <span class="token keyword">void</span> <span class="token function">visitor</span><span class="token punctuation">(</span><span class="token class-name">Directory</span> directory<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="Element接口"><a href="#Element接口" class="headerlink" title="Element接口"></a>Element接口</h3><p>Visitor类时表示访问者的类，而Element接口则是接收访问者的访问接口。如果将Visitor比喻为玛丽亚，Element接口就相当于住宿的地方（实现了Element接口的类的实例才是实际住宿的地方）。</p>
+<p>Element接口中声明了accept方法（accept在英文中是“接受”的意思）。该方法的参数是访问者Visitor类。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">interface</span> <span class="token class-name">Element</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">public</span> <span class="token keyword">abstract</span> <span class="token keyword">void</span> <span class="token function">accept</span><span class="token punctuation">(</span><span class="token class-name">Visitor</span> v<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="Entry类"><a href="#Entry类" class="headerlink" title="Entry类"></a>Entry类</h3><p>虽然Entry类在本质上与Composite模式中的Entry类是一样的，不过本章中的Entry类实现（implements）了Element接口。这是为了让Entry类适用于Visitor模式。实际上实现Element接口中声明的抽象方法accept的是Entry类的子类——File类和Directory类。</p>
+<p>add方法仅对Directory类有效，因此在Entry类中，我们让它简单地报错。同样地，用于获取Iterator的iterator方法也仅对Directory类有效，我们也让它简单的报错。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">abstract</span> <span class="token keyword">class</span> <span class="token class-name">Entry</span> <span class="token keyword">implements</span> <span class="token class-name">Element</span><span class="token punctuation">&#123;</span>
+    <span class="token comment">/**
+     * 获取文件名字
+     * @return 文件名字
+     */</span>
+    <span class="token keyword">public</span> <span class="token keyword">abstract</span> <span class="token class-name">String</span> <span class="token function">getName</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token comment">/**
+     * 获取文件大小
+     * @return 文件大小
+     */</span>
+    <span class="token keyword">public</span> <span class="token keyword">abstract</span> <span class="token keyword">int</span> <span class="token function">getSize</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token comment">/**
+     * 增加目录条目
+     * @param entry 条目
+     * @return 条目
+     * @throws FileTreatmentException 文件处理异常
+     */</span>
+    <span class="token keyword">public</span> <span class="token class-name">Entry</span> <span class="token function">add</span><span class="token punctuation">(</span><span class="token class-name">Entry</span> entry<span class="token punctuation">)</span> <span class="token keyword">throws</span> <span class="token class-name">FileTreatmentException</span><span class="token punctuation">&#123;</span>
+        <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">FileTreatmentException</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 生成Iterator
+     * @return 迭代器
+     * @throws FileTreatmentException 文件处理异常
+     */</span>
+    <span class="token keyword">public</span> <span class="token class-name">Iterator</span> <span class="token function">iterator</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token keyword">throws</span> <span class="token class-name">FileTreatmentException</span><span class="token punctuation">&#123;</span>
+        <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">FileTreatmentException</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 显示字符串
+     * @return 文件详情
+     */</span>
+    <span class="token keyword">public</span> <span class="token class-name">String</span> <span class="token function">toString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> <span class="token function">getName</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token string">"("</span> <span class="token operator">+</span> <span class="token function">getSize</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token string">")"</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="File类"><a href="#File类" class="headerlink" title="File类"></a>File类</h3><p>File类也与Composite模式中的File类一样。当然，在Visitor模式中要注意理解它是如何实现accept接口的。accept方法的参数是Visitor类，然后accept方法的内部处理是“v.visit(this);”,即调用了Visitor类的visitor方法。visit方法被重载了，此处调用的是visit(File)。这是因为这里的this是File类的实例。</p>
+<p>通过调用visit方法，可以告诉Visitor“正在访问的对象是File类的实例this”。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">File</span> <span class="token keyword">extends</span> <span class="token class-name">Entry</span><span class="token punctuation">&#123;</span>
+    <span class="token comment">/**
+     * 文件名
+     */</span>
+    <span class="token keyword">private</span> <span class="token class-name">String</span> name<span class="token punctuation">;</span>
+    <span class="token comment">/**
+     * 文件大小
+     */</span>
+    <span class="token keyword">private</span> <span class="token keyword">int</span> size<span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> <span class="token class-name">File</span><span class="token punctuation">(</span><span class="token class-name">String</span> name<span class="token punctuation">,</span> <span class="token keyword">int</span> size<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>name <span class="token operator">=</span> name<span class="token punctuation">;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>size <span class="token operator">=</span> size<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 获取文件名字
+     *
+     * @return 文件名字
+     */</span>
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token class-name">String</span> <span class="token function">getName</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> name<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 获取文件大小
+     *
+     * @return 文件大小
+     */</span>
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token keyword">int</span> <span class="token function">getSize</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> size<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">accept</span><span class="token punctuation">(</span><span class="token class-name">Visitor</span> v<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        v<span class="token punctuation">.</span><span class="token function">visitor</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="Directory类"><a href="#Directory类" class="headerlink" title="Directory类"></a>Directory类</h3><p>Directory类是表示文件夹的类。与Composite模式中的Directory类相比，本章中的Directory类中增加了下面两个方法。</p>
+<p>第一个方法是iterator方法。iterator方法回返回Iterator，我们可以使用它遍历文件夹中的所有目录条目（文件和文件夹）。</p>
+<p>第二个方法当然就是accept方法了。与File类中accept方法调用了visit（File）方法一样，Directory类中的accept方法调用了visit（Directory）方法。这样就可以告诉访问者“当前正在访问的是Directory类的实例”。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">Directory</span> <span class="token keyword">extends</span> <span class="token class-name">Entry</span><span class="token punctuation">&#123;</span>
+    <span class="token keyword">private</span> <span class="token class-name">String</span> name<span class="token punctuation">;</span>
+    <span class="token keyword">private</span> <span class="token class-name">ArrayList</span> dir <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">ArrayList</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> <span class="token class-name">Directory</span><span class="token punctuation">(</span><span class="token class-name">String</span> name<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>name <span class="token operator">=</span> name<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 获取文件名字
+     *
+     * @return 文件名字
+     */</span>
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token class-name">String</span> <span class="token function">getName</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> name<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 获取文件大小
+     *
+     * @return 文件大小
+     */</span>
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token keyword">int</span> <span class="token function">getSize</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">int</span> size <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+        <span class="token class-name">Iterator</span> iterator <span class="token operator">=</span> dir<span class="token punctuation">.</span><span class="token function">iterator</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">while</span> <span class="token punctuation">(</span>iterator<span class="token punctuation">.</span><span class="token function">hasNext</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token class-name">Entry</span> entry <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token class-name">Entry</span><span class="token punctuation">)</span> iterator<span class="token punctuation">.</span><span class="token function">next</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            size <span class="token operator">+=</span> entry<span class="token punctuation">.</span><span class="token function">getSize</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+        <span class="token keyword">return</span> size<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 增加目录条目
+     *
+     * @param entry 条目
+     * @return 条目
+     * @throws FileTreatmentException 文件处理异常
+     */</span>
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token class-name">Entry</span> <span class="token function">add</span><span class="token punctuation">(</span><span class="token class-name">Entry</span> entry<span class="token punctuation">)</span> <span class="token keyword">throws</span> <span class="token class-name">FileTreatmentException</span> <span class="token punctuation">&#123;</span>
+        dir<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>entry<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> <span class="token keyword">this</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 生成Iterator
+     *
+     * @return 迭代器
+     * @throws FileTreatmentException 文件处理异常
+     */</span>
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token class-name">Iterator</span> <span class="token function">iterator</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token keyword">throws</span> <span class="token class-name">FileTreatmentException</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> dir<span class="token punctuation">.</span><span class="token function">iterator</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">accept</span><span class="token punctuation">(</span><span class="token class-name">Visitor</span> v<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        v<span class="token punctuation">.</span><span class="token function">visitor</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="ListVisitor类"><a href="#ListVisitor类" class="headerlink" title="ListVisitor类"></a>ListVisitor类</h3><p>ListVisitor类是Visitor类的子类，它的作用是访问数据结构并显示元素一览。因为ListVisitor类是Visitor类的子类，所以它实现了Visit(File)方法和Visit(Directory)方法。</p>
+<p>currentdir字段中保存的是现在正在访问的文件夹的名字。Visit(File)方法在访问者访问文件时会被File类的accept方法调用，参数file是所访问的File类的实例。也就是说，visit(File)方法是用来实现“对File类的实例进行的处理”的。在本例中，我们实现的处理是先显示当前文件夹的名字（currentdir），然后显示间隔符号“&#x2F;”，最后显示文件名。</p>
+<p>visit(Directory)方法实现了“<strong>对Directory类的实例要进行的处理</strong>”。</p>
+<p>本例中是如何实现呢？与visit(File)方法一样，我们先显示当前文件夹的名字，接着调用iterator方法获取文件夹的Iterator，然后通过Iterator遍历文件夹中所有目录条目并调用它们各自的accept方法。由于文件夹中可能存在着许多目录条米，逐一访问会非常困难。</p>
+<p>accept方法调用visit方法，visit方法又会调用accept方法，这样就形成了非常复杂的递归调用。通常的递归调用是某个方法调用自身，在Visitor模式中，则是accept方法与visit方法之间相互递归调用。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">ListVisitor</span> <span class="token keyword">extends</span> <span class="token class-name">Visitor</span><span class="token punctuation">&#123;</span>
+    <span class="token keyword">private</span> <span class="token class-name">String</span> currentDir <span class="token operator">=</span> <span class="token string">""</span><span class="token punctuation">;</span>
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">visitor</span><span class="token punctuation">(</span><span class="token class-name">File</span> file<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span>currentDir <span class="token operator">+</span> <span class="token string">"/"</span> <span class="token operator">+</span> file<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">visitor</span><span class="token punctuation">(</span><span class="token class-name">Directory</span> directory<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span>currentDir <span class="token operator">+</span> <span class="token string">"/"</span> <span class="token operator">+</span> directory<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">String</span> saveDir <span class="token operator">=</span> <span class="token keyword">this</span><span class="token punctuation">.</span>currentDir<span class="token punctuation">;</span>
+        currentDir <span class="token operator">=</span> currentDir <span class="token operator">+</span> <span class="token string">"/"</span> <span class="token operator">+</span> directory<span class="token punctuation">.</span><span class="token function">getName</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">Iterator</span> iterator <span class="token operator">=</span> directory<span class="token punctuation">.</span><span class="token function">iterator</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">while</span> <span class="token punctuation">(</span>iterator<span class="token punctuation">.</span><span class="token function">hasNext</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token class-name">Entry</span> entry <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token class-name">Entry</span><span class="token punctuation">)</span> iterator<span class="token punctuation">.</span><span class="token function">next</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            entry<span class="token punctuation">.</span><span class="token function">accept</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+        currentDir <span class="token operator">=</span> saveDir<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="FileTeratmentException类"><a href="#FileTeratmentException类" class="headerlink" title="FileTeratmentException类"></a>FileTeratmentException类</h3><p>FileTeratmentException类与Composite模式中的FileTeratmentException类完全相同。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">FileTreatmentException</span> <span class="token keyword">extends</span> <span class="token class-name">RuntimeException</span><span class="token punctuation">&#123;</span>
+    <span class="token keyword">public</span> <span class="token class-name">FileTreatmentException</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    <span class="token punctuation">&#125;</span>
+    
+    <span class="token keyword">public</span> <span class="token class-name">FileTreatmentException</span><span class="token punctuation">(</span><span class="token class-name">String</span> message<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">super</span><span class="token punctuation">(</span>message<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="Main类"><a href="#Main类" class="headerlink" title="Main类"></a>Main类</h3><p>Main类与Composite模式中的Main类基本相同。不同之处仅仅在于，本章中的Main类使用了访问者ListVisitor类的实例来显示Directory中的内容。</p>
+<p>在Composite模式中，我们调用printList方法来显示文件夹中的内容。该方法已经在Directory类中（即表示数据结构的类）中被实现了。与之相对，在Visitor模式中是在访问者中显示文件夹中的内容。这是因为显示文件夹中的内容也属于对数据结构中的各元素进行的处理。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">Main</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token class-name">String</span><span class="token punctuation">[</span><span class="token punctuation">]</span> args<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">try</span> <span class="token punctuation">&#123;</span>
+            <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"Making root entries..."</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token class-name">Directory</span> rootDir <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Directory</span><span class="token punctuation">(</span><span class="token string">"root"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token class-name">Directory</span> binDir <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Directory</span><span class="token punctuation">(</span><span class="token string">"bin"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token class-name">Directory</span> tmpDir <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Directory</span><span class="token punctuation">(</span><span class="token string">"tmp"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token class-name">Directory</span> usrDir <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Directory</span><span class="token punctuation">(</span><span class="token string">"usr"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            rootDir<span class="token punctuation">.</span>add <span class="token punctuation">(</span>binDir<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            rootDir<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>tmpDir<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            rootDir<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>usrDir<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            binDir<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">File</span><span class="token punctuation">(</span><span class="token string">"vi"</span><span class="token punctuation">,</span><span class="token number">10000</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            binDir<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">File</span><span class="token punctuation">(</span><span class="token string">"latex"</span><span class="token punctuation">,</span><span class="token number">20000</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            rootDir<span class="token punctuation">.</span><span class="token function">accept</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">ListVisitor</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+            <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">""</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"Making user entries..."</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token class-name">Directory</span> yuki <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Directory</span><span class="token punctuation">(</span><span class="token string">"yuki"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token class-name">Directory</span> hanako <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Directory</span><span class="token punctuation">(</span><span class="token string">"hanako"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token class-name">Directory</span> tomura <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Directory</span><span class="token punctuation">(</span><span class="token string">"tomura"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            usrDir<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>yuki<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            usrDir<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>hanako<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            usrDir<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>tomura<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            yuki<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">File</span><span class="token punctuation">(</span><span class="token string">"diary.html"</span><span class="token punctuation">,</span><span class="token number">100</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            yuki<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">File</span><span class="token punctuation">(</span><span class="token string">"Composite.java"</span><span class="token punctuation">,</span><span class="token number">200</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            hanako<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">File</span><span class="token punctuation">(</span><span class="token string">"memo.tex"</span><span class="token punctuation">,</span><span class="token number">300</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            tomura<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">File</span><span class="token punctuation">(</span><span class="token string">"game.doc"</span><span class="token punctuation">,</span><span class="token number">400</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            tomura<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">File</span><span class="token punctuation">(</span><span class="token string">"junk.mail"</span><span class="token punctuation">,</span><span class="token number">500</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            rootDir<span class="token punctuation">.</span><span class="token function">accept</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">ListVisitor</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">FileTreatmentException</span> e<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            e<span class="token punctuation">.</span><span class="token function">printStackTrace</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="Visitor与Element之间的相互调用"><a href="#Visitor与Element之间的相互调用" class="headerlink" title="Visitor与Element之间的相互调用"></a>Visitor与Element之间的相互调用</h3><p>到这里，应该理解了Visitor模式是如何工作的吧。在初次接触Visitor模式时，完全无法理解这个模式。在头脑中，accept方法和visit方法的调用关系时一片混乱的。因此，这里我们再结合时序图来学习一下示例程序中的处理流程。</p>
+<p>为了方便理解，我们在图中展示了当一个文件夹下有两个文件时，示例程序的处理流程。</p>
+<ol>
+<li>首先，Main类生成ListVisitor的实例。在示例程序中，Main类还生成了其他的Directory类和File类的实例，但在本图中省略了。</li>
+<li>接着，Main类调用了Directory类的accept方法。这时传递的参数时ListVisitor的实例，但在本图中省略了。</li>
+<li>Directory类的实例调用接收的参数ListVisitor的visit(Directory)方法。</li>
+<li>接下来，ListVisitor类的实例会访问文件夹，并调用找到的第一个文件的accept方法。传递的参数时自（this）。</li>
+<li>File的示例调用接收到的参数ListVisitor的visit(File)方法。请注意，这时ListVisitor的Visit(Directory)还在执行中（并非多线程执行，而是表示visit(Directory)还存在于调用堆栈(callstack)中的意思。在时序图中，表示声明周期长方形右侧发生了重叠就说明了这一点）。</li>
+<li>从visit(File)返回到accept，接着又从accept也返回出来，然后调用另外一个File的实例（通一个文件夹下的第二个文件）的accept方法。传递的参数ListVisitor的实例this。</li>
+<li>与前面一样，File的实例调用visit(File)方法。所有处理完成后，逐步返回，最后回到Main类中调用accept方法的地方。</li>
+</ol>
+<h4 id="示例程序的时序图"><a href="#示例程序的时序图" class="headerlink" title="示例程序的时序图"></a>示例程序的时序图</h4><p><img src="/2022/09/19/VisitorPattern/image-20220929165946563.png" alt="image-20220929165946563" srcset="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20300%20300'%3E%3C/svg%3E" data-src="/2022/09/19/VisitorPattern/image-20220929165946563.png" class="lozad post-image"></p>
+<p>在阅读时序图时，请注意以下几点。</p>
+<ul>
+<li>对于Directory类的实例和File类的实例，我们调用了它们的accept方法</li>
+<li>对于每个Directory类的实例和File类的实例，我们只调用了一次它们的accept方法</li>
+<li>对于ListVisitor的实例，我们调用了它的visit(Directory)和visit(File)方法</li>
+<li>处理visit(Directory)和visit(File)的是同一个ListVisitor的实例</li>
+</ul>
+<p>通过上面的学习应该明白了吧。在Visitor模式中，visit方法将“处理”都集中在ListVisitor里面了。</p>
+</blockquote>
+<h2 id="Visitor模式中的登场角色"><a href="#Visitor模式中的登场角色" class="headerlink" title="Visitor模式中的登场角色"></a>Visitor模式中的登场角色</h2><ul>
+<li><h3 id="Visitor（访问者）"><a href="#Visitor（访问者）" class="headerlink" title="Visitor（访问者）"></a><strong>Visitor（访问者）</strong></h3><blockquote>
+<p>Visitor角色负责对数据结构中每个具体的元素（ConcreteElement角色）声明一个用于访问XXXXX的visit(XXXXX)方法。visit(XXXXX)是用于处理XXXXX的方法，负责实现该方法的ConcreteVisitor角色。</p>
+<p>在示例程序中，由Visitor类扮演此角色。</p>
+</blockquote>
+</li>
+<li><h3 id="ConceteVisitor（具体的访问者）"><a href="#ConceteVisitor（具体的访问者）" class="headerlink" title="ConceteVisitor（具体的访问者）"></a><strong>ConceteVisitor（具体的访问者）</strong></h3><blockquote>
+<p>ConcreteVisitor角色负责实现Visitor角色所定义的接口（API）。他要实现所有的visit(XXXXX)方法，即实现如何处理每个ConcreteElement角色。在示例程序中，由ListVistor类扮演此角色。如同在ListVisitor中，currentdir字段的值不断发生变化一样，随着visit(XXXXX)处理的进行，ConcreteVisitor角色。在示例程序中，由Element接口扮演此角色。</p>
+</blockquote>
+</li>
+<li><h3 id="Element（元素）"><a href="#Element（元素）" class="headerlink" title="Element（元素）"></a><strong>Element（元素）</strong></h3><blockquote>
+<p>Element角色表示Visitor角色的访问对象。它声明了接受访问者的accept方法。accept方法接收到的参数是Visitor角色。</p>
+<p>在示例程序中，由Element接口扮演此角色。</p>
+</blockquote>
+</li>
+<li><h3 id="ConcreteElement"><a href="#ConcreteElement" class="headerlink" title="ConcreteElement"></a><strong>ConcreteElement</strong></h3><blockquote>
+<p>ConcreteElement角色负责实现Element角色所定义的接口（API）。</p>
+<p>在示例程序中，由File类和Directory类扮演此类角色。</p>
+</blockquote>
+</li>
+<li><h3 id="ObjectStructure（对象结构）"><a href="#ObjectStructure（对象结构）" class="headerlink" title="ObjectStructure（对象结构）"></a><strong>ObjectStructure（对象结构）</strong></h3><blockquote>
+<p>ObjectStructur角色负责处理Element角色的集合。ConcreteVisitor角色为每个Element角色都准备了处理方法。</p>
+<p>在示例程序中，由Directory类扮演此角色（一人分饰两角）。</p>
+<p>为了让ConcreteVisitor角色可以遍历处理每个Element角色，在示例程序中，我们在Directory类中实现了iterator方法。</p>
+</blockquote>
+</li>
+</ul>
+<h2 id="拓展思路要点"><a href="#拓展思路要点" class="headerlink" title="拓展思路要点"></a>拓展思路要点</h2><ul>
+<li><h3 id="双重分发"><a href="#双重分发" class="headerlink" title="双重分发"></a>双重分发</h3><blockquote>
+<p>整理一下Visitor模式中方法的调用关系。</p>
+<p>accept（接受）方法的调用方法如下。</p>
+<p>element.accept(visitor);</p>
+<p>而visitor(访问)方法的调用方式如下。</p>
+<p>visitor.visit(element);</p>
+<p>对比一下这两个方法回发现，他们是相反的关系。element接受visitor，而visitor又访问element。</p>
+<p>在Visitor模式中，ConcreteElement和ConcreteVisitor这两个角色共同决定了实际进行的处理。这种消息分发的方式一般被称为<strong>双重分发（double dispatch）</strong>。</p>
+</blockquote>
+</li>
+<li><h3 id="为什么要弄的这么复杂"><a href="#为什么要弄的这么复杂" class="headerlink" title="为什么要弄的这么复杂"></a>为什么要弄的这么复杂</h3><blockquote>
+<p>当看到上面的处理流程后，可能会感觉到“Visitor模式不是把简单问题复杂化了吗？” “如果需要循环处理，在数据机构的类中直接编写成循环语句不久解决了吗？为什么要搞出accept方法和visit方法之间那样复杂的调用关系呢？”</p>
+<p>Visitor模式的目的是将处理从数据结构中分离出来。数据结构很重要，它能将元素集合和关联在一起。但是，需要注意的是，保存数据结构以数据结构为基础进行处理是两种不同的东西。</p>
+<p>在示例程序中，我们创建了ListVisitor类作为显示文件内容的ConcreteVisitor角色。此外，在练习题中，我们还要编写进行其他处理的ConcreteVisitor角色。通常，ConcreteVisitor角色的开发可以独立于File类和Directory类。也就是说，Visitor模式提高了File类和Directory类<strong>作为组件的独立性</strong>。如果将进行处理的方法定义在File类和Directory类中，当每次要扩展功能，添加新的“处理”时，就不得不去修改File类和Directory类。</p>
+</blockquote>
+</li>
+<li><h3 id="开闭原则——对扩展开放，对修改关闭"><a href="#开闭原则——对扩展开放，对修改关闭" class="headerlink" title="开闭原则——对扩展开放，对修改关闭"></a>开闭原则——对扩展开放，对修改关闭</h3><blockquote>
+<p>既然谈到了功能扩展和修改，那就顺带谈一谈开闭原则（The Open-Closed Principle, OCP）。该原则是勃兰特·梅耶提出的，而后Robert C.Martin 在 C++ Report（1996年1月）中的Engineering NoteBook专栏中对其进行了总结。</p>
+<p>该原则主张类应当是下面这样的。</p>
+<ul>
+<li><strong>对扩展（extension）是开放（open）的</strong></li>
+<li><strong>对修改（modification）是关闭（close）的</strong></li>
+</ul>
+<p>在设计类时，若无特殊理由，必须要考虑到将来可能会扩展类。绝不能毫无理由地禁止扩展类。这就是“对扩展是开放的”的意思。</p>
+<p>但是，如果在每次扩展类时都需要修改现有的类就太麻烦了。所以我们需要在不用修改现有类的前提下能够扩展类，这就是对“对修改是关闭的”的意思。</p>
+<p>我们提倡扩展，但是如果需要修改现有代码，那就不行了。<strong>在不修改代码的前提下进行扩展</strong>，这就是开闭原则。</p>
+<p>至此已经学习了多种设计模式。那么在看到这条设计原则后，应该都会点头表示赞同吧。</p>
+<p>功能需求总是在不断变化，而且这些功能需求大都是“希望扩展某个功能”。因此，如果不能比较容易地扩展类，开发过程将会变的非常困难。另一方面，如果要修改已经编写和测试完成的类，又可能会导致软件产品的质量降低。</p>
+<p>对扩展开放、对修改关闭的类具有高复用性，可作为组件复用。设计模式和面向对象的目的正是为我们提供一种结构，可以帮助我们设计出这样的类。</p>
+</blockquote>
+</li>
+<li><h3 id="易于增加ConcreteVisitor角色"><a href="#易于增加ConcreteVisitor角色" class="headerlink" title="易于增加ConcreteVisitor角色"></a>易于增加ConcreteVisitor角色</h3><blockquote>
+<p>使用Visitor模式可以哼容易的增加ConcteteVisitor角色。因为具体的处理被交给ConcreteVisitor角色负责，因此完全不用修改ConcreteElement角色。</p>
+</blockquote>
+</li>
+<li><h3 id="难以增加ConcreteElement角色"><a href="#难以增加ConcreteElement角色" class="headerlink" title="难以增加ConcreteElement角色"></a>难以增加ConcreteElement角色</h3><blockquote>
+<p>虽然使用Visitor模式可以很容易地增加ConcreteVisitor角色，不过它却很难应对ConcreteElement角色的增加。</p>
+<p>例如，假设现在我们要在示例程序中增加Entry类的子类Device类。也就是说，Device类是File类和Directory类的兄弟类。这时我们需要在Visitor类中声明一个visit(Device)方法，并在所有的Visitor类的子类中都实现这个方法。</p>
+</blockquote>
+</li>
+<li><h3 id="Visitor工作所需的条件"><a href="#Visitor工作所需的条件" class="headerlink" title="Visitor工作所需的条件"></a>Visitor工作所需的条件</h3><blockquote>
+<p>“在Visitor模式中，对数据结构中的元素进行处理的任务被分离出来，交给Visitor类负责。这样，就实现了数据结构与处理的分离”这个主题，在本章学习过程中已经提到很多次了。但是要达到这个目的是有条件的，那就是Element角色必须向Visitor角色公开足够多的信息。</p>
+<p>例如，在示例程序中，visit(Directory)方法需要调用每个目录条目的accept方法。为此，Directory类必须提供用于获取每个目录条目的iterator方法。</p>
+<p>访问者只有从数据结构中获取了足够多的信息才能工作。如果无法获取到这些信息，它就无法工作。这样做的缺点是，如果公开了不应当被公开的信息，将来对数据结构的改良就会变得非常困难。</p>
+</blockquote>
+</li>
+</ul>
+<h2 id="所学知识"><a href="#所学知识" class="headerlink" title="所学知识"></a>所学知识</h2><blockquote>
+<p>学习了访问数据结构并对数据结构中的元素进行处理的Visitor模式。</p>
+</blockquote>
+
+  </div>
+  <div>
+    
+      <div 
+        class="post-note note-warning copyright" 
+        style="margin-top: 42px">
+        <p>
+          <span style="font-weight: bold;">作者：</span><a 
+            target="_blank" 
+            rel="nofollow noopener noreferrer" 
+            href="/about">
+            简单且极端
+          </a>
+        </p>
+        <p>
+          <span style="font-weight: bold;">文章链接：</span><a 
+            target="_blank" 
+            rel="nofollow noopener noreferrer" 
+            href="https://extremelys.github.io/2022/09/19/VisitorPattern/">
+            https://extremelys.github.io/2022/09/19/VisitorPattern/
+          </a>
+        </p>
+        <p><span style="font-weight: bold;">版权声明：</span>本博客所有文章除特别声明外，均采用<a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">CC BY-NC-SA 4.0 协议</a>。转载请注明出处！</p>
+      </div>
+    
+  </div>
+</article>
+<div class="nav">
+  
+  
+    <div class="nav-item-next">
+      <a 
+        href="/2022/09/16/DecoratorPatten/" 
+        class="nav-link">
+        <div>
+          <div class="nav-label">下一篇</div>
+          
+            <div class="nav-title">装饰器模式 </div>
+          
+        </div>
+        <i class="iconfont icon-right nav-next-icon"></i>
+      </a>
+    </div>
+  
+</div>
+
+<div 
+  class="card card-content toc-card" 
+  id="mobiletoc">
+  <div class="toc-header">
+  <i 
+    class="iconfont icon-menu" 
+    style="padding-right: 2px;">
+  </i>目录
+</div>
+<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Visitor%E6%A8%A1%E5%BC%8F%EF%BC%88%E8%AE%BF%E9%97%AE%E8%80%85%E6%A8%A1%E5%BC%8F%EF%BC%89"><span class="toc-text">Visitor模式（访问者模式）</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Visitor%E6%A8%A1%E5%BC%8F"><span class="toc-text">Visitor模式</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E7%B1%BB%E5%9B%BE"><span class="toc-text">示例类图</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E7%A8%8B%E5%BA%8F"><span class="toc-text">示例程序</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Visitor%E7%B1%BB"><span class="toc-text">Visitor类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Element%E6%8E%A5%E5%8F%A3"><span class="toc-text">Element接口</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Entry%E7%B1%BB"><span class="toc-text">Entry类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#File%E7%B1%BB"><span class="toc-text">File类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Directory%E7%B1%BB"><span class="toc-text">Directory类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ListVisitor%E7%B1%BB"><span class="toc-text">ListVisitor类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#FileTeratmentException%E7%B1%BB"><span class="toc-text">FileTeratmentException类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Main%E7%B1%BB"><span class="toc-text">Main类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Visitor%E4%B8%8EElement%E4%B9%8B%E9%97%B4%E7%9A%84%E7%9B%B8%E4%BA%92%E8%B0%83%E7%94%A8"><span class="toc-text">Visitor与Element之间的相互调用</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E7%A8%8B%E5%BA%8F%E7%9A%84%E6%97%B6%E5%BA%8F%E5%9B%BE"><span class="toc-text">示例程序的时序图</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Visitor%E6%A8%A1%E5%BC%8F%E4%B8%AD%E7%9A%84%E7%99%BB%E5%9C%BA%E8%A7%92%E8%89%B2"><span class="toc-text">Visitor模式中的登场角色</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Visitor%EF%BC%88%E8%AE%BF%E9%97%AE%E8%80%85%EF%BC%89"><span class="toc-text">Visitor（访问者）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ConceteVisitor%EF%BC%88%E5%85%B7%E4%BD%93%E7%9A%84%E8%AE%BF%E9%97%AE%E8%80%85%EF%BC%89"><span class="toc-text">ConceteVisitor（具体的访问者）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Element%EF%BC%88%E5%85%83%E7%B4%A0%EF%BC%89"><span class="toc-text">Element（元素）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ConcreteElement"><span class="toc-text">ConcreteElement</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ObjectStructure%EF%BC%88%E5%AF%B9%E8%B1%A1%E7%BB%93%E6%9E%84%EF%BC%89"><span class="toc-text">ObjectStructure（对象结构）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8B%93%E5%B1%95%E6%80%9D%E8%B7%AF%E8%A6%81%E7%82%B9"><span class="toc-text">拓展思路要点</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8F%8C%E9%87%8D%E5%88%86%E5%8F%91"><span class="toc-text">双重分发</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E5%BC%84%E7%9A%84%E8%BF%99%E4%B9%88%E5%A4%8D%E6%9D%82"><span class="toc-text">为什么要弄的这么复杂</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%BC%80%E9%97%AD%E5%8E%9F%E5%88%99%E2%80%94%E2%80%94%E5%AF%B9%E6%89%A9%E5%B1%95%E5%BC%80%E6%94%BE%EF%BC%8C%E5%AF%B9%E4%BF%AE%E6%94%B9%E5%85%B3%E9%97%AD"><span class="toc-text">开闭原则——对扩展开放，对修改关闭</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%98%93%E4%BA%8E%E5%A2%9E%E5%8A%A0ConcreteVisitor%E8%A7%92%E8%89%B2"><span class="toc-text">易于增加ConcreteVisitor角色</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%9A%BE%E4%BB%A5%E5%A2%9E%E5%8A%A0ConcreteElement%E8%A7%92%E8%89%B2"><span class="toc-text">难以增加ConcreteElement角色</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Visitor%E5%B7%A5%E4%BD%9C%E6%89%80%E9%9C%80%E7%9A%84%E6%9D%A1%E4%BB%B6"><span class="toc-text">Visitor工作所需的条件</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%89%80%E5%AD%A6%E7%9F%A5%E8%AF%86"><span class="toc-text">所学知识</span></a></li></ol></li></ol>
+</div>
+            </main>
+            <aside class="right-column">
+              <div class="sticky-widescreen">
+  
+  
+    <article class="card card-content toc-card">
+      <div class="toc-header">
+  <i 
+    class="iconfont icon-menu" 
+    style="padding-right: 2px;">
+  </i>目录
+</div>
+<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Visitor%E6%A8%A1%E5%BC%8F%EF%BC%88%E8%AE%BF%E9%97%AE%E8%80%85%E6%A8%A1%E5%BC%8F%EF%BC%89"><span class="toc-text">Visitor模式（访问者模式）</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Visitor%E6%A8%A1%E5%BC%8F"><span class="toc-text">Visitor模式</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E7%B1%BB%E5%9B%BE"><span class="toc-text">示例类图</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E7%A8%8B%E5%BA%8F"><span class="toc-text">示例程序</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Visitor%E7%B1%BB"><span class="toc-text">Visitor类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Element%E6%8E%A5%E5%8F%A3"><span class="toc-text">Element接口</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Entry%E7%B1%BB"><span class="toc-text">Entry类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#File%E7%B1%BB"><span class="toc-text">File类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Directory%E7%B1%BB"><span class="toc-text">Directory类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ListVisitor%E7%B1%BB"><span class="toc-text">ListVisitor类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#FileTeratmentException%E7%B1%BB"><span class="toc-text">FileTeratmentException类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Main%E7%B1%BB"><span class="toc-text">Main类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Visitor%E4%B8%8EElement%E4%B9%8B%E9%97%B4%E7%9A%84%E7%9B%B8%E4%BA%92%E8%B0%83%E7%94%A8"><span class="toc-text">Visitor与Element之间的相互调用</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E7%A8%8B%E5%BA%8F%E7%9A%84%E6%97%B6%E5%BA%8F%E5%9B%BE"><span class="toc-text">示例程序的时序图</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Visitor%E6%A8%A1%E5%BC%8F%E4%B8%AD%E7%9A%84%E7%99%BB%E5%9C%BA%E8%A7%92%E8%89%B2"><span class="toc-text">Visitor模式中的登场角色</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Visitor%EF%BC%88%E8%AE%BF%E9%97%AE%E8%80%85%EF%BC%89"><span class="toc-text">Visitor（访问者）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ConceteVisitor%EF%BC%88%E5%85%B7%E4%BD%93%E7%9A%84%E8%AE%BF%E9%97%AE%E8%80%85%EF%BC%89"><span class="toc-text">ConceteVisitor（具体的访问者）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Element%EF%BC%88%E5%85%83%E7%B4%A0%EF%BC%89"><span class="toc-text">Element（元素）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ConcreteElement"><span class="toc-text">ConcreteElement</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ObjectStructure%EF%BC%88%E5%AF%B9%E8%B1%A1%E7%BB%93%E6%9E%84%EF%BC%89"><span class="toc-text">ObjectStructure（对象结构）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8B%93%E5%B1%95%E6%80%9D%E8%B7%AF%E8%A6%81%E7%82%B9"><span class="toc-text">拓展思路要点</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8F%8C%E9%87%8D%E5%88%86%E5%8F%91"><span class="toc-text">双重分发</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E5%BC%84%E7%9A%84%E8%BF%99%E4%B9%88%E5%A4%8D%E6%9D%82"><span class="toc-text">为什么要弄的这么复杂</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%BC%80%E9%97%AD%E5%8E%9F%E5%88%99%E2%80%94%E2%80%94%E5%AF%B9%E6%89%A9%E5%B1%95%E5%BC%80%E6%94%BE%EF%BC%8C%E5%AF%B9%E4%BF%AE%E6%94%B9%E5%85%B3%E9%97%AD"><span class="toc-text">开闭原则——对扩展开放，对修改关闭</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%98%93%E4%BA%8E%E5%A2%9E%E5%8A%A0ConcreteVisitor%E8%A7%92%E8%89%B2"><span class="toc-text">易于增加ConcreteVisitor角色</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%9A%BE%E4%BB%A5%E5%A2%9E%E5%8A%A0ConcreteElement%E8%A7%92%E8%89%B2"><span class="toc-text">难以增加ConcreteElement角色</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Visitor%E5%B7%A5%E4%BD%9C%E6%89%80%E9%9C%80%E7%9A%84%E6%9D%A1%E4%BB%B6"><span class="toc-text">Visitor工作所需的条件</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%89%80%E5%AD%A6%E7%9F%A5%E8%AF%86"><span class="toc-text">所学知识</span></a></li></ol></li></ol>
+    </article>
+  
+  
+  <article class="card card-content">
+    <div class="recent-posts-card">
+  <div class="recent-posts-header">
+    <i 
+      class="iconfont icon-wenzhang_huaban" 
+      style="padding-right: 2px;">
+    </i>最近文章
+  </div>
+  <div class="recent-posts-list">
+    
+      <div class="recent-posts-item">
+        <div class="recent-posts-item-title">2022-09-19</div>
+        <a href="/2022/09/19/VisitorPattern/"><div class="recent-posts-item-content">访问者模式</div></a>
+      </div>
+    
+      <div class="recent-posts-item">
+        <div class="recent-posts-item-title">2022-09-16</div>
+        <a href="/2022/09/16/DecoratorPatten/"><div class="recent-posts-item-content">装饰器模式</div></a>
+      </div>
+    
+      <div class="recent-posts-item">
+        <div class="recent-posts-item-title">2022-08-25</div>
+        <a href="/2022/08/25/CompositePattern/"><div class="recent-posts-item-content">组合模式</div></a>
+      </div>
+    
+      <div class="recent-posts-item">
+        <div class="recent-posts-item-title">2022-08-24</div>
+        <a href="/2022/08/24/StrategyPattern/"><div class="recent-posts-item-content">策略模式</div></a>
+      </div>
+    
+  </div>
+</div>
+  </article>
+  
+  
+</div>
+            </aside>
+          </div>
+        </div>
+      </div>
+    </div>
+     
+    <footer class="footer">
+  <div class="footer-container">
+    <div>
+      <div class="footer-dsc">
+        <span>
+          Copyright ©
+          
+            2022
+          
+          
+        </span>
+        &nbsp;
+        <a 
+          href="/" 
+          class="footer-link">
+          简单且极端
+        </a>
+      </div>
+    </div>
+
+    
+      <div class="footer-dsc">
+        
+          Powered by
+          <a 
+            href="https://hexo.io/" 
+            class="footer-link" 
+            target="_blank" 
+            rel="nofollow noopener noreferrer">
+            &nbsp;Hexo
+          </a>
+        
+        
+          <span>&nbsp;|&nbsp;</span>
+        
+        
+          Theme -
+          <a 
+            href="https://github.com/theme-kaze" 
+            class="footer-link" 
+            target="_blank"
+            rel="nofollow noopener noreferrer">
+            &nbsp;Kaze
+          </a>
+        
+      </div>
+    
+    
+    
+    
+</footer>
+ 
+    
+  <a 
+    role="button" 
+    id="scrollbutton" 
+    class="basebutton" 
+    aria-label="回到顶部">
+    <i class="iconfont icon-arrowleft button-icon"></i>
+  </a>
+
+<a 
+  role="button" 
+  id="menubutton"
+  aria-label="menu button"
+  class="basebutton">
+  <i class="iconfont icon-menu button-icon"></i>
+</a>
+<a 
+  role="button" 
+  id="popbutton" 
+  class="basebutton" 
+  aria-label="控制中心">
+  <i class="iconfont icon-expand button-icon"></i>
+</a>
+<a 
+  role="button" 
+  id="darkbutton" 
+  class="basebutton darkwidget" 
+  aria-label="夜色模式">
+  <i class="iconfont icon-weather button-icon"></i>
+</a>
+<a 
+  role="button" 
+  id="searchbutton" 
+  class="basebutton searchwidget" 
+  aria-label="搜索">
+  <i class="iconfont icon-search button-icon"></i>
+</a> 
+     
+     
+     
+      <script>
+  var addImgLayout = function () {
+    var img = document.querySelectorAll('.post-content img')
+    var i
+    for (i = 0; i < img.length; i++) {
+      var wrapper = document.createElement('a')
+      wrapper.setAttribute('href', img[i].getAttribute('data-src'))
+      wrapper.setAttribute('aria-label', 'illustration')
+      wrapper.style.cssText =
+        'width: 100%; display: flex; justify-content: center;'
+      if (img[i].alt) wrapper.dataset.caption = img[i].alt
+      wrapper.dataset.nolink = true
+      img[i].before(wrapper)
+      wrapper.append(img[i])
+      var divWrap = document.createElement('div')
+      divWrap.classList.add('gallery')
+      wrapper.before(divWrap)
+      divWrap.append(wrapper)
+    }
+    baguetteBox.run('.gallery')
+  }
+</script>
+<script>
+  loadScript(
+    "/js/lib/lightbox/baguetteBox.min.js",
+    addImgLayout
+  )
+</script>
+ 
+     
+     
+    <script src="/js/main.js"></script> 
+     
+    
+      <script>
+        var addLazyload = function () {
+          var observer = lozad('.lozad', {
+            load: function (el) {
+              el.srcset = el.getAttribute('data-src')
+            },
+            loaded: function (el) {
+              el.classList.add('loaded')
+            },
+          })
+          observer.observe()
+        }
+      </script>
+      <script>
+        loadScript('/js/lib/lozad.min.js', addLazyload)
+      </script>
+    
+    <script src="//instant.page/5.1.0" type="module"
+      integrity="sha384-by67kQnR+pyfy8yWP4kPO12fHKRLHZPfEsiSXR8u2IKcTdxD805MGUXBzVPnkLHw"></script>
+    
+    
+  </body>
+</html>

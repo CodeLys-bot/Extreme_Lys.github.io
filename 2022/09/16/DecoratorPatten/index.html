@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+  <meta charset="UTF-8">
+  <meta 
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+  <meta 
+    http-equiv="X-UA-Compatible" 
+    content="ie=edge">
+  <meta 
+    name="theme-color" 
+    content="#fff" 
+    id="theme-color">
+  <meta 
+    name="description" 
+    content="Hexo">
+  <link 
+    rel="icon" 
+    href="/">
+  <title>装饰器模式</title>
+  
+    
+      <meta 
+        property="og:title" 
+        content="装饰器模式">
+    
+    
+      <meta 
+        property="og:url" 
+        content="https://extremelys.github.io/2022/09/16/DecoratorPatten/index.html">
+    
+    
+      <meta 
+        property="og:img" 
+        content="https://img.songhn.com/img/Y67gdd.png">
+    
+    
+    
+      <meta 
+        property="og:type" 
+        content="article">
+      <meta 
+        property="og:article:published_time" 
+        content="2022-09-16">
+      <meta 
+        property="og:article:modified_time" 
+        content="2022-09-19">
+      <meta 
+        property="og:article:author" 
+        content="简单且极端">
+      
+        
+          <meta 
+            property="og:article:tag" 
+            content="设计模式">
+        
+          <meta 
+            property="og:article:tag" 
+            content="一致性">
+        
+      
+    
+  
+  
+  <link rel="preload" href="//at.alicdn.com/t/font_1946621_i1kgafibvw.css" as="style" >
+  <link rel="preload" href="//at.alicdn.com/t/font_1952792_89b4ac4k4up.css" as="style" >
+  <link rel="preload" href="/css/main.css" as="style" >
+  
+  <link rel="modulepreload" href="//instant.page/5.1.0">
+  
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1946621_i1kgafibvw.css">
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1952792_89b4ac4k4up.css">
+  
+  
+  
+    <link rel="stylesheet" href="/js/lib/lightbox/baguetteBox.min.css">
+  
+  <script>
+    function loadScript(url, cb) {
+      var script = document.createElement('script');
+      script.src = url;
+      if (cb) script.onload = cb;
+      script.async = true;
+      document.body.appendChild(script);
+    }
+    function loadCSS(href, data, attr) {
+      var sheet = document.createElement('link');
+      sheet.ref = 'stylesheet';
+      sheet.href = href;
+      sheet.dataset[data] = attr;
+      document.head.appendChild(sheet);
+    }
+    function changeCSS(cssFile, data, attr) {
+      var oldlink = document.querySelector(data);
+      var newlink = document.createElement("link");
+      newlink.setAttribute("rel", "stylesheet");
+      newlink.setAttribute("href", cssFile);
+      newlink.dataset.prism = attr;
+      document.head.replaceChild(newlink, oldlink);
+    }
+  </script>
+  
+    
+      
+      
+      
+      
+        
+        
+        
+        <script>
+          function prismThemeChange() {
+            if(document.getElementById('theme-color').dataset.mode === 'dark') {
+              if(document.querySelector('[data-prism]')) {
+                changeCSS('/js/lib/prism/prism-tomorrow.min.css', '[data-prism]', 'prism-tomorrow');
+              } else {
+                loadCSS('/js/lib/prism/prism-tomorrow.min.css', 'prism', 'prism-tomorrow');
+              }
+            } else {
+              if(document.querySelector('[data-prism]')) {
+                changeCSS('/js/lib/prism/prism.min.css', '[data-prism]', 'prism');
+              } else {
+                loadCSS('/js/lib/prism/prism.min.css', 'prism', 'prism');
+              }
+            }
+          }
+          prismThemeChange()
+        </script>
+      
+      
+        
+        <link rel="stylesheet" href="/js/lib/prism/prism-line-numbers.min.css">
+      
+    
+  
+  <script>
+    // control reverse button
+    var reverseDarkList = {
+      dark: 'light',
+      light: 'dark'
+    };
+    var themeColor = {
+      dark: '#1c1c1e',
+      light: '#fff'
+    }
+    // get the data of css prefers-color-scheme
+    var getCssMediaQuery = function() {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    };
+    // reverse current darkmode setting function
+    var reverseDarkModeSetting = function() {
+      var setting = localStorage.getItem('user-color-scheme');
+      if(reverseDarkList[setting]) {
+        setting = reverseDarkList[setting];
+      } else if(setting === null) {
+        setting = reverseDarkList[getCssMediaQuery()];
+      } else {
+        return;
+      }
+      localStorage.setItem('user-color-scheme', setting);
+      return setting;
+    };
+    // apply current darkmode setting
+  </script>
+  
+    <script>
+      var setDarkmode = function(mode) {
+      var setting = mode || localStorage.getItem('user-color-scheme');
+      if(setting === getCssMediaQuery()) {
+        document.documentElement.removeAttribute('data-user-color-scheme');
+        localStorage.removeItem('user-color-scheme');
+        document.getElementById('theme-color').content = themeColor[setting];
+        document.getElementById('theme-color').dataset.mode = setting;
+        prismThemeChange();
+      } else if(reverseDarkList[setting]) {
+        document.documentElement.setAttribute('data-user-color-scheme', setting);
+        document.getElementById('theme-color').content = themeColor[setting];
+        document.getElementById('theme-color').dataset.mode = setting;
+        prismThemeChange();
+      } else {
+        document.documentElement.removeAttribute('data-user-color-scheme');
+        localStorage.removeItem('user-color-scheme');
+        document.getElementById('theme-color').content = themeColor[getCssMediaQuery()];
+        document.getElementById('theme-color').dataset.mode = getCssMediaQuery();
+        prismThemeChange();
+      }
+    };
+    setDarkmode();
+    </script>
+  
+  
+  
+    <link rel="preload" href="/js/lib/lightbox/baguetteBox.min.js" as="script">
+    <link rel="preload" href="/js/lib/lightbox/baguetteBox.min.css" as="style" >
+  
+  
+    <link rel="preload" href="/js/lib/lozad.min.js" as="script">
+  
+  
+  
+  
+  
+  
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+  <body>
+    <div class="wrapper">
+       
+      <nav class="navbar">
+  <div class="navbar-logo">
+    <a class="navbar-logo-main" href="/">
+      
+      <span class="navbar-logo-dsc">简单且极端</span>
+      </a>
+  </div>
+  <div class="navbar-menu">
+    
+      <a 
+        href="/" 
+        class="navbar-menu-item">
+        
+          首页
+        
+      </a>
+    
+      <a 
+        href="/archives" 
+        class="navbar-menu-item">
+        
+          归档
+        
+      </a>
+    
+      <a 
+        href="/tags" 
+        class="navbar-menu-item">
+        
+          标签
+        
+      </a>
+    
+      <a 
+        href="/categories" 
+        class="navbar-menu-item">
+        
+          分类
+        
+      </a>
+    
+    <button 
+      class="navbar-menu-item darknavbar navbar-menu-btn" 
+      aria-label="Toggle dark mode"
+      id="dark">
+      <i class="iconfont icon-weather"></i>
+    </button>
+    <button 
+      class="navbar-menu-item searchnavbar navbar-menu-btn" 
+      aria-label="Toggle search"
+      id="search">
+      <!-- <i 
+        class="iconfont icon-search" 
+        style="font-size: 1.2rem; font-weight: 400;">
+      </i> -->
+      <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img"
+        class="iconify iconify--ion" width="28" height="28" preserveAspectRatio="xMidYMid meet" viewBox="0 0 512 512">
+        <path fill="none" stroke="currentColor" stroke-miterlimit="10" stroke-width="28"
+          d="M256 80a176 176 0 1 0 176 176A176 176 0 0 0 256 80Z"></path>
+        <path fill="none" stroke="currentColor" stroke-miterlimit="10" stroke-width="28"
+          d="M232 160a72 72 0 1 0 72 72a72 72 0 0 0-72-72Z"></path>
+        <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="28"
+          d="M283.64 283.64L336 336"></path>
+      </svg>
+    </button>
+  </div>
+</nav> 
+      
+      <div 
+        id="local-search" 
+        style="display: none">
+        <input
+          class="navbar-menu-item"
+          id="search-input"
+          placeholder="请输入搜索内容..." />
+        <div id="search-content"></div>
+      </div>
+      
+      <div class="section-wrap">
+        <div class="container">
+          <div class="columns">
+            <aside class="left-column">
+              
+              <div class="card card-author">
+                
+  <img 
+    src="https://img.songhn.com/img/Y67gdd.png" 
+    class="author-img"
+    width="88"
+    height="88"
+    alt="author avatar">
+
+<p class="author-name">简单且极端</p>
+<p class="author-description">只做能力范围之内的事，<br/>那么你将永远不会进步。</p>
+<div class="author-message">
+  <a 
+    class="author-posts-count" 
+    href="/archives">
+    <span>13</span>
+    <span>文章</span>
+  </a>
+  <a 
+    class="author-categories-count" 
+    href="/categories">
+    <span>1</span>
+    <span>分类</span>
+  </a>
+  <a 
+    class="author-tags-count" 
+    href="/tags">
+    <span>7</span>
+    <span>标签</span>
+  </a>
+</div>
+
+              </div>
+               <div class="sticky-tablet">
+  
+  
+    <article class="display-when-two-columns spacer">
+      <div class="card card-content toc-card">
+        <div class="toc-header">
+  <i 
+    class="iconfont icon-menu" 
+    style="padding-right: 2px;">
+  </i>目录
+</div>
+<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%A3%85%E9%A5%B0%E5%99%A8%E6%A8%A1%E5%BC%8F%EF%BC%88Decorator%E6%A8%A1%E5%BC%8F%EF%BC%89"><span class="toc-text">装饰器模式（Decorator模式）</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E7%B1%BB%E5%9B%BE"><span class="toc-text">示例类图</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E7%A8%8B%E5%BA%8F"><span class="toc-text">示例程序</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Display%E7%B1%BB"><span class="toc-text">Display类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#StringDisplay%E7%B1%BB"><span class="toc-text">StringDisplay类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Border%E7%B1%BB"><span class="toc-text">Border类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#SideBorder%E7%B1%BB"><span class="toc-text">SideBorder类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#FullBorder%E7%B1%BB"><span class="toc-text">FullBorder类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Main%E7%B1%BB"><span class="toc-text">Main类</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Decorator%E6%A8%A1%E5%BC%8F%E4%B8%AD%E7%9A%84%E7%99%BB%E5%9C%BA%E8%A7%92%E8%89%B2"><span class="toc-text">Decorator模式中的登场角色</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Component"><span class="toc-text">Component</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ConcreteComponent"><span class="toc-text">ConcreteComponent</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Decorator%EF%BC%88%E8%A3%85%E9%A5%B0%E7%89%A9%EF%BC%89"><span class="toc-text">Decorator（装饰物）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ConcreteDecorator%EF%BC%88%E5%85%B7%E4%BD%93%E7%9A%84%E8%A3%85%E9%A5%B0%E7%89%A9%EF%BC%89"><span class="toc-text">ConcreteDecorator（具体的装饰物）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Decorator%E6%A8%A1%E5%BC%8F%E7%9A%84%E7%B1%BB%E5%9B%BE"><span class="toc-text">Decorator模式的类图</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%9D%E8%B7%AF%E8%A6%81%E7%82%B9"><span class="toc-text">思路要点</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8E%A5%E5%8F%A3%EF%BC%88API%EF%BC%89%E7%9A%84%E9%80%8F%E6%98%8E%E6%80%A7"><span class="toc-text">接口（API）的透明性</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9C%A8%E4%B8%8D%E6%94%B9%E5%8F%98%E8%A2%AB%E8%A3%85%E9%A5%B0%E7%89%A9%E7%9A%84%E5%89%8D%E6%8F%90%E4%B8%8B%E5%A2%9E%E5%8A%A0%E5%8A%9F%E8%83%BD"><span class="toc-text">在不改变被装饰物的前提下增加功能</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8F%AF%E4%BB%A5%E5%8A%A8%E6%80%81%E7%9A%84%E5%A2%9E%E5%8A%A0%E5%8A%9F%E8%83%BD"><span class="toc-text">可以动态的增加功能</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8F%AA%E9%9C%80%E8%A6%81%E4%B8%80%E4%BA%9B%E8%A3%85%E9%A5%B0%E7%89%A9%E5%8D%B3%E5%8F%AF%E6%B7%BB%E5%8A%A0%E8%AE%B8%E5%A4%9A%E5%8A%9F%E8%83%BD"><span class="toc-text">只需要一些装饰物即可添加许多功能</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#java-io%E5%8C%85%E4%B8%8EDecorator%E6%A8%A1%E5%BC%8F"><span class="toc-text">java.io包与Decorator模式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AF%BC%E8%87%B4%E5%A2%9E%E5%8A%A0%E8%AE%B8%E5%A4%9A%E5%BE%88%E5%B0%8F%E7%9A%84%E7%B1%BB"><span class="toc-text">导致增加许多很小的类</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%BB%B6%E4%BC%B8%E9%98%85%E8%AF%BB%EF%BC%9A%E7%BB%A7%E6%89%BF%E5%92%8C%E5%A7%94%E6%89%98%E4%B8%AD%E7%9A%84%E4%B8%80%E8%87%B4%E6%80%A7"><span class="toc-text">延伸阅读：继承和委托中的一致性</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BB%A7%E6%89%BF%E2%80%94%E2%80%94%E7%88%B6%E7%B1%BB%E5%92%8C%E5%AD%90%E7%B1%BB%E7%9A%84%E4%B8%80%E8%87%B4%E6%80%A7"><span class="toc-text">继承——父类和子类的一致性</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%A7%94%E6%89%98%E2%80%94%E2%80%94%E8%87%AA%E5%B7%B1%E5%92%8C%E8%A2%AB%E5%A7%94%E6%89%98%E5%AF%B9%E8%B1%A1%E7%9A%84%E4%B8%80%E8%87%B4%E6%80%A7"><span class="toc-text">委托——自己和被委托对象的一致性</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%89%80%E5%AD%A6%E7%9F%A5%E8%AF%86"><span class="toc-text">所学知识</span></a></li></ol></li></ol>
+      </div>
+    </article>
+  
+  
+  <article class="card card-content categories-widget">
+    <div class="categories-card">
+  <div class="categories-header">
+    <i 
+      class="iconfont icon-fenlei" 
+      style="padding-right: 2px;">
+    </i>分类
+  </div>
+  <div class="categories-list">
+    
+      <a href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">
+        <div class="categories-list-item">
+          设计模式
+          <span class="categories-list-item-badge">13</span>
+        </div>
+      </a>
+    
+  </div>
+</div>
+  </article>
+  
+  <article class="card card-content tags-widget">
+    <div class="tags-card">
+  <div class="tags-header">
+    <i 
+      class="iconfont icon-biaoqian" 
+      style="padding-right: 2px;">
+    </i>热门标签
+  </div>
+  <div class="tags-list">
+    
+      <a 
+        href="/tags/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" 
+        title="设计模式">
+        <div class="tags-list-item">设计模式</div>
+      </a>
+    
+      <a 
+        href="/tags/%E7%94%9F%E6%88%90%E5%AE%9E%E4%BE%8B/" 
+        title="生成实例">
+        <div class="tags-list-item">生成实例</div>
+      </a>
+    
+      <a 
+        href="/tags/%E4%BA%A4%E7%BB%99%E5%AD%90%E7%B1%BB/" 
+        title="交给子类">
+        <div class="tags-list-item">交给子类</div>
+      </a>
+    
+      <a 
+        href="/tags/%E5%88%86%E5%BC%80%E8%80%83%E8%99%91/" 
+        title="分开考虑">
+        <div class="tags-list-item">分开考虑</div>
+      </a>
+    
+      <a 
+        href="/tags/%E9%80%82%E5%BA%94%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" 
+        title="适应设计模式">
+        <div class="tags-list-item">适应设计模式</div>
+      </a>
+    
+      <a 
+        href="/tags/%E8%AE%BF%E9%97%AE%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" 
+        title="访问数据结构">
+        <div class="tags-list-item">访问数据结构</div>
+      </a>
+    
+      <a 
+        href="/tags/%E4%B8%80%E8%87%B4%E6%80%A7/" 
+        title="一致性">
+        <div class="tags-list-item">一致性</div>
+      </a>
+    
+  </div>
+</div>
+  </article>
+  
+  
+</div>
+            </aside>
+            <main class="main-column">
+              
+<article class="card card-content">
+  <header>
+    <h1 class="post-title">
+      装饰器模式
+    </h1>
+  </header>
+  <div class="post-meta post-show-meta">
+    <time datetime="2022-09-16T01:26:22.286Z">
+      <i 
+        class="iconfont icon-calendar" 
+        style="margin-right: 2px;">
+      </i>
+      <span>2022-09-16</span>
+    </time>
+    
+      <span class="dot"></span>
+      
+        <a 
+          href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" 
+          class="post-meta-link">
+          设计模式
+        </a>
+      
+    
+    
+      <span class="dot"></span>
+      <span>4.1k 字</span>
+    
+  </div>
+  
+    <div 
+      class="post-meta post-show-meta" 
+      style="margin-top: -10px;">
+      <div style="display: flex; align-items: center;">
+        <i 
+          class="iconfont icon-biaoqian" 
+          style="margin-right: 2px; font-size: 1.15rem;">
+        </i>
+        
+          
+          <a 
+            href="/tags/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" 
+            class="post-meta-link">
+            设计模式
+          </a>
+        
+          
+            <span class="dot"></span>
+          
+          <a 
+            href="/tags/%E4%B8%80%E8%87%B4%E6%80%A7/" 
+            class="post-meta-link">
+            一致性
+          </a>
+        
+      </div>
+    </div>
+  
+  </header>
+  <div 
+    id="section" 
+    class="post-content">
+    <h1 id="装饰器模式（Decorator模式）"><a href="#装饰器模式（Decorator模式）" class="headerlink" title="装饰器模式（Decorator模式）"></a>装饰器模式（Decorator模式）</h1><blockquote>
+<p>假如现在有一块蛋糕，如果只涂上奶油，其他什么都不加，就是奶油蛋糕。如果加上草莓，就是草莓奶油蛋糕。如果再加上一块黑色巧克力板，上面用白色巧克力写上名字，然后插上代表年龄的蜡烛，就变成了一块生日蛋糕。</p>
+<p>不论是蛋糕、奶油蛋糕、草莓蛋糕还是生日蛋糕，它们的核心都是蛋糕。不过，经过涂上奶油，加上草莓等装饰后，蛋糕的味道变得更加甜美了，目的也变得更加明确了。</p>
+<p>程序中的对象与蛋糕十分相似。首先有一个相当于蛋糕的对象，然后像不断地装饰蛋糕一样地不断地对其增加功能，它就变成了一个使用目的更加明确的对象。</p>
+<p>想这样不断地为对象添加装饰的设计模式被称为<strong>Decorator模式</strong>。Decorator指的是“装饰物”。</p>
+</blockquote>
+<h2 id="示例类图"><a href="#示例类图" class="headerlink" title="示例类图"></a>示例类图</h2><blockquote>
+<p><img src="/2022/09/16/DecoratorPatten/image-20220916141641247.png" alt="image-20220916141641247" srcset="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20300%20300'%3E%3C/svg%3E" data-src="/2022/09/16/DecoratorPatten/image-20220916141641247.png" class="lozad post-image"></p>
+</blockquote>
+<h2 id="示例程序"><a href="#示例程序" class="headerlink" title="示例程序"></a>示例程序</h2><blockquote>
+<h3 id="Display类"><a href="#Display类" class="headerlink" title="Display类"></a>Display类</h3><p>Display类是可以显示多行字符串的抽象类。</p>
+<p>getColumns方法和getRows方法分别用于获取横向字符数和纵向行数。它们都是抽象方法，需要子类去实现。getRowText方法用于获取制定的某一行的字符串。它也是抽象方法，需要子类去实现。</p>
+<p>show是显示所有行的字符串的方法。在show方法内部，程序会调用getRows方法获取行数，调用getRowText获取该行需要显示的字符串，然后通过for循环语句将所有的字符串显示出来。show方法使用了getRows和getRowText等抽象方法，这属于Tempate Method模式。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">abstract</span> <span class="token keyword">class</span> <span class="token class-name">Display</span> <span class="token punctuation">&#123;</span>
+    <span class="token comment">/**
+     * 获取横向字符数
+     * @return 字符数量
+     */</span>
+    <span class="token keyword">public</span> <span class="token keyword">abstract</span> <span class="token keyword">int</span> <span class="token function">getColumns</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token comment">/**
+     * 获取纵向行数
+     * @return 行数
+     */</span>
+    <span class="token keyword">public</span> <span class="token keyword">abstract</span> <span class="token keyword">int</span> <span class="token function">getRows</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token comment">/**
+     * 获取第row行的字符串
+     * @return 字符串
+     */</span>
+    <span class="token keyword">public</span> <span class="token keyword">abstract</span> <span class="token class-name">String</span> <span class="token function">getRowText</span><span class="token punctuation">(</span><span class="token keyword">int</span> row<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> <span class="token keyword">final</span> <span class="token keyword">void</span> <span class="token function">show</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+        <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">int</span> i <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> <span class="token function">getRows</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token function">getRowText</span><span class="token punctuation">(</span>i<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="StringDisplay类"><a href="#StringDisplay类" class="headerlink" title="StringDisplay类"></a>StringDisplay类</h3><p>仅查看Display类的代码是不能明白程序究竟要做什么的。下面我们来看看它的子类——StringDisplay类。</p>
+<p>StringDisplay类是用于显示单行字符串的类。由于StringDisplay类是Display类的子类，因此它肩负着实现Display类中声明的抽象方法的重任。</p>
+<p>string字段中保存的是要显示的的字符串。由于StringDisplay类只显示一行字符串，因此getColumns方法返回String.getBytes().length的值，getRows方法返回则返回固定值1.</p>
+<p>此外，仅当要获取第0行的内容时getRowText方法才会返回string字段。以开头的蛋糕比喻来说，StringDisplay类就相当于生日蛋糕中的核心蛋糕。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">StringDisplay</span> <span class="token keyword">extends</span> <span class="token class-name">Display</span><span class="token punctuation">&#123;</span>
+    <span class="token keyword">private</span> <span class="token class-name">String</span> string<span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> <span class="token class-name">StringDisplay</span><span class="token punctuation">(</span><span class="token class-name">String</span> string<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>string <span class="token operator">=</span> string<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 获取横向字符数
+     *
+     * @return 字符数量
+     */</span>
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token keyword">int</span> <span class="token function">getColumns</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> string<span class="token punctuation">.</span><span class="token function">getBytes</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span>length<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 获取纵向行数
+     *
+     * @return 行数
+     */</span>
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token keyword">int</span> <span class="token function">getRows</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> <span class="token number">1</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 获取第row行的字符串
+     *
+     * @param row
+     * @return 字符串
+     */</span>
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token class-name">String</span> <span class="token function">getRowText</span><span class="token punctuation">(</span><span class="token keyword">int</span> row<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>row <span class="token operator">==</span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token keyword">return</span> string<span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span><span class="token keyword">else</span> <span class="token punctuation">&#123;</span>
+            <span class="token keyword">return</span> <span class="token keyword">null</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="Border类"><a href="#Border类" class="headerlink" title="Border类"></a>Border类</h3><p>Border类是装饰边框的抽象类。虽然它所表示的是装饰边框，但它也是Display类的子类。</p>
+<p>也就是说，通过继承，<strong>装饰边框与被装饰物具有了相同的方法</strong>。具体而言，Border类继承了父类的getColumns、getRows、getRowText、show等各方法。从接口（API）角度而言，装饰边框（Border）与被装饰物（Display）具有相同的方法也就意味着他们具有一致性。</p>
+<p>在装饰边框Border类中有一个Display类型的display字段，它表示被装饰物。不过，display字段所表示的被装饰物并不仅限于StringDisplay的实例。因为，Border也是Display类的子类，display字段所表示的也可能是其他的装饰边框（Border类的子类的实例），而且那个边框中也有一个display字段。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">abstract</span> <span class="token keyword">class</span> <span class="token class-name">Border</span> <span class="token keyword">extends</span> <span class="token class-name">Display</span><span class="token punctuation">&#123;</span>
+    <span class="token comment">/**
+     * 被装饰物
+     */</span>
+    <span class="token keyword">protected</span> <span class="token class-name">Display</span> display<span class="token punctuation">;</span>
+
+    <span class="token comment">/**
+     * 在生成实例时通过参数指定被装饰物
+     * @param display 被装饰物
+     */</span>
+    <span class="token keyword">public</span> <span class="token class-name">Border</span><span class="token punctuation">(</span><span class="token class-name">Display</span> display<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>display <span class="token operator">=</span> display<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="SideBorder类"><a href="#SideBorder类" class="headerlink" title="SideBorder类"></a>SideBorder类</h3><p>SideBorder类是一种具体的装饰边框，是Border类的子类。SideBorder类用指定的字符（borderchar）装饰字符串的左右两侧。例如，如果指定borderchar字段的值是“|”，那么我们就可以调用show方法，像下面这样在“被装饰物”的两侧加上“|”。还可以通过构造函数知道borderchar字段。</p>
+<p>​	|被装饰物|</p>
+<p>SideBorder类并非抽象类，这是因为它实现了父类中声明的所有抽象方法。</p>
+<p>getColumns方法是用于获取横向字符数的方法。字符数应当如何计算呢？非常简单，只需要在被装饰物的字符数的基础上，再加上两侧边框的字符数即可。那被装饰物的字符数应该如何计算呢？是的，大家应该想到了，其实只需调用display.getColumns()即可得到被装饰物的字符数。display字段的可见性是protected，因此SideBorder类的子类都可以使用该字段。然后我们再像下面这样，分别加上左右边框的字符数。</p>
+<p>​	1 + display.getColumns() + 1</p>
+<p>这就是getColumns方法的处理方式后，也就可以很快的理解getRows方法的处理了。因为SideBorder类并不会在字符串的上下两侧添加字符数1，所以采用了上面的表达式。</p>
+<p>在理解了getColumns方法的处理方式后，也就可以很快的理解getRows方法的处理了。因为SideBorder类并不会在字符串的上下两侧添加字符，因此getRows方法直接返回display.getRows()即可。</p>
+<p>那么，getRowText方法应该如何实现呢？调用getRowText方法可以获取参数指定的那一行的字符串。因此，我们会像下面这样，在display.getRowText(row)的字符串两侧，加上borderchar这个装饰边框。</p>
+<p>​	borderChar + display.getRowText(row)  + borderChar</p>
+<p>这就是getRowText方法的返回值（也就是SideBorder的装饰效果）。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">SideBorder</span> <span class="token keyword">extends</span> <span class="token class-name">Border</span> <span class="token punctuation">&#123;</span>
+    <span class="token comment">/**
+     *
+     */</span>
+    <span class="token keyword">private</span> <span class="token keyword">char</span> borderChar<span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> <span class="token class-name">SideBorder</span><span class="token punctuation">(</span><span class="token class-name">Display</span> display<span class="token punctuation">,</span> <span class="token keyword">char</span> borderChar<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">super</span><span class="token punctuation">(</span>display<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>borderChar <span class="token operator">=</span> borderChar<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 获取横向字符数
+     *
+     * @return 字符数量
+     */</span>
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token keyword">int</span> <span class="token function">getColumns</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> <span class="token number">1</span> <span class="token operator">+</span> display<span class="token punctuation">.</span><span class="token function">getColumns</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token number">1</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 获取纵向行数
+     *
+     * @return 行数
+     */</span>
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token keyword">int</span> <span class="token function">getRows</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> display<span class="token punctuation">.</span><span class="token function">getRows</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 获取第row行的字符串
+     *
+     * @param row
+     * @return 字符串
+     */</span>
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token class-name">String</span> <span class="token function">getRowText</span><span class="token punctuation">(</span><span class="token keyword">int</span> row<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> borderChar <span class="token operator">+</span> display<span class="token punctuation">.</span><span class="token function">getRowText</span><span class="token punctuation">(</span>row<span class="token punctuation">)</span> <span class="token operator">+</span> borderChar<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="FullBorder类"><a href="#FullBorder类" class="headerlink" title="FullBorder类"></a>FullBorder类</h3><p>FullBorder类与SideBorder类一样，也是Border类的子类。SideBorder类会在字符串的左右两侧加上装饰边框，而FullBorder类则会在字符串的上下左右都加上装饰边框。不过，在SideBorder类中可以指定边框的字符，而在FullBorder类中，边框的字符是固定的。</p>
+<p>makeLine方法可以连续的显示某个指定的字符，它是一个工具方法（为了防止FullBorder类外部使用该方法，我们设置它的可见性为private）。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">FullBorder</span> <span class="token keyword">extends</span> <span class="token class-name">Border</span><span class="token punctuation">&#123;</span>
+    <span class="token keyword">public</span> <span class="token class-name">FullBorder</span><span class="token punctuation">(</span><span class="token class-name">Display</span> display<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">super</span><span class="token punctuation">(</span>display<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 获取横向字符数
+     *
+     * @return 字符数量
+     */</span>
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token keyword">int</span> <span class="token function">getColumns</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> <span class="token number">1</span> <span class="token operator">+</span> display<span class="token punctuation">.</span><span class="token function">getColumns</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token number">1</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 获取纵向行数
+     *
+     * @return 行数
+     */</span>
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token keyword">int</span> <span class="token function">getRows</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> <span class="token number">1</span> <span class="token operator">+</span> display<span class="token punctuation">.</span><span class="token function">getRows</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token number">1</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 获取第row行的字符串
+     *
+     * @param row
+     * @return 字符串
+     */</span>
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token class-name">String</span> <span class="token function">getRowText</span><span class="token punctuation">(</span><span class="token keyword">int</span> row<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>row <span class="token operator">==</span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token keyword">return</span> <span class="token string">"+"</span> <span class="token operator">+</span> <span class="token function">makeLine</span><span class="token punctuation">(</span><span class="token char">'-'</span><span class="token punctuation">,</span>display<span class="token punctuation">.</span><span class="token function">getColumns</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token string">"+"</span> <span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token keyword">if</span> <span class="token punctuation">(</span>row <span class="token operator">==</span> display<span class="token punctuation">.</span><span class="token function">getRows</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+            <span class="token keyword">return</span> <span class="token string">"+"</span> <span class="token operator">+</span> <span class="token function">makeLine</span><span class="token punctuation">(</span><span class="token char">'-'</span><span class="token punctuation">,</span>display<span class="token punctuation">.</span><span class="token function">getColumns</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token string">"+"</span> <span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token punctuation">&#123;</span>
+            <span class="token keyword">return</span> <span class="token string">"|"</span> <span class="token operator">+</span> display<span class="token punctuation">.</span><span class="token function">getRowText</span><span class="token punctuation">(</span>row <span class="token operator">-</span> <span class="token number">1</span><span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token string">"|"</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token keyword">private</span> <span class="token class-name">String</span> <span class="token function">makeLine</span><span class="token punctuation">(</span><span class="token keyword">char</span> ch<span class="token punctuation">,</span><span class="token keyword">int</span> count<span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+        <span class="token class-name">StringBuffer</span> stringBuffer <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">StringBuffer</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">int</span> i <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> count<span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            stringBuffer<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span>ch<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+        <span class="token keyword">return</span> stringBuffer<span class="token punctuation">.</span><span class="token function">toString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="Main类"><a href="#Main类" class="headerlink" title="Main类"></a>Main类</h3><p>Main类是用于测试程序行为的类。在Main类中一共生成了4个实例，即d1~d4,他们作用分别如下所示。</p>
+<ul>
+<li>d1：将“Hello,world.”不加装饰的直接显示出来</li>
+<li>d2：在d1的两侧加上装饰边框‘#’</li>
+<li>d3：在d2的上下左右加上装饰边框</li>
+<li>d4：为“你好。世界。”加上多重边框</li>
+</ul>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">Main</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token class-name">String</span><span class="token punctuation">[</span><span class="token punctuation">]</span> args<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token class-name">Display</span> d1 <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">StringDisplay</span><span class="token punctuation">(</span><span class="token string">"Hello,world."</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">Display</span> d2 <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">SideBorder</span><span class="token punctuation">(</span>d1<span class="token punctuation">,</span><span class="token char">'#'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">Display</span> d3 <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">FullBorder</span><span class="token punctuation">(</span>d2<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        d1<span class="token punctuation">.</span><span class="token function">show</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        d2<span class="token punctuation">.</span><span class="token function">show</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        d3<span class="token punctuation">.</span><span class="token function">show</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">Display</span> d4 <span class="token operator">=</span>
+                <span class="token keyword">new</span> <span class="token class-name">SideBorder</span><span class="token punctuation">(</span>
+                        <span class="token keyword">new</span> <span class="token class-name">FullBorder</span><span class="token punctuation">(</span>
+                                <span class="token keyword">new</span> <span class="token class-name">FullBorder</span><span class="token punctuation">(</span>
+                                        <span class="token keyword">new</span> <span class="token class-name">SideBorder</span><span class="token punctuation">(</span>
+                                                <span class="token keyword">new</span> <span class="token class-name">FullBorder</span><span class="token punctuation">(</span>
+                                                        <span class="token keyword">new</span> <span class="token class-name">StringDisplay</span><span class="token punctuation">(</span><span class="token string">"你好，世界。"</span><span class="token punctuation">)</span>
+                                                <span class="token punctuation">)</span><span class="token punctuation">,</span>
+                                                <span class="token char">'*'</span>
+                                        <span class="token punctuation">)</span>
+                                <span class="token punctuation">)</span>
+                        <span class="token punctuation">)</span><span class="token punctuation">,</span>
+                        <span class="token char">'/'</span>
+                <span class="token punctuation">)</span><span class="token punctuation">;</span>
+        d4<span class="token punctuation">.</span><span class="token function">show</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+</blockquote>
+<h2 id="Decorator模式中的登场角色"><a href="#Decorator模式中的登场角色" class="headerlink" title="Decorator模式中的登场角色"></a>Decorator模式中的登场角色</h2><ul>
+<li><h3 id="Component"><a href="#Component" class="headerlink" title="Component"></a>Component</h3><blockquote>
+<p>增加功能时的核心角色。以开头的例子来说，装饰前的蛋糕就是Component角色。</p>
+<p>Component角色只是定义了蛋糕的接口（API）。</p>
+<p>在示例程序中，由Display类扮演此角色。</p>
+</blockquote>
+</li>
+<li><h3 id="ConcreteComponent"><a href="#ConcreteComponent" class="headerlink" title="ConcreteComponent"></a>ConcreteComponent</h3><blockquote>
+<p>该角色是实现了Component角色所定义的接口（API）的具体蛋糕。</p>
+<p>在示例程序中，由StringDisplay类半夜此角色。</p>
+</blockquote>
+</li>
+<li><h3 id="Decorator（装饰物）"><a href="#Decorator（装饰物）" class="headerlink" title="Decorator（装饰物）"></a>Decorator（装饰物）</h3><blockquote>
+<p>该角色具有与Component角色相同的接口（API）。在它内部保存了一个被装饰对象——Component角色。Decorator角色知道自己要装饰的角色。</p>
+<p>在示例程序中，由Border类扮演此角色。</p>
+</blockquote>
+</li>
+<li><h3 id="ConcreteDecorator（具体的装饰物）"><a href="#ConcreteDecorator（具体的装饰物）" class="headerlink" title="ConcreteDecorator（具体的装饰物）"></a>ConcreteDecorator（具体的装饰物）</h3><blockquote>
+<p>该角色是具体的Decorator角色。</p>
+<p>在示例程序中，由SideBorder类和FullBorder类扮演此角色。</p>
+</blockquote>
+</li>
+</ul>
+<h2 id="Decorator模式的类图"><a href="#Decorator模式的类图" class="headerlink" title="Decorator模式的类图"></a>Decorator模式的类图</h2><blockquote>
+<p><img src="/2022/09/16/DecoratorPatten/image-20220919093518991.png" alt="image-20220919093518991" srcset="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20300%20300'%3E%3C/svg%3E" data-src="/2022/09/16/DecoratorPatten/image-20220919093518991.png" class="lozad post-image"></p>
+</blockquote>
+<h2 id="思路要点"><a href="#思路要点" class="headerlink" title="思路要点"></a>思路要点</h2><ul>
+<li><h3 id="接口（API）的透明性"><a href="#接口（API）的透明性" class="headerlink" title="接口（API）的透明性"></a>接口（API）的透明性</h3><blockquote>
+<p>在Decorator模式中，装饰边框与被装饰物具有一致性。具体而言，在示例程序中，表示装饰边框的Border类是表示被装饰物的Display类的子类，这就体现了他们之间的一致性。也就是说，Border类（以及它的子类）与表示被装饰物的Display类具有相同的接口（API）。</p>
+<p>这样，即使被装饰物被边框装饰起来了，接口（API）也不会被隐藏起来。其他类依然可以调用getColumns、getRows、getRowText以及show方法。这就是接口（API）的“透明性”。</p>
+<p>在示例程序中，实例d4被装饰了多次，但是接口（API）却没有发生任何变化。</p>
+<p>得益于接口（API）的透明性，Decorator模式中也形成了类似于Composite模式中的递归结构。也就是说，装饰边框里面的“被装饰物”实际上又是别的物体系的“装饰边框”。就像是剥洋葱时以为洋葱心要出来了，结果发现还是皮。不过，Decorator模式虽然与Composite模式一样，都具有递归结构，但是它们的使用目的不同。Decorator模式的主要目的是通过添加装饰物来增加对象的功能。</p>
+</blockquote>
+</li>
+<li><h3 id="在不改变被装饰物的前提下增加功能"><a href="#在不改变被装饰物的前提下增加功能" class="headerlink" title="在不改变被装饰物的前提下增加功能"></a>在不改变被装饰物的前提下增加功能</h3><blockquote>
+<p>在Decorator模式中，装饰边框与被装饰物具有相同的接口（API）。虽然接口（API）是相同的，但是越装饰，功能越多。例如，用SideBorder装饰Display后，就可以在字符串的左右两侧加上装饰字符。如果在用FullBorder装饰，那么就可以在字符串的四周加上边框。此时，我们完全不需要对被装饰的类做任何修改。这样，我们就实现了<strong>不修改装饰的类即可增加功能</strong>。</p>
+<p>Decorator模式使用了<strong>委托</strong>。对“装饰边框”提出的要求（调用装饰边框的方法）会被转交（委托）给“被装饰物”去处理。以示例程序来说，就是SideBorder类的getColumns方法调用了display.getColumns()。除此以外，getRows方法也调用了display.getRows()。</p>
+</blockquote>
+</li>
+<li><h3 id="可以动态的增加功能"><a href="#可以动态的增加功能" class="headerlink" title="可以动态的增加功能"></a>可以动态的增加功能</h3><blockquote>
+<p>Deciratir模式中用到了委托，它使类之间形成了弱关联关系。因此，不用改变框架代码，就可以生成一个与其他对象具有不同关系的新对象。</p>
+</blockquote>
+</li>
+<li><h3 id="只需要一些装饰物即可添加许多功能"><a href="#只需要一些装饰物即可添加许多功能" class="headerlink" title="只需要一些装饰物即可添加许多功能"></a>只需要一些装饰物即可添加许多功能</h3><blockquote>
+<p>使用Decorator模式可以为程序添加许多功能。只要准备一些装饰边框（ConcreteDecorator角色），即使这些装饰边框都只具有非常简单的功能，也可以将它们自由组合成新的对象。</p>
+<p>这就像我们可以只有选择香草味冰激凌、巧克力冰激凌、草莓冰激凌、猕猴桃冰激凌等各种口味的冰激凌一样。如果冰激凌店要为顾客准备所有的冰激凌成品那真的太麻烦了。因此，冰激凌店只会准备各种香料，当顾客下单后只需要在冰激凌上加上各种香料就可以了。不管是香草味，还是咖啡朗姆和开心果混合口味，亦或是香草味、草莓味和猕猴桃三种口味，顾客想吃什么口味都可以。Decorator模式就是可以应对这种多功能对象的需求的一种模式。</p>
+</blockquote>
+</li>
+<li><h3 id="java-io包与Decorator模式"><a href="#java-io包与Decorator模式" class="headerlink" title="java.io包与Decorator模式"></a>java.io包与Decorator模式</h3><blockquote>
+<p>下面我们来谈谈java.io包中的类。java.io包是用于输入输出（Input&#x2F;Output，简称I&#x2F;O）的包。这里，我们使用了Decorator模式。</p>
+<p>首先，我们像下面这样生成一个读取文件的实例。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token class-name">Reader</span> reader <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">FileReader</span><span class="token punctuation">(</span><span class="token string">"datafile.txt"</span><span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<p>然后，我们也像下面这样在读取文件时将文件内容放入缓冲区。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token class-name">Reader</span> reader <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">BufferedReader</span><span class="token punctuation">(</span>
+									<span class="token keyword">new</span> <span class="token class-name">FileReader</span><span class="token punctuation">(</span><span class="token string">"datafile.txt"</span><span class="token punctuation">)</span>
+								<span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+
+<p>这样，在生成BufferedReader类的实例时，会指定文件读取到的FIleReader类的实例中。</p>
+<p>再然后，我们也可以像下面这样管理行号。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token class-name">Reader</span> reader <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">LineNumberReader</span><span class="token punctuation">(</span>
+									<span class="token keyword">new</span> <span class="token class-name">BufferedReader</span><span class="token punctuation">(</span>
+										<span class="token keyword">new</span> <span class="token class-name">FileReader</span><span class="token punctuation">(</span><span class="token string">"datafile.txt"</span><span class="token punctuation">)</span>
+									<span class="token punctuation">)</span>
+								<span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>无论是LineNumberReader类的构造函数还是BufferedReader类的构造函数，都可以接受Reader类（的子类）的实例作为参数，因此我们可以像上面那样进行各种组合。</p>
+<p>我们还可以只管理行号，但不进行缓存处理。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token class-name">Reader</span> reader <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">LineNumberReader</span><span class="token punctuation">(</span>
+									<span class="token keyword">new</span> <span class="token class-name">FileReader</span><span class="token punctuation">(</span><span class="token string">"datafile.txt"</span><span class="token punctuation">)</span>
+								<span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+
+<p>接下来，我们还会管理行号，进行缓存，但是我们不从文件中读取数据，而是从网络中读取数据（下面的代码省略了细节部分和异常处理）。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token class-name"><span class="token namespace">java<span class="token punctuation">.</span>net<span class="token punctuation">.</span></span>Socket</span> socket <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Socket</span><span class="token punctuation">(</span>hostname<span class="token punctuation">,</span> portnumber<span class="token punctuation">)</span><span class="token punctuation">;</span>
+……
+<span class="token class-name">Reader</span> reader <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">LineNumberReader</span><span class="token punctuation">(</span>
+									<span class="token keyword">new</span> <span class="token class-name">BufferedReader</span><span class="token punctuation">(</span>
+										socket<span class="token punctuation">.</span><span class="token function">getInputStream</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+									<span class="token punctuation">)</span>
+								<span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>这里使用的InputStreamReader类及接收getInputStream方法返回的InputStream类的实例作为构造函数的参数，也提供了Reader类的接口（API）。</p>
+<p>除了java.io包以外，我们还在javax.swing.border包中使用了Decorator模式。javax.swing.border包为我们提供了可以为界面中的控件添加装饰边框的类。</p>
+</blockquote>
+</li>
+<li><h3 id="导致增加许多很小的类"><a href="#导致增加许多很小的类" class="headerlink" title="导致增加许多很小的类"></a>导致增加许多很小的类</h3><blockquote>
+<p>Decorator模式的缺点是会导致程序中增加许多功能类似的很小的类。</p>
+</blockquote>
+</li>
+</ul>
+<h2 id="延伸阅读：继承和委托中的一致性"><a href="#延伸阅读：继承和委托中的一致性" class="headerlink" title="延伸阅读：继承和委托中的一致性"></a>延伸阅读：继承和委托中的一致性</h2><ul>
+<li><h3 id="继承——父类和子类的一致性"><a href="#继承——父类和子类的一致性" class="headerlink" title="继承——父类和子类的一致性"></a>继承——父类和子类的一致性</h3><blockquote>
+<p>子类和父类具有一致性。下面我们看例子。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">class</span> <span class="token class-name">Parent</span> <span class="token punctuation">&#123;</span>
+  ……
+  <span class="token keyword">void</span> <span class="token function">parentMethod</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+    ……
+  <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">class</span> <span class="token class-name">Child</span> <span class="token keyword">extends</span> <span class="token class-name">Parent</span> <span class="token punctuation">&#123;</span>
+  ……
+  <span class="token keyword">void</span> <span class="token function">childMethod</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+    ……
+  <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>此时，Child类的实例可以被保存在Parent类型的变量中，也可以调用从Parent类中继承的方法。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token class-name">Parent</span> obj <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Child</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+obj<span class="token punctuation">.</span><span class="token function">parentMethod</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+
+<p>也就是说，可以像操作Parent类的实例一样操作Child类的实例。这是将子类当作父类看待的一个例子。</p>
+<p>但是，反过来，如果想将父类当作子类一样操作，则需要先进行类型转换。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token class-name">Parent</span> obj <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Child</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token class-name">Child</span><span class="token punctuation">)</span>obj<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">childMethod</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+</blockquote>
+</li>
+<li><h3 id="委托——自己和被委托对象的一致性"><a href="#委托——自己和被委托对象的一致性" class="headerlink" title="委托——自己和被委托对象的一致性"></a>委托——自己和被委托对象的一致性</h3><blockquote>
+<p>使用委托让接口具有透明性时，自己和被委托对象具有一致性。</p>
+<p>下面我们看一个稍微有点生硬的例子。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">class</span> <span class="token class-name">Rose</span> <span class="token punctuation">&#123;</span>
+  <span class="token class-name">Violet</span> obj <span class="token operator">=</span> ……
+  <span class="token keyword">void</span> <span class="token function">method</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+    obj<span class="token punctuation">.</span><span class="token function">method</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">class</span> <span class="token class-name">Violet</span> <span class="token punctuation">&#123;</span>
+  <span class="token keyword">void</span> <span class="token function">method</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    ……
+  <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>Rose和Violet都有相同的method方法。Rose将method方法的处理委托给了Violet。这样，会让人有一种好像这两个类有所关联，又好像没有关联的感觉。</p>
+<p>要说有什么奇怪的地方，那就是这两个类虽然都有method方法，但是却没有明确的在代码中体现出这个“共通性”。如果要明确的表示method方法是共通的，只需要想下面这样编写一个共同的抽象类Flower就可以了。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">abstract</span> <span class="token keyword">class</span> <span class="token class-name">Flower</span> <span class="token punctuation">&#123;</span>
+  <span class="token keyword">abstract</span> <span class="token keyword">void</span> <span class="token function">method</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">class</span> <span class="token class-name">Rose</span> <span class="token keyword">extends</span> <span class="token class-name">Flower</span><span class="token punctuation">&#123;</span>
+  <span class="token class-name">Violet</span> odj <span class="token operator">=</span> ……
+  <span class="token keyword">void</span> <span class="token function">method</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    obj<span class="token punctuation">.</span><span class="token function">method</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">class</span> <span class="token class-name">Violet</span> <span class="token keyword">extends</span> <span class="token class-name">Flower</span><span class="token punctuation">&#123;</span>
+  <span class="token keyword">void</span> <span class="token function">method</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    ……
+  <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>或者是像下面这样，让Flower作为接口也行。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">interface</span> <span class="token class-name">Flower</span> <span class="token punctuation">&#123;</span>
+  <span class="token keyword">abstract</span> <span class="token keyword">void</span> <span class="token function">method</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">class</span> <span class="token class-name">Violet</span> <span class="token keyword">implements</span> <span class="token class-name">Flower</span><span class="token punctuation">&#123;</span>
+  <span class="token keyword">void</span> <span class="token function">method</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    ……
+  <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">class</span> <span class="token class-name">Violet</span> <span class="token keyword">extends</span> <span class="token class-name">Flower</span><span class="token punctuation">&#123;</span>
+  <span class="token keyword">void</span> <span class="token function">method</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    ……
+  <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>至此，可能会产生这样的疑问，即Rose类中的obj字段被指定为具体类型Violet真的好吗？如果指定为抽象类型Flower会不会更好呢？……究竟应该怎么做才好呢？其实没有固定答案，需求不同，做法也不同。</p>
+</blockquote>
+</li>
+</ul>
+<h2 id="所学知识"><a href="#所学知识" class="headerlink" title="所学知识"></a>所学知识</h2><blockquote>
+<p>学习了在保持透明性的接口（API）不变的前提下，向类中增加功能的Decorator模式。此外，还学习了继承与委托。</p>
+</blockquote>
+
+  </div>
+  <div>
+    
+      <div 
+        class="post-note note-warning copyright" 
+        style="margin-top: 42px">
+        <p>
+          <span style="font-weight: bold;">作者：</span><a 
+            target="_blank" 
+            rel="nofollow noopener noreferrer" 
+            href="/about">
+            简单且极端
+          </a>
+        </p>
+        <p>
+          <span style="font-weight: bold;">文章链接：</span><a 
+            target="_blank" 
+            rel="nofollow noopener noreferrer" 
+            href="https://extremelys.github.io/2022/09/16/DecoratorPatten/">
+            https://extremelys.github.io/2022/09/16/DecoratorPatten/
+          </a>
+        </p>
+        <p><span style="font-weight: bold;">版权声明：</span>本博客所有文章除特别声明外，均采用<a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">CC BY-NC-SA 4.0 协议</a>。转载请注明出处！</p>
+      </div>
+    
+  </div>
+</article>
+<div class="nav">
+  
+    <div class="nav-item-prev">
+      <a 
+        href="/2022/09/19/VisitorPattern/" 
+        class="nav-link">
+        <i class="iconfont icon-left nav-prev-icon"></i>
+        <div>
+          <div class="nav-label">上一篇</div>
+          
+            <div class="nav-title">访问者模式 </div>
+          
+        </div>
+      </a>
+    </div>
+  
+  
+    <div class="nav-item-next">
+      <a 
+        href="/2022/08/25/CompositePattern/" 
+        class="nav-link">
+        <div>
+          <div class="nav-label">下一篇</div>
+          
+            <div class="nav-title">组合模式 </div>
+          
+        </div>
+        <i class="iconfont icon-right nav-next-icon"></i>
+      </a>
+    </div>
+  
+</div>
+
+<div 
+  class="card card-content toc-card" 
+  id="mobiletoc">
+  <div class="toc-header">
+  <i 
+    class="iconfont icon-menu" 
+    style="padding-right: 2px;">
+  </i>目录
+</div>
+<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%A3%85%E9%A5%B0%E5%99%A8%E6%A8%A1%E5%BC%8F%EF%BC%88Decorator%E6%A8%A1%E5%BC%8F%EF%BC%89"><span class="toc-text">装饰器模式（Decorator模式）</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E7%B1%BB%E5%9B%BE"><span class="toc-text">示例类图</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E7%A8%8B%E5%BA%8F"><span class="toc-text">示例程序</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Display%E7%B1%BB"><span class="toc-text">Display类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#StringDisplay%E7%B1%BB"><span class="toc-text">StringDisplay类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Border%E7%B1%BB"><span class="toc-text">Border类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#SideBorder%E7%B1%BB"><span class="toc-text">SideBorder类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#FullBorder%E7%B1%BB"><span class="toc-text">FullBorder类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Main%E7%B1%BB"><span class="toc-text">Main类</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Decorator%E6%A8%A1%E5%BC%8F%E4%B8%AD%E7%9A%84%E7%99%BB%E5%9C%BA%E8%A7%92%E8%89%B2"><span class="toc-text">Decorator模式中的登场角色</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Component"><span class="toc-text">Component</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ConcreteComponent"><span class="toc-text">ConcreteComponent</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Decorator%EF%BC%88%E8%A3%85%E9%A5%B0%E7%89%A9%EF%BC%89"><span class="toc-text">Decorator（装饰物）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ConcreteDecorator%EF%BC%88%E5%85%B7%E4%BD%93%E7%9A%84%E8%A3%85%E9%A5%B0%E7%89%A9%EF%BC%89"><span class="toc-text">ConcreteDecorator（具体的装饰物）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Decorator%E6%A8%A1%E5%BC%8F%E7%9A%84%E7%B1%BB%E5%9B%BE"><span class="toc-text">Decorator模式的类图</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%9D%E8%B7%AF%E8%A6%81%E7%82%B9"><span class="toc-text">思路要点</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8E%A5%E5%8F%A3%EF%BC%88API%EF%BC%89%E7%9A%84%E9%80%8F%E6%98%8E%E6%80%A7"><span class="toc-text">接口（API）的透明性</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9C%A8%E4%B8%8D%E6%94%B9%E5%8F%98%E8%A2%AB%E8%A3%85%E9%A5%B0%E7%89%A9%E7%9A%84%E5%89%8D%E6%8F%90%E4%B8%8B%E5%A2%9E%E5%8A%A0%E5%8A%9F%E8%83%BD"><span class="toc-text">在不改变被装饰物的前提下增加功能</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8F%AF%E4%BB%A5%E5%8A%A8%E6%80%81%E7%9A%84%E5%A2%9E%E5%8A%A0%E5%8A%9F%E8%83%BD"><span class="toc-text">可以动态的增加功能</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8F%AA%E9%9C%80%E8%A6%81%E4%B8%80%E4%BA%9B%E8%A3%85%E9%A5%B0%E7%89%A9%E5%8D%B3%E5%8F%AF%E6%B7%BB%E5%8A%A0%E8%AE%B8%E5%A4%9A%E5%8A%9F%E8%83%BD"><span class="toc-text">只需要一些装饰物即可添加许多功能</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#java-io%E5%8C%85%E4%B8%8EDecorator%E6%A8%A1%E5%BC%8F"><span class="toc-text">java.io包与Decorator模式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AF%BC%E8%87%B4%E5%A2%9E%E5%8A%A0%E8%AE%B8%E5%A4%9A%E5%BE%88%E5%B0%8F%E7%9A%84%E7%B1%BB"><span class="toc-text">导致增加许多很小的类</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%BB%B6%E4%BC%B8%E9%98%85%E8%AF%BB%EF%BC%9A%E7%BB%A7%E6%89%BF%E5%92%8C%E5%A7%94%E6%89%98%E4%B8%AD%E7%9A%84%E4%B8%80%E8%87%B4%E6%80%A7"><span class="toc-text">延伸阅读：继承和委托中的一致性</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BB%A7%E6%89%BF%E2%80%94%E2%80%94%E7%88%B6%E7%B1%BB%E5%92%8C%E5%AD%90%E7%B1%BB%E7%9A%84%E4%B8%80%E8%87%B4%E6%80%A7"><span class="toc-text">继承——父类和子类的一致性</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%A7%94%E6%89%98%E2%80%94%E2%80%94%E8%87%AA%E5%B7%B1%E5%92%8C%E8%A2%AB%E5%A7%94%E6%89%98%E5%AF%B9%E8%B1%A1%E7%9A%84%E4%B8%80%E8%87%B4%E6%80%A7"><span class="toc-text">委托——自己和被委托对象的一致性</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%89%80%E5%AD%A6%E7%9F%A5%E8%AF%86"><span class="toc-text">所学知识</span></a></li></ol></li></ol>
+</div>
+            </main>
+            <aside class="right-column">
+              <div class="sticky-widescreen">
+  
+  
+    <article class="card card-content toc-card">
+      <div class="toc-header">
+  <i 
+    class="iconfont icon-menu" 
+    style="padding-right: 2px;">
+  </i>目录
+</div>
+<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%A3%85%E9%A5%B0%E5%99%A8%E6%A8%A1%E5%BC%8F%EF%BC%88Decorator%E6%A8%A1%E5%BC%8F%EF%BC%89"><span class="toc-text">装饰器模式（Decorator模式）</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E7%B1%BB%E5%9B%BE"><span class="toc-text">示例类图</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E7%A8%8B%E5%BA%8F"><span class="toc-text">示例程序</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Display%E7%B1%BB"><span class="toc-text">Display类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#StringDisplay%E7%B1%BB"><span class="toc-text">StringDisplay类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Border%E7%B1%BB"><span class="toc-text">Border类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#SideBorder%E7%B1%BB"><span class="toc-text">SideBorder类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#FullBorder%E7%B1%BB"><span class="toc-text">FullBorder类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Main%E7%B1%BB"><span class="toc-text">Main类</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Decorator%E6%A8%A1%E5%BC%8F%E4%B8%AD%E7%9A%84%E7%99%BB%E5%9C%BA%E8%A7%92%E8%89%B2"><span class="toc-text">Decorator模式中的登场角色</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Component"><span class="toc-text">Component</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ConcreteComponent"><span class="toc-text">ConcreteComponent</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Decorator%EF%BC%88%E8%A3%85%E9%A5%B0%E7%89%A9%EF%BC%89"><span class="toc-text">Decorator（装饰物）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ConcreteDecorator%EF%BC%88%E5%85%B7%E4%BD%93%E7%9A%84%E8%A3%85%E9%A5%B0%E7%89%A9%EF%BC%89"><span class="toc-text">ConcreteDecorator（具体的装饰物）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Decorator%E6%A8%A1%E5%BC%8F%E7%9A%84%E7%B1%BB%E5%9B%BE"><span class="toc-text">Decorator模式的类图</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%9D%E8%B7%AF%E8%A6%81%E7%82%B9"><span class="toc-text">思路要点</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8E%A5%E5%8F%A3%EF%BC%88API%EF%BC%89%E7%9A%84%E9%80%8F%E6%98%8E%E6%80%A7"><span class="toc-text">接口（API）的透明性</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9C%A8%E4%B8%8D%E6%94%B9%E5%8F%98%E8%A2%AB%E8%A3%85%E9%A5%B0%E7%89%A9%E7%9A%84%E5%89%8D%E6%8F%90%E4%B8%8B%E5%A2%9E%E5%8A%A0%E5%8A%9F%E8%83%BD"><span class="toc-text">在不改变被装饰物的前提下增加功能</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8F%AF%E4%BB%A5%E5%8A%A8%E6%80%81%E7%9A%84%E5%A2%9E%E5%8A%A0%E5%8A%9F%E8%83%BD"><span class="toc-text">可以动态的增加功能</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8F%AA%E9%9C%80%E8%A6%81%E4%B8%80%E4%BA%9B%E8%A3%85%E9%A5%B0%E7%89%A9%E5%8D%B3%E5%8F%AF%E6%B7%BB%E5%8A%A0%E8%AE%B8%E5%A4%9A%E5%8A%9F%E8%83%BD"><span class="toc-text">只需要一些装饰物即可添加许多功能</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#java-io%E5%8C%85%E4%B8%8EDecorator%E6%A8%A1%E5%BC%8F"><span class="toc-text">java.io包与Decorator模式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AF%BC%E8%87%B4%E5%A2%9E%E5%8A%A0%E8%AE%B8%E5%A4%9A%E5%BE%88%E5%B0%8F%E7%9A%84%E7%B1%BB"><span class="toc-text">导致增加许多很小的类</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%BB%B6%E4%BC%B8%E9%98%85%E8%AF%BB%EF%BC%9A%E7%BB%A7%E6%89%BF%E5%92%8C%E5%A7%94%E6%89%98%E4%B8%AD%E7%9A%84%E4%B8%80%E8%87%B4%E6%80%A7"><span class="toc-text">延伸阅读：继承和委托中的一致性</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BB%A7%E6%89%BF%E2%80%94%E2%80%94%E7%88%B6%E7%B1%BB%E5%92%8C%E5%AD%90%E7%B1%BB%E7%9A%84%E4%B8%80%E8%87%B4%E6%80%A7"><span class="toc-text">继承——父类和子类的一致性</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%A7%94%E6%89%98%E2%80%94%E2%80%94%E8%87%AA%E5%B7%B1%E5%92%8C%E8%A2%AB%E5%A7%94%E6%89%98%E5%AF%B9%E8%B1%A1%E7%9A%84%E4%B8%80%E8%87%B4%E6%80%A7"><span class="toc-text">委托——自己和被委托对象的一致性</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%89%80%E5%AD%A6%E7%9F%A5%E8%AF%86"><span class="toc-text">所学知识</span></a></li></ol></li></ol>
+    </article>
+  
+  
+  <article class="card card-content">
+    <div class="recent-posts-card">
+  <div class="recent-posts-header">
+    <i 
+      class="iconfont icon-wenzhang_huaban" 
+      style="padding-right: 2px;">
+    </i>最近文章
+  </div>
+  <div class="recent-posts-list">
+    
+      <div class="recent-posts-item">
+        <div class="recent-posts-item-title">2022-09-19</div>
+        <a href="/2022/09/19/VisitorPattern/"><div class="recent-posts-item-content">访问者模式</div></a>
+      </div>
+    
+      <div class="recent-posts-item">
+        <div class="recent-posts-item-title">2022-09-16</div>
+        <a href="/2022/09/16/DecoratorPatten/"><div class="recent-posts-item-content">装饰器模式</div></a>
+      </div>
+    
+      <div class="recent-posts-item">
+        <div class="recent-posts-item-title">2022-08-25</div>
+        <a href="/2022/08/25/CompositePattern/"><div class="recent-posts-item-content">组合模式</div></a>
+      </div>
+    
+      <div class="recent-posts-item">
+        <div class="recent-posts-item-title">2022-08-24</div>
+        <a href="/2022/08/24/StrategyPattern/"><div class="recent-posts-item-content">策略模式</div></a>
+      </div>
+    
+  </div>
+</div>
+  </article>
+  
+  
+</div>
+            </aside>
+          </div>
+        </div>
+      </div>
+    </div>
+     
+    <footer class="footer">
+  <div class="footer-container">
+    <div>
+      <div class="footer-dsc">
+        <span>
+          Copyright ©
+          
+            2022
+          
+          
+        </span>
+        &nbsp;
+        <a 
+          href="/" 
+          class="footer-link">
+          简单且极端
+        </a>
+      </div>
+    </div>
+
+    
+      <div class="footer-dsc">
+        
+          Powered by
+          <a 
+            href="https://hexo.io/" 
+            class="footer-link" 
+            target="_blank" 
+            rel="nofollow noopener noreferrer">
+            &nbsp;Hexo
+          </a>
+        
+        
+          <span>&nbsp;|&nbsp;</span>
+        
+        
+          Theme -
+          <a 
+            href="https://github.com/theme-kaze" 
+            class="footer-link" 
+            target="_blank"
+            rel="nofollow noopener noreferrer">
+            &nbsp;Kaze
+          </a>
+        
+      </div>
+    
+    
+    
+    
+</footer>
+ 
+    
+  <a 
+    role="button" 
+    id="scrollbutton" 
+    class="basebutton" 
+    aria-label="回到顶部">
+    <i class="iconfont icon-arrowleft button-icon"></i>
+  </a>
+
+<a 
+  role="button" 
+  id="menubutton"
+  aria-label="menu button"
+  class="basebutton">
+  <i class="iconfont icon-menu button-icon"></i>
+</a>
+<a 
+  role="button" 
+  id="popbutton" 
+  class="basebutton" 
+  aria-label="控制中心">
+  <i class="iconfont icon-expand button-icon"></i>
+</a>
+<a 
+  role="button" 
+  id="darkbutton" 
+  class="basebutton darkwidget" 
+  aria-label="夜色模式">
+  <i class="iconfont icon-weather button-icon"></i>
+</a>
+<a 
+  role="button" 
+  id="searchbutton" 
+  class="basebutton searchwidget" 
+  aria-label="搜索">
+  <i class="iconfont icon-search button-icon"></i>
+</a> 
+     
+     
+     
+      <script>
+  var addImgLayout = function () {
+    var img = document.querySelectorAll('.post-content img')
+    var i
+    for (i = 0; i < img.length; i++) {
+      var wrapper = document.createElement('a')
+      wrapper.setAttribute('href', img[i].getAttribute('data-src'))
+      wrapper.setAttribute('aria-label', 'illustration')
+      wrapper.style.cssText =
+        'width: 100%; display: flex; justify-content: center;'
+      if (img[i].alt) wrapper.dataset.caption = img[i].alt
+      wrapper.dataset.nolink = true
+      img[i].before(wrapper)
+      wrapper.append(img[i])
+      var divWrap = document.createElement('div')
+      divWrap.classList.add('gallery')
+      wrapper.before(divWrap)
+      divWrap.append(wrapper)
+    }
+    baguetteBox.run('.gallery')
+  }
+</script>
+<script>
+  loadScript(
+    "/js/lib/lightbox/baguetteBox.min.js",
+    addImgLayout
+  )
+</script>
+ 
+     
+     
+    <script src="/js/main.js"></script> 
+     
+    
+      <script>
+        var addLazyload = function () {
+          var observer = lozad('.lozad', {
+            load: function (el) {
+              el.srcset = el.getAttribute('data-src')
+            },
+            loaded: function (el) {
+              el.classList.add('loaded')
+            },
+          })
+          observer.observe()
+        }
+      </script>
+      <script>
+        loadScript('/js/lib/lozad.min.js', addLazyload)
+      </script>
+    
+    <script src="//instant.page/5.1.0" type="module"
+      integrity="sha384-by67kQnR+pyfy8yWP4kPO12fHKRLHZPfEsiSXR8u2IKcTdxD805MGUXBzVPnkLHw"></script>
+    
+    
+  </body>
+</html>
