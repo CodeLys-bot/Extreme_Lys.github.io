@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+  <meta charset="UTF-8">
+  <meta 
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+  <meta 
+    http-equiv="X-UA-Compatible" 
+    content="ie=edge">
+  <meta 
+    name="theme-color" 
+    content="#fff" 
+    id="theme-color">
+  <meta 
+    name="description" 
+    content="Hexo">
+  <link 
+    rel="icon" 
+    href="/">
+  <title>责任链模式</title>
+  
+    
+      <meta 
+        property="og:title" 
+        content="责任链模式">
+    
+    
+      <meta 
+        property="og:url" 
+        content="https://extremelys.github.io/2022/10/13/ChainOfResponsibility/index.html">
+    
+    
+      <meta 
+        property="og:img" 
+        content="https://img.songhn.com/img/Y67gdd.png">
+    
+    
+    
+      <meta 
+        property="og:type" 
+        content="article">
+      <meta 
+        property="og:article:published_time" 
+        content="2022-10-13">
+      <meta 
+        property="og:article:modified_time" 
+        content="2022-10-27">
+      <meta 
+        property="og:article:author" 
+        content="简单且极端">
+      
+        
+          <meta 
+            property="og:article:tag" 
+            content="设计模式">
+        
+          <meta 
+            property="og:article:tag" 
+            content="访问数据结构">
+        
+      
+    
+  
+  
+  <link rel="preload" href="//at.alicdn.com/t/font_1946621_i1kgafibvw.css" as="style" >
+  <link rel="preload" href="//at.alicdn.com/t/font_1952792_89b4ac4k4up.css" as="style" >
+  <link rel="preload" href="/css/main.css" as="style" >
+  
+  <link rel="modulepreload" href="//instant.page/5.1.0">
+  
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1946621_i1kgafibvw.css">
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1952792_89b4ac4k4up.css">
+  
+  
+  
+    <link rel="stylesheet" href="/js/lib/lightbox/baguetteBox.min.css">
+  
+  <script>
+    function loadScript(url, cb) {
+      var script = document.createElement('script');
+      script.src = url;
+      if (cb) script.onload = cb;
+      script.async = true;
+      document.body.appendChild(script);
+    }
+    function loadCSS(href, data, attr) {
+      var sheet = document.createElement('link');
+      sheet.ref = 'stylesheet';
+      sheet.href = href;
+      sheet.dataset[data] = attr;
+      document.head.appendChild(sheet);
+    }
+    function changeCSS(cssFile, data, attr) {
+      var oldlink = document.querySelector(data);
+      var newlink = document.createElement("link");
+      newlink.setAttribute("rel", "stylesheet");
+      newlink.setAttribute("href", cssFile);
+      newlink.dataset.prism = attr;
+      document.head.replaceChild(newlink, oldlink);
+    }
+  </script>
+  
+    
+      
+      
+      
+      
+        
+        
+        
+        <script>
+          function prismThemeChange() {
+            if(document.getElementById('theme-color').dataset.mode === 'dark') {
+              if(document.querySelector('[data-prism]')) {
+                changeCSS('/js/lib/prism/prism-tomorrow.min.css', '[data-prism]', 'prism-tomorrow');
+              } else {
+                loadCSS('/js/lib/prism/prism-tomorrow.min.css', 'prism', 'prism-tomorrow');
+              }
+            } else {
+              if(document.querySelector('[data-prism]')) {
+                changeCSS('/js/lib/prism/prism.min.css', '[data-prism]', 'prism');
+              } else {
+                loadCSS('/js/lib/prism/prism.min.css', 'prism', 'prism');
+              }
+            }
+          }
+          prismThemeChange()
+        </script>
+      
+      
+        
+        <link rel="stylesheet" href="/js/lib/prism/prism-line-numbers.min.css">
+      
+    
+  
+  <script>
+    // control reverse button
+    var reverseDarkList = {
+      dark: 'light',
+      light: 'dark'
+    };
+    var themeColor = {
+      dark: '#1c1c1e',
+      light: '#fff'
+    }
+    // get the data of css prefers-color-scheme
+    var getCssMediaQuery = function() {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    };
+    // reverse current darkmode setting function
+    var reverseDarkModeSetting = function() {
+      var setting = localStorage.getItem('user-color-scheme');
+      if(reverseDarkList[setting]) {
+        setting = reverseDarkList[setting];
+      } else if(setting === null) {
+        setting = reverseDarkList[getCssMediaQuery()];
+      } else {
+        return;
+      }
+      localStorage.setItem('user-color-scheme', setting);
+      return setting;
+    };
+    // apply current darkmode setting
+  </script>
+  
+    <script>
+      var setDarkmode = function(mode) {
+      var setting = mode || localStorage.getItem('user-color-scheme');
+      if(setting === getCssMediaQuery()) {
+        document.documentElement.removeAttribute('data-user-color-scheme');
+        localStorage.removeItem('user-color-scheme');
+        document.getElementById('theme-color').content = themeColor[setting];
+        document.getElementById('theme-color').dataset.mode = setting;
+        prismThemeChange();
+      } else if(reverseDarkList[setting]) {
+        document.documentElement.setAttribute('data-user-color-scheme', setting);
+        document.getElementById('theme-color').content = themeColor[setting];
+        document.getElementById('theme-color').dataset.mode = setting;
+        prismThemeChange();
+      } else {
+        document.documentElement.removeAttribute('data-user-color-scheme');
+        localStorage.removeItem('user-color-scheme');
+        document.getElementById('theme-color').content = themeColor[getCssMediaQuery()];
+        document.getElementById('theme-color').dataset.mode = getCssMediaQuery();
+        prismThemeChange();
+      }
+    };
+    setDarkmode();
+    </script>
+  
+  
+  
+    <link rel="preload" href="/js/lib/lightbox/baguetteBox.min.js" as="script">
+    <link rel="preload" href="/js/lib/lightbox/baguetteBox.min.css" as="style" >
+  
+  
+    <link rel="preload" href="/js/lib/lozad.min.js" as="script">
+  
+  
+  
+  
+  
+  
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+  <body>
+    <div class="wrapper">
+       
+      <nav class="navbar">
+  <div class="navbar-logo">
+    <a class="navbar-logo-main" href="/">
+      
+      <span class="navbar-logo-dsc">简单且极端</span>
+      </a>
+  </div>
+  <div class="navbar-menu">
+    
+      <a 
+        href="/" 
+        class="navbar-menu-item">
+        
+          首页
+        
+      </a>
+    
+      <a 
+        href="/archives" 
+        class="navbar-menu-item">
+        
+          归档
+        
+      </a>
+    
+      <a 
+        href="/tags" 
+        class="navbar-menu-item">
+        
+          标签
+        
+      </a>
+    
+      <a 
+        href="/categories" 
+        class="navbar-menu-item">
+        
+          分类
+        
+      </a>
+    
+    <button 
+      class="navbar-menu-item darknavbar navbar-menu-btn" 
+      aria-label="Toggle dark mode"
+      id="dark">
+      <i class="iconfont icon-weather"></i>
+    </button>
+    <button 
+      class="navbar-menu-item searchnavbar navbar-menu-btn" 
+      aria-label="Toggle search"
+      id="search">
+      <!-- <i 
+        class="iconfont icon-search" 
+        style="font-size: 1.2rem; font-weight: 400;">
+      </i> -->
+      <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img"
+        class="iconify iconify--ion" width="28" height="28" preserveAspectRatio="xMidYMid meet" viewBox="0 0 512 512">
+        <path fill="none" stroke="currentColor" stroke-miterlimit="10" stroke-width="28"
+          d="M256 80a176 176 0 1 0 176 176A176 176 0 0 0 256 80Z"></path>
+        <path fill="none" stroke="currentColor" stroke-miterlimit="10" stroke-width="28"
+          d="M232 160a72 72 0 1 0 72 72a72 72 0 0 0-72-72Z"></path>
+        <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="28"
+          d="M283.64 283.64L336 336"></path>
+      </svg>
+    </button>
+  </div>
+</nav> 
+      
+      <div 
+        id="local-search" 
+        style="display: none">
+        <input
+          class="navbar-menu-item"
+          id="search-input"
+          placeholder="请输入搜索内容..." />
+        <div id="search-content"></div>
+      </div>
+      
+      <div class="section-wrap">
+        <div class="container">
+          <div class="columns">
+            <aside class="left-column">
+              
+              <div class="card card-author">
+                
+  <img 
+    src="https://img.songhn.com/img/Y67gdd.png" 
+    class="author-img"
+    width="88"
+    height="88"
+    alt="author avatar">
+
+<p class="author-name">简单且极端</p>
+<p class="author-description">只做能力范围之内的事，<br/>那么你将永远不会进步。</p>
+<div class="author-message">
+  <a 
+    class="author-posts-count" 
+    href="/archives">
+    <span>14</span>
+    <span>文章</span>
+  </a>
+  <a 
+    class="author-categories-count" 
+    href="/categories">
+    <span>1</span>
+    <span>分类</span>
+  </a>
+  <a 
+    class="author-tags-count" 
+    href="/tags">
+    <span>7</span>
+    <span>标签</span>
+  </a>
+</div>
+
+              </div>
+               <div class="sticky-tablet">
+  
+  
+    <article class="display-when-two-columns spacer">
+      <div class="card card-content toc-card">
+        <div class="toc-header">
+  <i 
+    class="iconfont icon-menu" 
+    style="padding-right: 2px;">
+  </i>目录
+</div>
+<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Chain-of-Responsibility%E6%A8%A1%E5%BC%8F%EF%BC%88%E8%B4%A3%E4%BB%BB%E9%93%BE%E6%A8%A1%E5%BC%8F%EF%BC%89"><span class="toc-text">Chain of Responsibility模式（责任链模式）</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E7%B1%BB%E5%9B%BE"><span class="toc-text">示例类图</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E7%A8%8B%E5%BA%8F"><span class="toc-text">示例程序</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Trouble%E7%B1%BB"><span class="toc-text">Trouble类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Support%E7%B1%BB"><span class="toc-text">Support类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#NoSupport%E7%B1%BB"><span class="toc-text">NoSupport类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#LimitSupport%E7%B1%BB"><span class="toc-text">LimitSupport类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#OddSupport%E7%B1%BB"><span class="toc-text">OddSupport类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#SpecialSupport%E7%B1%BB"><span class="toc-text">SpecialSupport类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Main%E7%B1%BB"><span class="toc-text">Main类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%9E%E4%BE%8B%E7%A8%8B%E5%BA%8F%E6%97%B6%E5%BA%8F%E5%9B%BE"><span class="toc-text">实例程序时序图</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Chain-of-Responsibility-%E6%A8%A1%E5%BC%8F%E4%B8%AD%E7%99%BB%E5%9C%BA%E8%A7%92%E8%89%B2"><span class="toc-text">Chain of Responsibility 模式中登场角色</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Handler%EF%BC%88%E5%A4%84%E7%90%86%E8%80%85%EF%BC%89"><span class="toc-text">Handler（处理者）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ConcreteHandler%EF%BC%88%E5%85%B7%E4%BD%93%E7%9A%84%E5%A4%84%E7%90%86%E8%80%85%EF%BC%89"><span class="toc-text">ConcreteHandler（具体的处理者）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Client%EF%BC%88%E8%AF%B7%E6%B1%82%E8%80%85%EF%BC%89"><span class="toc-text">Client（请求者）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Chain-of-Responsibility-%E6%A8%A1%E5%BC%8F%E7%B1%BB%E5%9B%BE"><span class="toc-text">Chain of Responsibility 模式类图</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%9D%E8%B7%AF%E8%A6%81%E7%82%B9"><span class="toc-text">思路要点</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%BC%B1%E5%8C%96%E4%BA%86%E5%8F%91%E5%87%BA%E8%AF%B7%E6%B1%82%E7%9A%84%E4%BA%BA%E5%92%8C%E5%A4%84%E7%90%86%E8%AF%B7%E6%B1%82%E7%9A%84%E4%BA%BA%E4%B9%8B%E9%97%B4%E7%9A%84%E5%85%B3%E7%B3%BB"><span class="toc-text">弱化了发出请求的人和处理请求的人之间的关系</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8F%AF%E4%BB%A5%E5%8A%A8%E6%80%81%E5%9C%B0%E6%94%B9%E5%8F%98%E8%B4%A3%E4%BB%BB%E9%93%BE"><span class="toc-text">可以动态地改变责任链</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%93%E6%B3%A8%E4%BA%8E%E8%87%AA%E5%B7%B1%E7%9A%84%E5%B7%A5%E4%BD%9C"><span class="toc-text">专注于自己的工作</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8E%A8%E5%8D%B8%E8%AF%B7%E6%B1%82%E4%BC%9A%E5%AF%BC%E8%87%B4%E5%A4%84%E7%90%86%E5%BB%B6%E8%BF%9F%E5%90%97"><span class="toc-text">推卸请求会导致处理延迟吗</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%89%80%E5%AD%A6%E7%9F%A5%E8%AF%86"><span class="toc-text">所学知识</span></a></li></ol></li></ol>
+      </div>
+    </article>
+  
+  
+  <article class="card card-content categories-widget">
+    <div class="categories-card">
+  <div class="categories-header">
+    <i 
+      class="iconfont icon-fenlei" 
+      style="padding-right: 2px;">
+    </i>分类
+  </div>
+  <div class="categories-list">
+    
+      <a href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">
+        <div class="categories-list-item">
+          设计模式
+          <span class="categories-list-item-badge">14</span>
+        </div>
+      </a>
+    
+  </div>
+</div>
+  </article>
+  
+  <article class="card card-content tags-widget">
+    <div class="tags-card">
+  <div class="tags-header">
+    <i 
+      class="iconfont icon-biaoqian" 
+      style="padding-right: 2px;">
+    </i>热门标签
+  </div>
+  <div class="tags-list">
+    
+      <a 
+        href="/tags/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" 
+        title="设计模式">
+        <div class="tags-list-item">设计模式</div>
+      </a>
+    
+      <a 
+        href="/tags/%E7%94%9F%E6%88%90%E5%AE%9E%E4%BE%8B/" 
+        title="生成实例">
+        <div class="tags-list-item">生成实例</div>
+      </a>
+    
+      <a 
+        href="/tags/%E4%BA%A4%E7%BB%99%E5%AD%90%E7%B1%BB/" 
+        title="交给子类">
+        <div class="tags-list-item">交给子类</div>
+      </a>
+    
+      <a 
+        href="/tags/%E8%AE%BF%E9%97%AE%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" 
+        title="访问数据结构">
+        <div class="tags-list-item">访问数据结构</div>
+      </a>
+    
+      <a 
+        href="/tags/%E5%88%86%E5%BC%80%E8%80%83%E8%99%91/" 
+        title="分开考虑">
+        <div class="tags-list-item">分开考虑</div>
+      </a>
+    
+      <a 
+        href="/tags/%E9%80%82%E5%BA%94%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" 
+        title="适应设计模式">
+        <div class="tags-list-item">适应设计模式</div>
+      </a>
+    
+      <a 
+        href="/tags/%E4%B8%80%E8%87%B4%E6%80%A7/" 
+        title="一致性">
+        <div class="tags-list-item">一致性</div>
+      </a>
+    
+  </div>
+</div>
+  </article>
+  
+  
+</div>
+            </aside>
+            <main class="main-column">
+              
+<article class="card card-content">
+  <header>
+    <h1 class="post-title">
+      责任链模式
+    </h1>
+  </header>
+  <div class="post-meta post-show-meta">
+    <time datetime="2022-10-13T06:53:41.444Z">
+      <i 
+        class="iconfont icon-calendar" 
+        style="margin-right: 2px;">
+      </i>
+      <span>2022-10-13</span>
+    </time>
+    
+      <span class="dot"></span>
+      
+        <a 
+          href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" 
+          class="post-meta-link">
+          设计模式
+        </a>
+      
+    
+    
+      <span class="dot"></span>
+      <span>2.8k 字</span>
+    
+  </div>
+  
+    <div 
+      class="post-meta post-show-meta" 
+      style="margin-top: -10px;">
+      <div style="display: flex; align-items: center;">
+        <i 
+          class="iconfont icon-biaoqian" 
+          style="margin-right: 2px; font-size: 1.15rem;">
+        </i>
+        
+          
+          <a 
+            href="/tags/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" 
+            class="post-meta-link">
+            设计模式
+          </a>
+        
+          
+            <span class="dot"></span>
+          
+          <a 
+            href="/tags/%E8%AE%BF%E9%97%AE%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" 
+            class="post-meta-link">
+            访问数据结构
+          </a>
+        
+      </div>
+    </div>
+  
+  </header>
+  <div 
+    id="section" 
+    class="post-content">
+    <h1 id="Chain-of-Responsibility模式（责任链模式）"><a href="#Chain-of-Responsibility模式（责任链模式）" class="headerlink" title="Chain of Responsibility模式（责任链模式）"></a>Chain of Responsibility模式（责任链模式）</h1><blockquote>
+<p>首先看看什么是<strong>推卸责任</strong>。假设现在我们要去公司领取资料。首先我们向公司前台打听要去哪里领取资料，她告诉我们应该去“营业窗口”。然后等我们到了“营业窗口”后，又被告知应该去“售后部门”。等好不容易赶到售后部门，又被告知应该去“资料中心”，因此最后我们又不得不敢往“资料中心”。像这样，在找到合适的办理人之前，我们被不断的踢给一个又一个人，这就是“推卸责任”。</p>
+<p>“推卸责任”听起来有些贬义的意思，但是有时候也确实存在需要“推卸责任”的情况。例如，当外部勤秋程序进行某个处理，但程序暂时无法直接决定由那个对象负责处理时，就需要推卸责任。这种情况下我们可以考虑<strong>将多个对象组成一条责任链，然后按照他们在指责链上的顺序一个一个地找出到底应该谁来负责处理</strong>。</p>
+<p>这种模式被称为<strong>Chain of Responsibility 模式</strong>。Responsibility有“责任”的意思，该模式称为“责任链”。总之，我们可以将它想象为推卸责任的结构，这有利于记住这种模式。</p>
+<p>使用Chain of Responsibility 模式可以弱化“请求方”和“处理方”之间的关联关系，让双方各自都成为可独立复用的组件。此外，程序还可以应对其他需求，如根据情况不同，负责处理对象也会发生变化的这种需求。</p>
+<p>当一个人被要求做什么事情时，如果他可以做就自己做，如果不能做就将“要求”转给另外一个人。下一个人如果可以自己处理，就自己做；如果不能自己处理，就再转给另外一个人……这就是Chain of Responsibility 模式。</p>
+</blockquote>
+<h2 id="示例类图"><a href="#示例类图" class="headerlink" title="示例类图"></a>示例类图</h2><blockquote>
+<p><img src="/2022/10/13/ChainOfResponsibility/image-20221013153615392.png" alt="image-20221013153615392" srcset="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20300%20300'%3E%3C/svg%3E" data-src="/2022/10/13/ChainOfResponsibility/image-20221013153615392.png" class="lozad post-image"></p>
+</blockquote>
+<h2 id="示例程序"><a href="#示例程序" class="headerlink" title="示例程序"></a>示例程序</h2><blockquote>
+<h3 id="Trouble类"><a href="#Trouble类" class="headerlink" title="Trouble类"></a>Trouble类</h3><p>Trouble类时表示发生问题的类。number是问题编号。通过getNumber方法可以获取问题编号。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">Trouble</span> <span class="token punctuation">&#123;</span>
+    <span class="token comment">/**
+     * 问题编号
+     */</span>
+    <span class="token keyword">private</span> <span class="token keyword">int</span> number<span class="token punctuation">;</span>
+
+    <span class="token comment">/**
+     * 生成问题
+     * @param number 问题编号
+     */</span>
+    <span class="token keyword">public</span> <span class="token class-name">Trouble</span><span class="token punctuation">(</span><span class="token keyword">int</span> number<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>number <span class="token operator">=</span> number<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 获取问题编号
+     * @return 问题编号
+     */</span>
+    <span class="token keyword">public</span> <span class="token keyword">int</span> <span class="token function">getNumber</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> number<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 代表问题的字符串
+     * @return
+     */</span>
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token class-name">String</span> <span class="token function">toString</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> <span class="token string">"[Trouble "</span> <span class="token operator">+</span> number <span class="token operator">+</span> <span class="token char">']'</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="Support类"><a href="#Support类" class="headerlink" title="Support类"></a>Support类</h3><p>Support类是用来解决问题的抽象类，它是职责链上的对象。</p>
+<p>next字段中指定了要推卸给的对象。可以通过setNext方法设定该对象。</p>
+<p>resolve方法是需要子类去实现的抽象方法。如果resolve返回true，则表示问题已经被处理，如果返回false则表示问题还没有被处理（即需要被推卸给下一个对象）。Resolve有“解决”的意思。</p>
+<p>support方法会调用resolve方法，如果resolve方法返回false，则support方法会将问题转交给下一个对象。如果已经达到指责链中的最后一个对象，则表示没有人处理问题，将会显示出处理失败的相关信息。在本例中我们只是简单的输出处理失败的相关信息，但根据需求不同，有时候也需要抛出异常。</p>
+<p>support方法调用了抽象方法resolve，因此它属于Template Method模式。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">abstract</span> <span class="token keyword">class</span> <span class="token class-name">Support</span> <span class="token punctuation">&#123;</span>
+
+    <span class="token comment">/**
+     * 解决问题的实例的名字
+     */</span>
+    <span class="token keyword">private</span> <span class="token class-name">String</span> name<span class="token punctuation">;</span>
+    <span class="token comment">/**
+     * 要推卸给的对象
+     */</span>
+    <span class="token keyword">private</span> <span class="token class-name">Support</span> next<span class="token punctuation">;</span>
+
+    <span class="token comment">/**
+     * 生成的问题实例
+     * @param name 问题名字
+     */</span>
+    <span class="token keyword">public</span> <span class="token class-name">Support</span><span class="token punctuation">(</span><span class="token class-name">String</span> name<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>name <span class="token operator">=</span> name<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 设置要推卸给的对象
+     * @param next 要推卸给的对象
+     * @return 要推卸的对象
+     */</span>
+    <span class="token keyword">public</span> <span class="token class-name">Support</span> <span class="token function">setNext</span><span class="token punctuation">(</span><span class="token class-name">Support</span> next<span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>next <span class="token operator">=</span> next<span class="token punctuation">;</span>
+        <span class="token keyword">return</span> next<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 解决问题的步骤
+     * @param trouble 问题
+     */</span>
+    <span class="token keyword">public</span> <span class="token keyword">final</span> <span class="token keyword">void</span> <span class="token function">support</span><span class="token punctuation">(</span><span class="token class-name">Trouble</span> trouble<span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">resolve</span><span class="token punctuation">(</span>trouble<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token function">done</span><span class="token punctuation">(</span>trouble<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token keyword">if</span> <span class="token punctuation">(</span>next <span class="token operator">!=</span> <span class="token keyword">null</span><span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+            next<span class="token punctuation">.</span><span class="token function">support</span><span class="token punctuation">(</span>trouble<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token punctuation">&#123;</span>
+            <span class="token function">fail</span><span class="token punctuation">(</span>trouble<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token class-name">String</span> <span class="token function">toString</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> <span class="token string">"["</span> <span class="token operator">+</span> name <span class="token operator">+</span> <span class="token string">"]"</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 解决问题的方法
+     * @param trouble 问题
+     * @return true 解决  false 未解决
+     */</span>
+    <span class="token keyword">protected</span> <span class="token keyword">abstract</span> <span class="token keyword">boolean</span> <span class="token function">resolve</span><span class="token punctuation">(</span><span class="token class-name">Trouble</span> trouble<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token comment">/**
+     * 解决
+     * @param trouble 问题
+     */</span>
+    <span class="token keyword">protected</span> <span class="token keyword">void</span> <span class="token function">done</span><span class="token punctuation">(</span><span class="token class-name">Trouble</span> trouble<span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+        <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span>trouble <span class="token operator">+</span> <span class="token string">"is resolved by "</span> <span class="token operator">+</span> <span class="token keyword">this</span> <span class="token operator">+</span> <span class="token string">"."</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 未解决
+     * @param trouble 问题
+     */</span>
+    <span class="token keyword">protected</span> <span class="token keyword">void</span> <span class="token function">fail</span><span class="token punctuation">(</span><span class="token class-name">Trouble</span> trouble<span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+        <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span>trouble <span class="token operator">+</span> <span class="token string">"cannot be resolved."</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="NoSupport类"><a href="#NoSupport类" class="headerlink" title="NoSupport类"></a>NoSupport类</h3><p>NoSupport类是Support类的子类。NoSupport类的resolve方法总是返回false。则它是一个永远“不解决问题”的类</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">NoSupport</span> <span class="token keyword">extends</span> <span class="token class-name">Support</span><span class="token punctuation">&#123;</span>
+    <span class="token keyword">public</span> <span class="token class-name">NoSupport</span><span class="token punctuation">(</span><span class="token class-name">String</span> name<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">super</span><span class="token punctuation">(</span>name<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 解决问题的方法
+     * 自己什么也不处理
+     * @param trouble 问题
+     * @return true 解决  false 未解决
+     */</span>
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">protected</span> <span class="token keyword">boolean</span> <span class="token function">resolve</span><span class="token punctuation">(</span><span class="token class-name">Trouble</span> trouble<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="LimitSupport类"><a href="#LimitSupport类" class="headerlink" title="LimitSupport类"></a>LimitSupport类</h3><p>LimitSupport类<strong>解决编号小于limit值的问题</strong>。reslove方法在判断编号小于limit值后，只是简单的返回true，但是实际上这里应该是解决问题的代码。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">LimitSupport</span> <span class="token keyword">extends</span> <span class="token class-name">Support</span><span class="token punctuation">&#123;</span>
+    <span class="token comment">/**
+     * 可以解决编号小于limit的问题
+     */</span>
+    <span class="token keyword">private</span> <span class="token keyword">int</span> limit<span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> <span class="token class-name">LimitSupport</span><span class="token punctuation">(</span><span class="token class-name">String</span> name<span class="token punctuation">,</span> <span class="token keyword">int</span> limit<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">super</span><span class="token punctuation">(</span>name<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>limit <span class="token operator">=</span> limit<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 解决问题的方法
+     * @param trouble 问题
+     * @return true 解决  false 未解决
+     */</span>
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">protected</span> <span class="token keyword">boolean</span> <span class="token function">resolve</span><span class="token punctuation">(</span><span class="token class-name">Trouble</span> trouble<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>trouble<span class="token punctuation">.</span><span class="token function">getNumber</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&lt;</span> limit<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token keyword">return</span> <span class="token boolean">true</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token punctuation">&#123;</span>
+            <span class="token keyword">return</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="OddSupport类"><a href="#OddSupport类" class="headerlink" title="OddSupport类"></a>OddSupport类</h3><p>OddSupport类<strong>解决奇数编号的问题</strong>。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">OddSupport</span> <span class="token keyword">extends</span> <span class="token class-name">Support</span><span class="token punctuation">&#123;</span>
+
+    <span class="token keyword">public</span> <span class="token class-name">OddSupport</span><span class="token punctuation">(</span><span class="token class-name">String</span> name<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">super</span><span class="token punctuation">(</span>name<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 解决问题的方法
+     * @param trouble 问题
+     * @return true 解决  false 未解决
+     */</span>
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">protected</span> <span class="token keyword">boolean</span> <span class="token function">resolve</span><span class="token punctuation">(</span><span class="token class-name">Trouble</span> trouble<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>trouble<span class="token punctuation">.</span><span class="token function">getNumber</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">%</span> <span class="token number">2</span> <span class="token operator">==</span> <span class="token number">1</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token keyword">return</span> <span class="token boolean">true</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token punctuation">&#123;</span>
+            <span class="token keyword">return</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="SpecialSupport类"><a href="#SpecialSupport类" class="headerlink" title="SpecialSupport类"></a>SpecialSupport类</h3><p>S pecialSupport类<strong>只解决指定编号的问题</strong>。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">SpecialSupport</span> <span class="token keyword">extends</span> <span class="token class-name">Support</span><span class="token punctuation">&#123;</span>
+    <span class="token comment">/**
+     * 只能解决指定编号的问题
+     */</span>
+    <span class="token keyword">private</span> <span class="token keyword">int</span> numble<span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> <span class="token class-name">SpecialSupport</span><span class="token punctuation">(</span><span class="token class-name">String</span> name<span class="token punctuation">,</span> <span class="token keyword">int</span> numble<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">super</span><span class="token punctuation">(</span>name<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>numble <span class="token operator">=</span> numble<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 解决问题的方法
+     *
+     * @param trouble 问题
+     * @return true 解决  false 未解决
+     */</span>
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">protected</span> <span class="token keyword">boolean</span> <span class="token function">resolve</span><span class="token punctuation">(</span><span class="token class-name">Trouble</span> trouble<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>trouble<span class="token punctuation">.</span><span class="token function">getNumber</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">==</span> numble<span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+            <span class="token keyword">return</span> <span class="token boolean">true</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span><span class="token keyword">else</span> <span class="token punctuation">&#123;</span>
+            <span class="token keyword">return</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="Main类"><a href="#Main类" class="headerlink" title="Main类"></a>Main类</h3><p>Main类首先生成了Alice至Fred等6个解决问题的实例。虽然此处定义的变量都是Support类型的，但是实际上所保存的变量却是NoSupport、LimitSupport、SpecialSupport、OddSupport等各个类的实例。</p>
+<p>接下来，Main类调用setNext方法将Alice至Fred这6个实例串联在职责链上。之后，Main类逐个生成问题，并将他们传递给alice，然后显示最终谁解决了该问题。请注意，这里的问题编号从0开始，增长步长为33。这里的33并没有什么特别的意思，我们只是随便使用一个增长步长使程序有趣而已。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">Main</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token class-name">String</span><span class="token punctuation">[</span><span class="token punctuation">]</span> args<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token class-name">Support</span> alice <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">NoSupport</span><span class="token punctuation">(</span><span class="token string">"Alice"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">Support</span> bob <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">LimitSupport</span><span class="token punctuation">(</span><span class="token string">"Bob"</span><span class="token punctuation">,</span><span class="token number">100</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">Support</span> charlie <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">SpecialSupport</span><span class="token punctuation">(</span><span class="token string">"Charlie"</span><span class="token punctuation">,</span> <span class="token number">429</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">Support</span> diana <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">LimitSupport</span><span class="token punctuation">(</span><span class="token string">"Diana"</span><span class="token punctuation">,</span> <span class="token number">200</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">Support</span> elmo <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">OddSupport</span><span class="token punctuation">(</span><span class="token string">"Elmo"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">Support</span> fred <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">LimitSupport</span><span class="token punctuation">(</span><span class="token string">"Fred"</span><span class="token punctuation">,</span><span class="token number">300</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment">// 形成责任链</span>
+        alice<span class="token punctuation">.</span><span class="token function">setNext</span><span class="token punctuation">(</span>bob<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">setNext</span><span class="token punctuation">(</span>charlie<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">setNext</span><span class="token punctuation">(</span>diana<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">setNext</span><span class="token punctuation">(</span>elmo<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">setNext</span><span class="token punctuation">(</span>fred<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment">// 制造各种问题</span>
+        <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">int</span> i <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> <span class="token number">500</span><span class="token punctuation">;</span> i<span class="token operator">+=</span> <span class="token number">33</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            alice<span class="token punctuation">.</span><span class="token function">support</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">Trouble</span><span class="token punctuation">(</span>i<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="实例程序时序图"><a href="#实例程序时序图" class="headerlink" title="实例程序时序图"></a>实例程序时序图</h3><p><img src="/2022/10/13/ChainOfResponsibility/image-20221024102651130.png" alt="image-20221024102651130" srcset="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20300%20300'%3E%3C/svg%3E" data-src="/2022/10/13/ChainOfResponsibility/image-20221024102651130.png" class="lozad post-image"></p>
+</blockquote>
+<h2 id="Chain-of-Responsibility-模式中登场角色"><a href="#Chain-of-Responsibility-模式中登场角色" class="headerlink" title="Chain of Responsibility 模式中登场角色"></a>Chain of Responsibility 模式中登场角色</h2><ul>
+<li><h3 id="Handler（处理者）"><a href="#Handler（处理者）" class="headerlink" title="Handler（处理者）"></a>Handler（处理者）</h3><blockquote>
+<p>Handler角色定义了处理请求的接口（API）。Handler角色知道“下一个处理者”是谁，如果自己无法处理请求，它会将请求转给“下一个处理者”。当然，“下一个处理者”也是Handler角色。</p>
+<p>在示例程序中，由Support类扮演此角色。负责处理请求的是support方法。</p>
+</blockquote>
+</li>
+<li><h3 id="ConcreteHandler（具体的处理者）"><a href="#ConcreteHandler（具体的处理者）" class="headerlink" title="ConcreteHandler（具体的处理者）"></a>ConcreteHandler（具体的处理者）</h3><blockquote>
+<p>ConcreteHandler角色是处理请求的具体角色。</p>
+<p>在示例程序中，由NoSupport、LimitSupport、OddSupport、SpecialSupport等各个类扮演此角色。</p>
+</blockquote>
+</li>
+<li><h3 id="Client（请求者）"><a href="#Client（请求者）" class="headerlink" title="Client（请求者）"></a>Client（请求者）</h3><blockquote>
+<p>Client角色是向一个ConcreteHandle角色发送请求的角色。</p>
+<p>在示例程序中，由Main类扮演此角色。</p>
+</blockquote>
+</li>
+</ul>
+<h2 id="Chain-of-Responsibility-模式类图"><a href="#Chain-of-Responsibility-模式类图" class="headerlink" title="Chain of Responsibility 模式类图"></a>Chain of Responsibility 模式类图</h2><blockquote>
+<p><img src="/2022/10/13/ChainOfResponsibility/image-20221013161658956.png" alt="image-20221013161658956" srcset="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20300%20300'%3E%3C/svg%3E" data-src="/2022/10/13/ChainOfResponsibility/image-20221013161658956.png" class="lozad post-image"></p>
+</blockquote>
+<h2 id="思路要点"><a href="#思路要点" class="headerlink" title="思路要点"></a>思路要点</h2><ul>
+<li><h3 id="弱化了发出请求的人和处理请求的人之间的关系"><a href="#弱化了发出请求的人和处理请求的人之间的关系" class="headerlink" title="弱化了发出请求的人和处理请求的人之间的关系"></a>弱化了发出请求的人和处理请求的人之间的关系</h3><blockquote>
+<p>Chain of Responsibility 模式的最大优点就在于它弱化了发出请求的人（Client 角色）和处理请求的人（ConcreteHandler 角色）之间的关系。Client角色向第一个ConcreteHandler角色发出请求，然后请求会在职责链中传播，直到某个ConcreteHandler角色处理该请求。</p>
+<p>如果不使用该模式，就必须有某个伟大的角色知道“谁该处理什么请求”，这有点类似中央集权制。而让“发出请求的人”知道“谁应该处理该请求”并不明智，因为如果发出请求的人不得不知道处理请求的人各自的责任分摊情况，就会降低其作为可复用的组件的独立性。</p>
+<p>补充说明：为了简单期间，在示例程序中，我们让扮演Client角色的Main类负责串联起ConcreteHandle的职责链。</p>
+</blockquote>
+</li>
+<li><h3 id="可以动态地改变责任链"><a href="#可以动态地改变责任链" class="headerlink" title="可以动态地改变责任链"></a>可以动态地改变责任链</h3><blockquote>
+<p>在示例程序中，问题的解决是按照从Alice到Fred的固定顺序进行处理的。但是，我们还需要考虑负责处理的各个ConcreteHandler角色之间的关系可能会发生变化的情况。如果使用Chain of Responsibility 模式，通过委托推卸责任，就可以根据情况变化动态地重新组织职责链。</p>
+<p>如果不使用Chain of Responsibility 模式，而是在程序中固定写明“某个请求需要谁处理”这样的对应关系，那么很难在程序中去改变请求的处理者。</p>
+<p>在视窗系统中，用户有时需要可以自由地在视窗中添加空间（按钮和文本输入框等）。这时，Chain of Responsibility 模式就有了用武之地。</p>
+</blockquote>
+</li>
+<li><h3 id="专注于自己的工作"><a href="#专注于自己的工作" class="headerlink" title="专注于自己的工作"></a>专注于自己的工作</h3><blockquote>
+<p>“推卸”这个词虽然有贬义，但是反过来想，这样才可以使每个对象更专注于自己的工作，即每个ConcreteHandler角色都专注于自己所负责的处理。当自己无法处理时，ConcreteHandler角色就会干脆地对下一个处理者说一句“嘿，交给你了”，然后将请求转出去。这样，每个ConcreteHandler角色就只能处理它应该负责的请求了。</p>
+<p>如果我们不使用Chain of Responsibility 模式又会怎样呢？这时，我们需要编写一个“决定谁应该负责什么样的处理”的方法。亦或是让每个ConcreteHandler角色自己负责“任务分配”工作，即“如果自己不能处理，就转交给那个人。如果他也不能处理，那就根据需痛情况将请求再转交给另外一个人”。</p>
+</blockquote>
+</li>
+<li><h3 id="推卸请求会导致处理延迟吗"><a href="#推卸请求会导致处理延迟吗" class="headerlink" title="推卸请求会导致处理延迟吗"></a>推卸请求会导致处理延迟吗</h3><blockquote>
+<p>使用Chain of Responsibility 模式可以推卸请求，直至找到合适的处理请求的对象，这样确实提高了程序的灵活性，但是难道不会导致处理延迟吗？</p>
+<p>确实如此，与“事先确定那个对象负责什么样的处理当接收到请求时，立即让相应的对象去处理请求”相比，使用Chain of Responsibility 模式确实会导致处理请求发生了延迟。</p>
+<p>不过，这是一个需要权衡的问题。如果请求和处理者之间的关系时确定的，而且需要非常快的处理速度时，不使用Chain of Responsibility 模式会更好。</p>
+</blockquote>
+</li>
+</ul>
+<h2 id="所学知识"><a href="#所学知识" class="headerlink" title="所学知识"></a>所学知识</h2><blockquote>
+<p>学习了将处理请求的实例串联在职责链上，然后当接收到请求后，按顺序去确认每个实例是否可以处理请求，如果不能处理，就推卸请求的Chain of Responsibility 模式。</p>
+<p>在视窗系统中经常会使用到Chain of Responsibility 模式。</p>
+</blockquote>
+
+  </div>
+  <div>
+    
+      <div 
+        class="post-note note-warning copyright" 
+        style="margin-top: 42px">
+        <p>
+          <span style="font-weight: bold;">作者：</span><a 
+            target="_blank" 
+            rel="nofollow noopener noreferrer" 
+            href="/about">
+            简单且极端
+          </a>
+        </p>
+        <p>
+          <span style="font-weight: bold;">文章链接：</span><a 
+            target="_blank" 
+            rel="nofollow noopener noreferrer" 
+            href="https://extremelys.github.io/2022/10/13/ChainOfResponsibility/">
+            https://extremelys.github.io/2022/10/13/ChainOfResponsibility/
+          </a>
+        </p>
+        <p><span style="font-weight: bold;">版权声明：</span>本博客所有文章除特别声明外，均采用<a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">CC BY-NC-SA 4.0 协议</a>。转载请注明出处！</p>
+      </div>
+    
+  </div>
+</article>
+<div class="nav">
+  
+  
+    <div class="nav-item-next">
+      <a 
+        href="/2022/09/19/VisitorPattern/" 
+        class="nav-link">
+        <div>
+          <div class="nav-label">下一篇</div>
+          
+            <div class="nav-title">访问者模式 </div>
+          
+        </div>
+        <i class="iconfont icon-right nav-next-icon"></i>
+      </a>
+    </div>
+  
+</div>
+
+<div 
+  class="card card-content toc-card" 
+  id="mobiletoc">
+  <div class="toc-header">
+  <i 
+    class="iconfont icon-menu" 
+    style="padding-right: 2px;">
+  </i>目录
+</div>
+<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Chain-of-Responsibility%E6%A8%A1%E5%BC%8F%EF%BC%88%E8%B4%A3%E4%BB%BB%E9%93%BE%E6%A8%A1%E5%BC%8F%EF%BC%89"><span class="toc-text">Chain of Responsibility模式（责任链模式）</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E7%B1%BB%E5%9B%BE"><span class="toc-text">示例类图</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E7%A8%8B%E5%BA%8F"><span class="toc-text">示例程序</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Trouble%E7%B1%BB"><span class="toc-text">Trouble类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Support%E7%B1%BB"><span class="toc-text">Support类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#NoSupport%E7%B1%BB"><span class="toc-text">NoSupport类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#LimitSupport%E7%B1%BB"><span class="toc-text">LimitSupport类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#OddSupport%E7%B1%BB"><span class="toc-text">OddSupport类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#SpecialSupport%E7%B1%BB"><span class="toc-text">SpecialSupport类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Main%E7%B1%BB"><span class="toc-text">Main类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%9E%E4%BE%8B%E7%A8%8B%E5%BA%8F%E6%97%B6%E5%BA%8F%E5%9B%BE"><span class="toc-text">实例程序时序图</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Chain-of-Responsibility-%E6%A8%A1%E5%BC%8F%E4%B8%AD%E7%99%BB%E5%9C%BA%E8%A7%92%E8%89%B2"><span class="toc-text">Chain of Responsibility 模式中登场角色</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Handler%EF%BC%88%E5%A4%84%E7%90%86%E8%80%85%EF%BC%89"><span class="toc-text">Handler（处理者）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ConcreteHandler%EF%BC%88%E5%85%B7%E4%BD%93%E7%9A%84%E5%A4%84%E7%90%86%E8%80%85%EF%BC%89"><span class="toc-text">ConcreteHandler（具体的处理者）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Client%EF%BC%88%E8%AF%B7%E6%B1%82%E8%80%85%EF%BC%89"><span class="toc-text">Client（请求者）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Chain-of-Responsibility-%E6%A8%A1%E5%BC%8F%E7%B1%BB%E5%9B%BE"><span class="toc-text">Chain of Responsibility 模式类图</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%9D%E8%B7%AF%E8%A6%81%E7%82%B9"><span class="toc-text">思路要点</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%BC%B1%E5%8C%96%E4%BA%86%E5%8F%91%E5%87%BA%E8%AF%B7%E6%B1%82%E7%9A%84%E4%BA%BA%E5%92%8C%E5%A4%84%E7%90%86%E8%AF%B7%E6%B1%82%E7%9A%84%E4%BA%BA%E4%B9%8B%E9%97%B4%E7%9A%84%E5%85%B3%E7%B3%BB"><span class="toc-text">弱化了发出请求的人和处理请求的人之间的关系</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8F%AF%E4%BB%A5%E5%8A%A8%E6%80%81%E5%9C%B0%E6%94%B9%E5%8F%98%E8%B4%A3%E4%BB%BB%E9%93%BE"><span class="toc-text">可以动态地改变责任链</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%93%E6%B3%A8%E4%BA%8E%E8%87%AA%E5%B7%B1%E7%9A%84%E5%B7%A5%E4%BD%9C"><span class="toc-text">专注于自己的工作</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8E%A8%E5%8D%B8%E8%AF%B7%E6%B1%82%E4%BC%9A%E5%AF%BC%E8%87%B4%E5%A4%84%E7%90%86%E5%BB%B6%E8%BF%9F%E5%90%97"><span class="toc-text">推卸请求会导致处理延迟吗</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%89%80%E5%AD%A6%E7%9F%A5%E8%AF%86"><span class="toc-text">所学知识</span></a></li></ol></li></ol>
+</div>
+            </main>
+            <aside class="right-column">
+              <div class="sticky-widescreen">
+  
+  
+    <article class="card card-content toc-card">
+      <div class="toc-header">
+  <i 
+    class="iconfont icon-menu" 
+    style="padding-right: 2px;">
+  </i>目录
+</div>
+<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Chain-of-Responsibility%E6%A8%A1%E5%BC%8F%EF%BC%88%E8%B4%A3%E4%BB%BB%E9%93%BE%E6%A8%A1%E5%BC%8F%EF%BC%89"><span class="toc-text">Chain of Responsibility模式（责任链模式）</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E7%B1%BB%E5%9B%BE"><span class="toc-text">示例类图</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E7%A8%8B%E5%BA%8F"><span class="toc-text">示例程序</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Trouble%E7%B1%BB"><span class="toc-text">Trouble类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Support%E7%B1%BB"><span class="toc-text">Support类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#NoSupport%E7%B1%BB"><span class="toc-text">NoSupport类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#LimitSupport%E7%B1%BB"><span class="toc-text">LimitSupport类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#OddSupport%E7%B1%BB"><span class="toc-text">OddSupport类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#SpecialSupport%E7%B1%BB"><span class="toc-text">SpecialSupport类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Main%E7%B1%BB"><span class="toc-text">Main类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%9E%E4%BE%8B%E7%A8%8B%E5%BA%8F%E6%97%B6%E5%BA%8F%E5%9B%BE"><span class="toc-text">实例程序时序图</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Chain-of-Responsibility-%E6%A8%A1%E5%BC%8F%E4%B8%AD%E7%99%BB%E5%9C%BA%E8%A7%92%E8%89%B2"><span class="toc-text">Chain of Responsibility 模式中登场角色</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Handler%EF%BC%88%E5%A4%84%E7%90%86%E8%80%85%EF%BC%89"><span class="toc-text">Handler（处理者）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ConcreteHandler%EF%BC%88%E5%85%B7%E4%BD%93%E7%9A%84%E5%A4%84%E7%90%86%E8%80%85%EF%BC%89"><span class="toc-text">ConcreteHandler（具体的处理者）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Client%EF%BC%88%E8%AF%B7%E6%B1%82%E8%80%85%EF%BC%89"><span class="toc-text">Client（请求者）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Chain-of-Responsibility-%E6%A8%A1%E5%BC%8F%E7%B1%BB%E5%9B%BE"><span class="toc-text">Chain of Responsibility 模式类图</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%9D%E8%B7%AF%E8%A6%81%E7%82%B9"><span class="toc-text">思路要点</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%BC%B1%E5%8C%96%E4%BA%86%E5%8F%91%E5%87%BA%E8%AF%B7%E6%B1%82%E7%9A%84%E4%BA%BA%E5%92%8C%E5%A4%84%E7%90%86%E8%AF%B7%E6%B1%82%E7%9A%84%E4%BA%BA%E4%B9%8B%E9%97%B4%E7%9A%84%E5%85%B3%E7%B3%BB"><span class="toc-text">弱化了发出请求的人和处理请求的人之间的关系</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8F%AF%E4%BB%A5%E5%8A%A8%E6%80%81%E5%9C%B0%E6%94%B9%E5%8F%98%E8%B4%A3%E4%BB%BB%E9%93%BE"><span class="toc-text">可以动态地改变责任链</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%93%E6%B3%A8%E4%BA%8E%E8%87%AA%E5%B7%B1%E7%9A%84%E5%B7%A5%E4%BD%9C"><span class="toc-text">专注于自己的工作</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8E%A8%E5%8D%B8%E8%AF%B7%E6%B1%82%E4%BC%9A%E5%AF%BC%E8%87%B4%E5%A4%84%E7%90%86%E5%BB%B6%E8%BF%9F%E5%90%97"><span class="toc-text">推卸请求会导致处理延迟吗</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%89%80%E5%AD%A6%E7%9F%A5%E8%AF%86"><span class="toc-text">所学知识</span></a></li></ol></li></ol>
+    </article>
+  
+  
+  <article class="card card-content">
+    <div class="recent-posts-card">
+  <div class="recent-posts-header">
+    <i 
+      class="iconfont icon-wenzhang_huaban" 
+      style="padding-right: 2px;">
+    </i>最近文章
+  </div>
+  <div class="recent-posts-list">
+    
+      <div class="recent-posts-item">
+        <div class="recent-posts-item-title">2022-10-13</div>
+        <a href="/2022/10/13/ChainOfResponsibility/"><div class="recent-posts-item-content">责任链模式</div></a>
+      </div>
+    
+      <div class="recent-posts-item">
+        <div class="recent-posts-item-title">2022-09-19</div>
+        <a href="/2022/09/19/VisitorPattern/"><div class="recent-posts-item-content">访问者模式</div></a>
+      </div>
+    
+      <div class="recent-posts-item">
+        <div class="recent-posts-item-title">2022-09-16</div>
+        <a href="/2022/09/16/DecoratorPatten/"><div class="recent-posts-item-content">装饰器模式</div></a>
+      </div>
+    
+      <div class="recent-posts-item">
+        <div class="recent-posts-item-title">2022-08-25</div>
+        <a href="/2022/08/25/CompositePattern/"><div class="recent-posts-item-content">组合模式</div></a>
+      </div>
+    
+  </div>
+</div>
+  </article>
+  
+  
+</div>
+            </aside>
+          </div>
+        </div>
+      </div>
+    </div>
+     
+    <footer class="footer">
+  <div class="footer-container">
+    <div>
+      <div class="footer-dsc">
+        <span>
+          Copyright ©
+          
+            2022
+          
+          
+        </span>
+        &nbsp;
+        <a 
+          href="/" 
+          class="footer-link">
+          简单且极端
+        </a>
+      </div>
+    </div>
+
+    
+      <div class="footer-dsc">
+        
+          Powered by
+          <a 
+            href="https://hexo.io/" 
+            class="footer-link" 
+            target="_blank" 
+            rel="nofollow noopener noreferrer">
+            &nbsp;Hexo
+          </a>
+        
+        
+          <span>&nbsp;|&nbsp;</span>
+        
+        
+          Theme -
+          <a 
+            href="https://github.com/theme-kaze" 
+            class="footer-link" 
+            target="_blank"
+            rel="nofollow noopener noreferrer">
+            &nbsp;Kaze
+          </a>
+        
+      </div>
+    
+    
+    
+    
+</footer>
+ 
+    
+  <a 
+    role="button" 
+    id="scrollbutton" 
+    class="basebutton" 
+    aria-label="回到顶部">
+    <i class="iconfont icon-arrowleft button-icon"></i>
+  </a>
+
+<a 
+  role="button" 
+  id="menubutton"
+  aria-label="menu button"
+  class="basebutton">
+  <i class="iconfont icon-menu button-icon"></i>
+</a>
+<a 
+  role="button" 
+  id="popbutton" 
+  class="basebutton" 
+  aria-label="控制中心">
+  <i class="iconfont icon-expand button-icon"></i>
+</a>
+<a 
+  role="button" 
+  id="darkbutton" 
+  class="basebutton darkwidget" 
+  aria-label="夜色模式">
+  <i class="iconfont icon-weather button-icon"></i>
+</a>
+<a 
+  role="button" 
+  id="searchbutton" 
+  class="basebutton searchwidget" 
+  aria-label="搜索">
+  <i class="iconfont icon-search button-icon"></i>
+</a> 
+     
+     
+     
+      <script>
+  var addImgLayout = function () {
+    var img = document.querySelectorAll('.post-content img')
+    var i
+    for (i = 0; i < img.length; i++) {
+      var wrapper = document.createElement('a')
+      wrapper.setAttribute('href', img[i].getAttribute('data-src'))
+      wrapper.setAttribute('aria-label', 'illustration')
+      wrapper.style.cssText =
+        'width: 100%; display: flex; justify-content: center;'
+      if (img[i].alt) wrapper.dataset.caption = img[i].alt
+      wrapper.dataset.nolink = true
+      img[i].before(wrapper)
+      wrapper.append(img[i])
+      var divWrap = document.createElement('div')
+      divWrap.classList.add('gallery')
+      wrapper.before(divWrap)
+      divWrap.append(wrapper)
+    }
+    baguetteBox.run('.gallery')
+  }
+</script>
+<script>
+  loadScript(
+    "/js/lib/lightbox/baguetteBox.min.js",
+    addImgLayout
+  )
+</script>
+ 
+     
+     
+    <script src="/js/main.js"></script> 
+     
+    
+      <script>
+        var addLazyload = function () {
+          var observer = lozad('.lozad', {
+            load: function (el) {
+              el.srcset = el.getAttribute('data-src')
+            },
+            loaded: function (el) {
+              el.classList.add('loaded')
+            },
+          })
+          observer.observe()
+        }
+      </script>
+      <script>
+        loadScript('/js/lib/lozad.min.js', addLazyload)
+      </script>
+    
+    <script src="//instant.page/5.1.0" type="module"
+      integrity="sha384-by67kQnR+pyfy8yWP4kPO12fHKRLHZPfEsiSXR8u2IKcTdxD805MGUXBzVPnkLHw"></script>
+    
+    
+  </body>
+</html>
