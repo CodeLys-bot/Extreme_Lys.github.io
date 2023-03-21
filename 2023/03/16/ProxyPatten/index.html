@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+  <meta charset="UTF-8">
+  <meta 
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+  <meta 
+    http-equiv="X-UA-Compatible" 
+    content="ie=edge">
+  <meta 
+    name="theme-color" 
+    content="#fff" 
+    id="theme-color">
+  <meta 
+    name="description" 
+    content="Hexo">
+  <link 
+    rel="icon" 
+    href="/">
+  <title>代理模式</title>
+  
+    
+      <meta 
+        property="og:title" 
+        content="代理模式">
+    
+    
+      <meta 
+        property="og:url" 
+        content="https://extremelys.github.io/2023/03/16/ProxyPatten/index.html">
+    
+    
+      <meta 
+        property="og:img" 
+        content="https://img.songhn.com/img/Y67gdd.png">
+    
+    
+    
+      <meta 
+        property="og:type" 
+        content="article">
+      <meta 
+        property="og:article:published_time" 
+        content="2023-03-16">
+      <meta 
+        property="og:article:modified_time" 
+        content="2023-03-16">
+      <meta 
+        property="og:article:author" 
+        content="简单且极端">
+      
+        
+          <meta 
+            property="og:article:tag" 
+            content="设计模式">
+        
+          <meta 
+            property="og:article:tag" 
+            content="避免浪费">
+        
+      
+    
+  
+  
+  <link rel="preload" href="//at.alicdn.com/t/font_1946621_i1kgafibvw.css" as="style" >
+  <link rel="preload" href="//at.alicdn.com/t/font_1952792_89b4ac4k4up.css" as="style" >
+  <link rel="preload" href="/css/main.css" as="style" >
+  
+  <link rel="modulepreload" href="//instant.page/5.1.0">
+  
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1946621_i1kgafibvw.css">
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1952792_89b4ac4k4up.css">
+  
+  
+  
+    <link rel="stylesheet" href="/js/lib/lightbox/baguetteBox.min.css">
+  
+  <script>
+    function loadScript(url, cb) {
+      var script = document.createElement('script');
+      script.src = url;
+      if (cb) script.onload = cb;
+      script.async = true;
+      document.body.appendChild(script);
+    }
+    function loadCSS(href, data, attr) {
+      var sheet = document.createElement('link');
+      sheet.ref = 'stylesheet';
+      sheet.href = href;
+      sheet.dataset[data] = attr;
+      document.head.appendChild(sheet);
+    }
+    function changeCSS(cssFile, data, attr) {
+      var oldlink = document.querySelector(data);
+      var newlink = document.createElement("link");
+      newlink.setAttribute("rel", "stylesheet");
+      newlink.setAttribute("href", cssFile);
+      newlink.dataset.prism = attr;
+      document.head.replaceChild(newlink, oldlink);
+    }
+  </script>
+  
+    
+      
+      
+      
+      
+        
+        
+        
+        <script>
+          function prismThemeChange() {
+            if(document.getElementById('theme-color').dataset.mode === 'dark') {
+              if(document.querySelector('[data-prism]')) {
+                changeCSS('/js/lib/prism/prism-tomorrow.min.css', '[data-prism]', 'prism-tomorrow');
+              } else {
+                loadCSS('/js/lib/prism/prism-tomorrow.min.css', 'prism', 'prism-tomorrow');
+              }
+            } else {
+              if(document.querySelector('[data-prism]')) {
+                changeCSS('/js/lib/prism/prism.min.css', '[data-prism]', 'prism');
+              } else {
+                loadCSS('/js/lib/prism/prism.min.css', 'prism', 'prism');
+              }
+            }
+          }
+          prismThemeChange()
+        </script>
+      
+      
+        
+        <link rel="stylesheet" href="/js/lib/prism/prism-line-numbers.min.css">
+      
+    
+  
+  <script>
+    // control reverse button
+    var reverseDarkList = {
+      dark: 'light',
+      light: 'dark'
+    };
+    var themeColor = {
+      dark: '#1c1c1e',
+      light: '#fff'
+    }
+    // get the data of css prefers-color-scheme
+    var getCssMediaQuery = function() {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    };
+    // reverse current darkmode setting function
+    var reverseDarkModeSetting = function() {
+      var setting = localStorage.getItem('user-color-scheme');
+      if(reverseDarkList[setting]) {
+        setting = reverseDarkList[setting];
+      } else if(setting === null) {
+        setting = reverseDarkList[getCssMediaQuery()];
+      } else {
+        return;
+      }
+      localStorage.setItem('user-color-scheme', setting);
+      return setting;
+    };
+    // apply current darkmode setting
+  </script>
+  
+    <script>
+      var setDarkmode = function(mode) {
+      var setting = mode || localStorage.getItem('user-color-scheme');
+      if(setting === getCssMediaQuery()) {
+        document.documentElement.removeAttribute('data-user-color-scheme');
+        localStorage.removeItem('user-color-scheme');
+        document.getElementById('theme-color').content = themeColor[setting];
+        document.getElementById('theme-color').dataset.mode = setting;
+        prismThemeChange();
+      } else if(reverseDarkList[setting]) {
+        document.documentElement.setAttribute('data-user-color-scheme', setting);
+        document.getElementById('theme-color').content = themeColor[setting];
+        document.getElementById('theme-color').dataset.mode = setting;
+        prismThemeChange();
+      } else {
+        document.documentElement.removeAttribute('data-user-color-scheme');
+        localStorage.removeItem('user-color-scheme');
+        document.getElementById('theme-color').content = themeColor[getCssMediaQuery()];
+        document.getElementById('theme-color').dataset.mode = getCssMediaQuery();
+        prismThemeChange();
+      }
+    };
+    setDarkmode();
+    </script>
+  
+  
+  
+    <link rel="preload" href="/js/lib/lightbox/baguetteBox.min.js" as="script">
+    <link rel="preload" href="/js/lib/lightbox/baguetteBox.min.css" as="style" >
+  
+  
+    <link rel="preload" href="/js/lib/lozad.min.js" as="script">
+  
+  
+  
+  
+  
+  
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+  <body>
+    <div class="wrapper">
+       
+      <nav class="navbar">
+  <div class="navbar-logo">
+    <a class="navbar-logo-main" href="/">
+      
+      <span class="navbar-logo-dsc">简单且极端</span>
+      </a>
+  </div>
+  <div class="navbar-menu">
+    
+      <a 
+        href="/" 
+        class="navbar-menu-item">
+        
+          首页
+        
+      </a>
+    
+      <a 
+        href="/archives" 
+        class="navbar-menu-item">
+        
+          归档
+        
+      </a>
+    
+      <a 
+        href="/tags" 
+        class="navbar-menu-item">
+        
+          标签
+        
+      </a>
+    
+      <a 
+        href="/categories" 
+        class="navbar-menu-item">
+        
+          分类
+        
+      </a>
+    
+    <button 
+      class="navbar-menu-item darknavbar navbar-menu-btn" 
+      aria-label="Toggle dark mode"
+      id="dark">
+      <i class="iconfont icon-weather"></i>
+    </button>
+    <button 
+      class="navbar-menu-item searchnavbar navbar-menu-btn" 
+      aria-label="Toggle search"
+      id="search">
+      <!-- <i 
+        class="iconfont icon-search" 
+        style="font-size: 1.2rem; font-weight: 400;">
+      </i> -->
+      <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img"
+        class="iconify iconify--ion" width="28" height="28" preserveAspectRatio="xMidYMid meet" viewBox="0 0 512 512">
+        <path fill="none" stroke="currentColor" stroke-miterlimit="10" stroke-width="28"
+          d="M256 80a176 176 0 1 0 176 176A176 176 0 0 0 256 80Z"></path>
+        <path fill="none" stroke="currentColor" stroke-miterlimit="10" stroke-width="28"
+          d="M232 160a72 72 0 1 0 72 72a72 72 0 0 0-72-72Z"></path>
+        <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="28"
+          d="M283.64 283.64L336 336"></path>
+      </svg>
+    </button>
+  </div>
+</nav> 
+      
+      <div 
+        id="local-search" 
+        style="display: none">
+        <input
+          class="navbar-menu-item"
+          id="search-input"
+          placeholder="请输入搜索内容..." />
+        <div id="search-content"></div>
+      </div>
+      
+      <div class="section-wrap">
+        <div class="container">
+          <div class="columns">
+            <aside class="left-column">
+              
+              <div class="card card-author">
+                
+  <img 
+    src="https://img.songhn.com/img/Y67gdd.png" 
+    class="author-img"
+    width="88"
+    height="88"
+    alt="author avatar">
+
+<p class="author-name">简单且极端</p>
+<p class="author-description">只做能力范围之内的事，<br/>那么你将永远不会进步。</p>
+<div class="author-message">
+  <a 
+    class="author-posts-count" 
+    href="/archives">
+    <span>22</span>
+    <span>文章</span>
+  </a>
+  <a 
+    class="author-categories-count" 
+    href="/categories">
+    <span>1</span>
+    <span>分类</span>
+  </a>
+  <a 
+    class="author-tags-count" 
+    href="/tags">
+    <span>10</span>
+    <span>标签</span>
+  </a>
+</div>
+
+              </div>
+               <div class="sticky-tablet">
+  
+  
+    <article class="display-when-two-columns spacer">
+      <div class="card card-content toc-card">
+        <div class="toc-header">
+  <i 
+    class="iconfont icon-menu" 
+    style="padding-right: 2px;">
+  </i>目录
+</div>
+<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Proxy%E6%A8%A1%E5%BC%8F%EF%BC%88%E4%BB%A3%E7%90%86%E6%A8%A1%E5%BC%8F%EF%BC%89"><span class="toc-text">Proxy模式（代理模式）</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E7%B1%BB%E5%9B%BE"><span class="toc-text">示例类图</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E7%A8%8B%E5%BA%8F"><span class="toc-text">示例程序</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Printer%E7%B1%BB"><span class="toc-text">Printer类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Printabler%E7%B1%BB"><span class="toc-text">Printabler类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#PrinterProxy%E7%B1%BB"><span class="toc-text">PrinterProxy类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Main%E7%B1%BB"><span class="toc-text">Main类</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Proxy%E6%A8%A1%E5%BC%8F%E4%B8%AD%E7%9A%84%E7%99%BB%E5%9C%BA%E8%A7%92%E8%89%B2"><span class="toc-text">Proxy模式中的登场角色</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Subject%EF%BC%88%E4%B8%BB%E4%BD%93%EF%BC%89"><span class="toc-text">Subject（主体）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Proxy%EF%BC%88%E4%BB%A3%E7%90%86%E4%BA%BA%EF%BC%89"><span class="toc-text">Proxy（代理人）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#RealSubject%EF%BC%88%E5%AE%9E%E4%BD%93%E7%9A%84%E4%B8%BB%E4%BD%93%EF%BC%89"><span class="toc-text">RealSubject（实体的主体）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Client%EF%BC%88%E8%AF%B7%E6%B1%82%E8%80%85%EF%BC%89"><span class="toc-text">Client（请求者）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Proxy%E6%A8%A1%E5%BC%8F%E7%9A%84%E7%B1%BB%E5%9B%BE"><span class="toc-text">Proxy模式的类图</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8B%93%E5%B1%95%E6%80%9D%E8%B7%AF%E8%A6%81%E7%82%B9"><span class="toc-text">拓展思路要点</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8%E4%BB%A3%E7%90%86%E4%BA%BA%E6%9D%A5%E6%8F%90%E5%8D%87%E5%A4%84%E7%90%86%E9%80%9F%E5%BA%A6"><span class="toc-text">使用代理人来提升处理速度</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%9C%89%E5%BF%85%E8%A6%81%E5%88%92%E5%88%86%E4%BB%A3%E7%90%86%E4%BA%BA%E5%92%8C%E6%9C%AC%E4%BA%BA%E5%90%97"><span class="toc-text">有必要划分代理人和本人吗</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BB%A3%E7%90%86%E4%B8%8E%E5%A7%94%E6%89%98"><span class="toc-text">代理与委托</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%80%8F%E6%98%8E%E6%80%A7"><span class="toc-text">透明性</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#HTTP%E4%BB%A3%E7%90%86"><span class="toc-text">HTTP代理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%90%84%E7%A7%8DProxy%E4%BB%A3%E7%90%86"><span class="toc-text">各种Proxy代理</span></a></li></ol></li></ol></li></ol>
+      </div>
+    </article>
+  
+  
+  <article class="card card-content categories-widget">
+    <div class="categories-card">
+  <div class="categories-header">
+    <i 
+      class="iconfont icon-fenlei" 
+      style="padding-right: 2px;">
+    </i>分类
+  </div>
+  <div class="categories-list">
+    
+      <a href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">
+        <div class="categories-list-item">
+          设计模式
+          <span class="categories-list-item-badge">22</span>
+        </div>
+      </a>
+    
+  </div>
+</div>
+  </article>
+  
+  <article class="card card-content tags-widget">
+    <div class="tags-card">
+  <div class="tags-header">
+    <i 
+      class="iconfont icon-biaoqian" 
+      style="padding-right: 2px;">
+    </i>热门标签
+  </div>
+  <div class="tags-list">
+    
+      <a 
+        href="/tags/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" 
+        title="设计模式">
+        <div class="tags-list-item">设计模式</div>
+      </a>
+    
+      <a 
+        href="/tags/%E7%94%9F%E6%88%90%E5%AE%9E%E4%BE%8B/" 
+        title="生成实例">
+        <div class="tags-list-item">生成实例</div>
+      </a>
+    
+      <a 
+        href="/tags/%E7%AE%A1%E7%90%86%E7%8A%B6%E6%80%81/" 
+        title="管理状态">
+        <div class="tags-list-item">管理状态</div>
+      </a>
+    
+      <a 
+        href="/tags/%E9%81%BF%E5%85%8D%E6%B5%AA%E8%B4%B9/" 
+        title="避免浪费">
+        <div class="tags-list-item">避免浪费</div>
+      </a>
+    
+      <a 
+        href="/tags/%E7%AE%80%E5%8D%95%E5%8C%96/" 
+        title="简单化">
+        <div class="tags-list-item">简单化</div>
+      </a>
+    
+      <a 
+        href="/tags/%E4%BA%A4%E7%BB%99%E5%AD%90%E7%B1%BB/" 
+        title="交给子类">
+        <div class="tags-list-item">交给子类</div>
+      </a>
+    
+      <a 
+        href="/tags/%E8%AE%BF%E9%97%AE%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" 
+        title="访问数据结构">
+        <div class="tags-list-item">访问数据结构</div>
+      </a>
+    
+      <a 
+        href="/tags/%E5%88%86%E5%BC%80%E8%80%83%E8%99%91/" 
+        title="分开考虑">
+        <div class="tags-list-item">分开考虑</div>
+      </a>
+    
+      <a 
+        href="/tags/%E9%80%82%E5%BA%94%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" 
+        title="适应设计模式">
+        <div class="tags-list-item">适应设计模式</div>
+      </a>
+    
+      <a 
+        href="/tags/%E4%B8%80%E8%87%B4%E6%80%A7/" 
+        title="一致性">
+        <div class="tags-list-item">一致性</div>
+      </a>
+    
+  </div>
+</div>
+  </article>
+  
+  
+</div>
+            </aside>
+            <main class="main-column">
+              
+<article class="card card-content">
+  <header>
+    <h1 class="post-title">
+      代理模式
+    </h1>
+  </header>
+  <div class="post-meta post-show-meta">
+    <time datetime="2023-03-16T05:57:06.342Z">
+      <i 
+        class="iconfont icon-calendar" 
+        style="margin-right: 2px;">
+      </i>
+      <span>2023-03-16</span>
+    </time>
+    
+      <span class="dot"></span>
+      
+        <a 
+          href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" 
+          class="post-meta-link">
+          设计模式
+        </a>
+      
+    
+    
+      <span class="dot"></span>
+      <span>3.1k 字</span>
+    
+  </div>
+  
+    <div 
+      class="post-meta post-show-meta" 
+      style="margin-top: -10px;">
+      <div style="display: flex; align-items: center;">
+        <i 
+          class="iconfont icon-biaoqian" 
+          style="margin-right: 2px; font-size: 1.15rem;">
+        </i>
+        
+          
+          <a 
+            href="/tags/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" 
+            class="post-meta-link">
+            设计模式
+          </a>
+        
+          
+            <span class="dot"></span>
+          
+          <a 
+            href="/tags/%E9%81%BF%E5%85%8D%E6%B5%AA%E8%B4%B9/" 
+            class="post-meta-link">
+            避免浪费
+          </a>
+        
+      </div>
+    </div>
+  
+  </header>
+  <div 
+    id="section" 
+    class="post-content">
+    <h1 id="Proxy模式（代理模式）"><a href="#Proxy模式（代理模式）" class="headerlink" title="Proxy模式（代理模式）"></a>Proxy模式（代理模式）</h1><blockquote>
+<p>Proxy是“代理人”的意思，它指的是代替别人进行工作的人。当不一定需要本人亲自进行工作时，就可以寻找代理人去完成工作。但代理人毕竟只是代理人，能代替本人做的事情终究还是有限的。因此，当代理人遇到无法自己解决的事情时就会去找本人解决该问题。</p>
+<p>在面向对象编程中，“本人”和“代理人”都是对象。如果“本人”对象太忙了，有些工作无法自己亲自完成，就将其交给“代理人”对象负责。</p>
+</blockquote>
+<h2 id="示例类图"><a href="#示例类图" class="headerlink" title="示例类图"></a>示例类图</h2><blockquote>
+<p>使用了Proxy模式的示例程序。这段示例程序实现了一个“带名字的打印机”。说是打印机，其实只是将文字显示在界面上而已。在Mian类中会生成PrinterProxy类的示例（即“代理人”）。首先我们会给实例赋予名字Alice并在界面中显示该名字。接着会将实例名字改为Bob，然后显示该名字。在设置和获取名字时，都不会生成真正的Printer类的实例（即本人），而是由PrinterProxy类代理。最后，直到我们调用print方法，<strong>开始进入实际打印阶段后，PrinterProxy类才会生成Printer类的实例</strong>。</p>
+<p>为了让PrinterProxy类与Printer类具有一致性，我们定义了Printable接口。示例程序的前提是“生成Printer类的实例”这一处理需要花费很多时间。为了在程序中体现这一点，我们在Printer类的构造函数中调用heavyJob方法，让它干一些“重活”（虽说是重活，也不过是让程序睡眠5秒钟）。</p>
+<p><img src="/2023/03/16/ProxyPatten/image-20230316144205090.png" alt="image-20230316144205090" srcset="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20300%20300'%3E%3C/svg%3E" data-src="/2023/03/16/ProxyPatten/image-20230316144205090.png" class="lozad post-image"></p>
+</blockquote>
+<h2 id="示例程序"><a href="#示例程序" class="headerlink" title="示例程序"></a>示例程序</h2><h3 id="Printer类"><a href="#Printer类" class="headerlink" title="Printer类"></a>Printer类</h3><blockquote>
+<p>Printer类是表示“本人”的类。</p>
+<p>在它的构造函数中，我们让它左一些所谓的“重活”（heavyJob）。</p>
+<p>setPrinterName方法用于设置打印机的名字；getPrinterName用于获取打印机的名字。</p>
+<p>print方法则用于显示带一串带打印机名字的文字。</p>
+<p>heavyJob是一个干5秒钟“重活”的方法，它每秒（l000毫秒）以点号（.）显示一次干活的进度。</p>
+<p>Proxy模式的核心是PrinterProxy类。Printer类自身并不难理解。</p>
+</blockquote>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">Printer</span> <span class="token keyword">implements</span> <span class="token class-name">Printable</span><span class="token punctuation">&#123;</span>
+    <span class="token keyword">private</span> <span class="token class-name">String</span> name<span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> <span class="token class-name">Printer</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token function">heavyJob</span><span class="token punctuation">(</span><span class="token string">"Priter的实例生成中 "</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 构造方法
+     * @param name 名字
+     */</span>
+    <span class="token keyword">public</span> <span class="token class-name">Printer</span><span class="token punctuation">(</span><span class="token class-name">String</span> name<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>name <span class="token operator">=</span> name<span class="token punctuation">;</span>
+        <span class="token function">heavyJob</span><span class="token punctuation">(</span><span class="token string">"Printer的实例生成中（"</span> <span class="token operator">+</span> name <span class="token operator">+</span><span class="token string">"）"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 设置名字
+     * @param name 名字
+     */</span>
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">setPrinterName</span><span class="token punctuation">(</span><span class="token class-name">String</span> name<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>name <span class="token operator">=</span> name<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 获取名字
+     * @return 名字
+     */</span>
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token class-name">String</span> <span class="token function">getPrinterName</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> name<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 显示带打印机名字的文字
+     * @param string 文字
+     */</span>
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">print</span><span class="token punctuation">(</span><span class="token class-name">String</span> string<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"=== "</span> <span class="token operator">+</span> name <span class="token operator">+</span> <span class="token string">" ==="</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span>string<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 重活
+     * @param msg 消息
+     */</span>
+    <span class="token keyword">private</span> <span class="token keyword">void</span> <span class="token function">heavyJob</span><span class="token punctuation">(</span><span class="token class-name">String</span> msg<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">print</span><span class="token punctuation">(</span>msg<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">int</span> i <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> <span class="token number">5</span><span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token keyword">try</span> <span class="token punctuation">&#123;</span>
+                <span class="token class-name">Thread</span><span class="token punctuation">.</span><span class="token function">sleep</span><span class="token punctuation">(</span>l000<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token punctuation">&#125;</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">InterruptedException</span> e<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token punctuation">&#125;</span>
+            <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">print</span><span class="token punctuation">(</span><span class="token string">"."</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+        <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"结束。"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="Printabler类"><a href="#Printabler类" class="headerlink" title="Printabler类"></a>Printabler类</h3><blockquote>
+<p>Printable接口用于使PrinterProxy类和Printer类具有一致性。setPrinterName方法用于设置打印机的名字；getPrinterName用于获取打印机的名字；print用于显示文字（打印输出）。</p>
+</blockquote>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">interface</span> <span class="token class-name">Printable</span> <span class="token punctuation">&#123;</span>
+    <span class="token comment">/**
+     * 设置名字
+     * @param name 名字
+     */</span>
+    <span class="token keyword">public</span> <span class="token keyword">abstract</span> <span class="token keyword">void</span> <span class="token function">setPrinterName</span><span class="token punctuation">(</span><span class="token class-name">String</span> name<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token comment">/**
+     * 获取名字
+     * @return 名字
+     */</span>
+    <span class="token keyword">public</span> <span class="token keyword">abstract</span> <span class="token class-name">String</span> <span class="token function">getPrinterName</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token comment">/**
+     * 显示文字（ 打印输出 ）
+     * @param string 文字
+     */</span>
+    <span class="token keyword">public</span> <span class="token keyword">abstract</span> <span class="token keyword">void</span> <span class="token function">print</span><span class="token punctuation">(</span><span class="token class-name">String</span> string<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="PrinterProxy类"><a href="#PrinterProxy类" class="headerlink" title="PrinterProxy类"></a>PrinterProxy类</h3><blockquote>
+<p>PrinterProxy类是扮演“代理人”角色的类，它实现了Printable接口。</p>
+<p>name宇段中保存了打印机的名字，而real宇段中保存的是“本人”。</p>
+<p>在构造函数中设置打印机的名字(此时还没有生成“本人”)。</p>
+<p>setPrinterName方法用于设置新的打印机名字。如果real字段不为null(也就是已经生成了“本人”)，那么会设置“本人”的名字”。但是当real字段为null时(即还没有生成“本人”)，那么只会设置自己(PrinterProxy的实例)的名字。</p>
+<p>getPrinterName会返回自己的name字段。</p>
+<p>print方法己经超出了代理人的工作范围，因此它会调用realize方法来生成本人。Realize有“实现〞(使成为真的东西)的意思。在调用realize方法后，real宇段中会保存本人(Print类的实例)，因此可以调用real.print方法。这就是“委托”。</p>
+<p><strong>不论setPrinterName</strong>方法和<strong>getPrinterName方法被调用多少次，都不会生成Printer类的实例</strong>。只有当真正需要本人时，才会生成Printer类的实例（PrinterProxy类的调用者完全不知道是否生成了本人，也不用在意是否生成了本人）。</p>
+<p>realize方法很简单，当real字段为null时，它会使用newPrinter来生成Printer类的实例；如果real字段不为null(即已己经生成了本人)，则什么都不做。</p>
+<p>这里希望大家记住的是，<strong>Printer类并不知道PrintezProxy类的存在</strong>。即，Printer类并不知道自己到底是通过PrinterProxy被调用的还是直接被调用的。</p>
+<p>但反过来，PrinterProxy类是知道Printer类的。这是因为PrinterProxy类的real字段是Printer类型的。在PrinterProxy类的代码中，显式地写出了Printer这个类名。因此，PrinterProxy类是与Printer类紧密地关联在一起的组件。</p>
+<p>相信细心的读者应该已经发现了Printer类的setPrinterName方法和realize方法都是synchronized方法。</p>
+</blockquote>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">PrinterProxy</span> <span class="token keyword">implements</span> <span class="token class-name">Printable</span><span class="token punctuation">&#123;</span>
+    <span class="token comment">/**
+     * 名字
+     */</span>
+    <span class="token keyword">private</span> <span class="token class-name">String</span> name<span class="token punctuation">;</span>
+
+    <span class="token comment">/**
+     * "本人"
+     */</span>
+    <span class="token keyword">private</span> <span class="token class-name">Printer</span> real<span class="token punctuation">;</span>
+
+    <span class="token comment">/**
+     * 构造方法
+     */</span>
+    <span class="token keyword">public</span> <span class="token class-name">PrinterProxy</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 构造方法
+     * @param name 名字
+     */</span>
+    <span class="token keyword">public</span> <span class="token class-name">PrinterProxy</span><span class="token punctuation">(</span><span class="token class-name">String</span> name<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>name <span class="token operator">=</span> name<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 设置名字
+     *
+     * @param name 名字
+     */</span>
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">setPrinterName</span><span class="token punctuation">(</span><span class="token class-name">String</span> name<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>real <span class="token operator">!=</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            real<span class="token punctuation">.</span><span class="token function">setPrinterName</span><span class="token punctuation">(</span>name<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>name <span class="token operator">=</span> name<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 获取名字
+     *
+     * @return 名字
+     */</span>
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token class-name">String</span> <span class="token function">getPrinterName</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> name<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 显示文字（ 打印输出 ）
+     *
+     * @param string 文字
+     */</span>
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">print</span><span class="token punctuation">(</span><span class="token class-name">String</span> string<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token function">realize</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        real<span class="token punctuation">.</span><span class="token function">print</span><span class="token punctuation">(</span>string<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token keyword">private</span> <span class="token keyword">synchronized</span> <span class="token keyword">void</span> <span class="token function">realize</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>real <span class="token operator">==</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            real <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Printer</span><span class="token punctuation">(</span>name<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="Main类"><a href="#Main类" class="headerlink" title="Main类"></a>Main类</h3><blockquote>
+<p>Main类通过PrinterProxy类使用Printer类。Main类首先会生成PrinterProxy，然后调用getPrinterName方法获取打印机名并显示它。之后通过setPrinterName方法重新设置打印机名。最后，调用print方法输出“Hello.world.”。</p>
+<p>请注意，在设置名字和显示名字之间并没有生成Printer的实例（本人 ），直至调用print方法后，Printer的实例才被生成。</p>
+</blockquote>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">Main</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token class-name">String</span><span class="token punctuation">[</span><span class="token punctuation">]</span> args<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token class-name">Printable</span> p <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">PrinterProxy</span><span class="token punctuation">(</span><span class="token string">"Alice"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"现在的名字是"</span> <span class="token operator">+</span> p<span class="token punctuation">.</span><span class="token function">getPrinterName</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token string">"。"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        p<span class="token punctuation">.</span><span class="token function">setPrinterName</span><span class="token punctuation">(</span><span class="token string">"Bob"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"现在的名字是"</span> <span class="token operator">+</span> p<span class="token punctuation">.</span><span class="token function">getPrinterName</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token string">"。"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        p<span class="token punctuation">.</span><span class="token function">print</span><span class="token punctuation">(</span><span class="token string">"Hello, world."</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h2 id="Proxy模式中的登场角色"><a href="#Proxy模式中的登场角色" class="headerlink" title="Proxy模式中的登场角色"></a>Proxy模式中的登场角色</h2><ul>
+<li><h3 id="Subject（主体）"><a href="#Subject（主体）" class="headerlink" title="Subject（主体）"></a>Subject（主体）</h3><blockquote>
+<p>Subject角色定义了使Proxy角色和RealSubject角色之间具有一致性的接口。由于存在Subject角色，所以Client角色不必在意它所使用的究竟是Proxy角色还是RealSubject角色。</p>
+<p>在示例程序中，由Printable接口扮演此角色。</p>
+</blockquote>
+</li>
+<li><h3 id="Proxy（代理人）"><a href="#Proxy（代理人）" class="headerlink" title="Proxy（代理人）"></a>Proxy（代理人）</h3><blockquote>
+<p>Proxy角色会尽量处理来自Client角色的请求。只有当自己不能处理时，它才会将工作交给RealSubject角色。Proxy角色只有在必要时才会生成RealSubject角色。Proxy角色实现了在Subject角色中定义的接口（API）。</p>
+<p>在示例程序中，由PrinterProxy类扮演此角色。</p>
+</blockquote>
+</li>
+<li><h3 id="RealSubject（实体的主体）"><a href="#RealSubject（实体的主体）" class="headerlink" title="RealSubject（实体的主体）"></a>RealSubject（实体的主体）</h3><blockquote>
+<p>“本人”RealSubject角色会在“代理人”Proxy角色无法胜任工作时出场。它与Proxy角色一样也实现了在Subject角色中定义的接口（API）。</p>
+<p>在示例程序中，由Printer类扮演此角色。</p>
+</blockquote>
+</li>
+<li><h3 id="Client（请求者）"><a href="#Client（请求者）" class="headerlink" title="Client（请求者）"></a>Client（请求者）</h3><blockquote>
+<p>使用Proxy模式的角色。Client角色并不包含在Proxy模式中。</p>
+<p>在示例程序中，由Main类扮演此角色。</p>
+</blockquote>
+</li>
+</ul>
+<h3 id="Proxy模式的类图"><a href="#Proxy模式的类图" class="headerlink" title="Proxy模式的类图"></a>Proxy模式的类图</h3><blockquote>
+<p><img src="/2023/03/16/ProxyPatten/image-20230316161307418.png" alt="image-20230316161307418" srcset="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20300%20300'%3E%3C/svg%3E" data-src="/2023/03/16/ProxyPatten/image-20230316161307418.png" class="lozad post-image"></p>
+</blockquote>
+<h2 id="拓展思路要点"><a href="#拓展思路要点" class="headerlink" title="拓展思路要点"></a>拓展思路要点</h2><ul>
+<li><h3 id="使用代理人来提升处理速度"><a href="#使用代理人来提升处理速度" class="headerlink" title="使用代理人来提升处理速度"></a>使用代理人来提升处理速度</h3><blockquote>
+<p>在Proxy模式中，Proxy角色作为代理人尽力肩负着工作使命。例如，在示例程序中，通过使用Proxy角色，我们成功地将耗时处理（生成实例的处理）推迟至print方法被调用后才进行。示例程序中的耗时处理的消耗时间并不算太长，大家可能感受不深。请大家试想一下，假如在一个大型系统的初始化过程中，存在大量的耗时处理。如果在启动系统时连那些暂时不会被使用的功能也初始化了，那么应用程序的启动时间将会非常漫长，这将会引发用户的不满。而如果我们只在需要使用某个功能时才将其初始化，则可以帮助我们改善用户体验。</p>
+<p>在讲解Proxy模式时，使用了一个可以在文本中嵌人图形对象（例如图片等）的文本编辑器作为例子。为了生成这些图形对象，需要读取图片文件，这很耗费时间。因此如果在打开文档时就生成有所的图形对象，就会导致文档打开时间过长。所以，最好是当用户测览至文本中各个图形对象时，再去生成它们的实例。这时，Proxy模式就有了用武之地。</p>
+</blockquote>
+</li>
+<li><h3 id="有必要划分代理人和本人吗"><a href="#有必要划分代理人和本人吗" class="headerlink" title="有必要划分代理人和本人吗"></a>有必要划分代理人和本人吗</h3><blockquote>
+<p>当然，我们也可以不划分PrinterProxy类和Printer类，而是直接在Printer类中加人惰性求值功能（即只有必要时才生成实例的功能）。不过，通过划分PrinterProxy角色和Printer角色，可以使它们成为独立的组件，在进行修改时也不会互相之间产生影响（分而治之）。</p>
+<p>只要改变了PrinterProxy类的实现方式，即可改变在Printable接口中定义的那些方法，即对于“哪些由代理人负责处理，哪些必须本人负责处理”进行更改。而且，不论怎么改变，都不必修改Printer类。如果不想使用惰性求值功能，只需要修改Main类，将它使用new关键宇生成的实例从PrinterProxy类的实例变为Printer类的实例即可。由于PrinterProxy类和Printer类都实现了Printable接口，因此Main类可以放心地切换这两个类。</p>
+<p>在示例程序中，PrinterProxy类代表了“Proxy角色”。因此使用或是不使用PrinterProxy类就代表了使用或是不使用代理功能。</p>
+</blockquote>
+</li>
+<li><h3 id="代理与委托"><a href="#代理与委托" class="headerlink" title="代理与委托"></a>代理与委托</h3><blockquote>
+<p>代理人只代理他能解决的问题。当遇到他不能解快的问题时，还是会“转交”给本人去解决。这里的“转交”就是在本书中多次提到过的“委托”。从PrinterProxy类的print方法中调用real.print方法正是这种“委托”的体现。</p>
+<p>在现实世界中，应当是本人将事情委托给代理人负责，而在设计模式中则是反过来的。</p>
+</blockquote>
+</li>
+<li><h3 id="透明性"><a href="#透明性" class="headerlink" title="透明性"></a>透明性</h3><blockquote>
+<p>PrinterProxy类和Printer类都实现了Printable接口，因此Main类可以完全不必在意调用的究竟是PrinterProxy类还是Printer类。无论是直接使用Printer类还是通过PrinterProxy类间接地使用Printer类都可以。</p>
+<p>在这种情况下，可以说PrinterProxy类是具有“透明性”的。就像在人和一幅画之间放置了一块透明的玻璃板后，我们依然可以透过它看到画一样，即使在Main类和Printer类之间加人一个PrinterProxy类，也不会有问题。</p>
+</blockquote>
+</li>
+<li><h3 id="HTTP代理"><a href="#HTTP代理" class="headerlink" title="HTTP代理"></a>HTTP代理</h3><blockquote>
+<p>提到代理，许多人应该都会想到HTTP代理。HTTP代理是指位于HTTP服务器(Web服务器)和HTTP客户端(Web浏览器)之间，为Web页面提供高速缓存等功能的软件。我们也可以认为它是一种Proxy模式。</p>
+<p>HTTP代理有很多功能。作为示例，我们只讨论一下它的页面高速缓存功能。</p>
+<p>通过Web浏览器访问Web页面时，并不会每次都去访问远程Web服务器来获取页面的内容，而是会先去获取HTTP代理缓存的页面。只有当需要最新页面内容或是页面的缓存期限过期时，才去访问远程Web服务器。</p>
+<p>在这种情况下，Web服务器扮演的是Client角色，HTTP代理扮演的是Proxy角色，而Web服务器扮演的则是RealSubiject角色。</p>
+</blockquote>
+</li>
+<li><h3 id="各种Proxy代理"><a href="#各种Proxy代理" class="headerlink" title="各种Proxy代理"></a>各种Proxy代理</h3><blockquote>
+<ul>
+<li><strong>Virtual Proxy（虚拟代理）</strong></li>
+</ul>
+<blockquote>
+<p>Virtual Proxy 就是学习的Proxy模式。只有当真正需要实例时，它才生成和初始化实例。</p>
+</blockquote>
+<ul>
+<li><strong>Remote Proxy（远程代理）</strong></li>
+</ul>
+<blockquote>
+<p>Remote Proxy 可以让我们完全不必在意RealSubject角色是否在远程网络上，可以如同它在自己身边一样（透明地）调用它的方法。Java的RMI（RemoteMethodInvocatoin：远程方法调用）就相当于Remote Proxy。</p>
+</blockquote>
+<ul>
+<li><strong>Access Proxy</strong></li>
+</ul>
+<blockquote>
+<p>Access Proxy 用于在调用RealSubject角色的功能时设置访问限制。例如，这种代理可以只允许指定的用户调用方法，而当其他用户调用方法时则报错。</p>
+</blockquote>
+</blockquote>
+</li>
+</ul>
+
+  </div>
+  <div>
+    
+      <div 
+        class="post-note note-warning copyright" 
+        style="margin-top: 42px">
+        <p>
+          <span style="font-weight: bold;">作者：</span><a 
+            target="_blank" 
+            rel="nofollow noopener noreferrer" 
+            href="/about">
+            简单且极端
+          </a>
+        </p>
+        <p>
+          <span style="font-weight: bold;">文章链接：</span><a 
+            target="_blank" 
+            rel="nofollow noopener noreferrer" 
+            href="https://extremelys.github.io/2023/03/16/ProxyPatten/">
+            https://extremelys.github.io/2023/03/16/ProxyPatten/
+          </a>
+        </p>
+        <p><span style="font-weight: bold;">版权声明：</span>本博客所有文章除特别声明外，均采用<a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">CC BY-NC-SA 4.0 协议</a>。转载请注明出处！</p>
+      </div>
+    
+  </div>
+</article>
+<div class="nav">
+  
+    <div class="nav-item-prev">
+      <a 
+        href="/2023/03/16/CommandPattern/" 
+        class="nav-link">
+        <i class="iconfont icon-left nav-prev-icon"></i>
+        <div>
+          <div class="nav-label">上一篇</div>
+          
+            <div class="nav-title">命令模式 </div>
+          
+        </div>
+      </a>
+    </div>
+  
+  
+    <div class="nav-item-next">
+      <a 
+        href="/2023/03/15/FlyweightPattrn/" 
+        class="nav-link">
+        <div>
+          <div class="nav-label">下一篇</div>
+          
+            <div class="nav-title">享元模式 </div>
+          
+        </div>
+        <i class="iconfont icon-right nav-next-icon"></i>
+      </a>
+    </div>
+  
+</div>
+
+<div 
+  class="card card-content toc-card" 
+  id="mobiletoc">
+  <div class="toc-header">
+  <i 
+    class="iconfont icon-menu" 
+    style="padding-right: 2px;">
+  </i>目录
+</div>
+<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Proxy%E6%A8%A1%E5%BC%8F%EF%BC%88%E4%BB%A3%E7%90%86%E6%A8%A1%E5%BC%8F%EF%BC%89"><span class="toc-text">Proxy模式（代理模式）</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E7%B1%BB%E5%9B%BE"><span class="toc-text">示例类图</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E7%A8%8B%E5%BA%8F"><span class="toc-text">示例程序</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Printer%E7%B1%BB"><span class="toc-text">Printer类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Printabler%E7%B1%BB"><span class="toc-text">Printabler类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#PrinterProxy%E7%B1%BB"><span class="toc-text">PrinterProxy类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Main%E7%B1%BB"><span class="toc-text">Main类</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Proxy%E6%A8%A1%E5%BC%8F%E4%B8%AD%E7%9A%84%E7%99%BB%E5%9C%BA%E8%A7%92%E8%89%B2"><span class="toc-text">Proxy模式中的登场角色</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Subject%EF%BC%88%E4%B8%BB%E4%BD%93%EF%BC%89"><span class="toc-text">Subject（主体）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Proxy%EF%BC%88%E4%BB%A3%E7%90%86%E4%BA%BA%EF%BC%89"><span class="toc-text">Proxy（代理人）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#RealSubject%EF%BC%88%E5%AE%9E%E4%BD%93%E7%9A%84%E4%B8%BB%E4%BD%93%EF%BC%89"><span class="toc-text">RealSubject（实体的主体）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Client%EF%BC%88%E8%AF%B7%E6%B1%82%E8%80%85%EF%BC%89"><span class="toc-text">Client（请求者）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Proxy%E6%A8%A1%E5%BC%8F%E7%9A%84%E7%B1%BB%E5%9B%BE"><span class="toc-text">Proxy模式的类图</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8B%93%E5%B1%95%E6%80%9D%E8%B7%AF%E8%A6%81%E7%82%B9"><span class="toc-text">拓展思路要点</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8%E4%BB%A3%E7%90%86%E4%BA%BA%E6%9D%A5%E6%8F%90%E5%8D%87%E5%A4%84%E7%90%86%E9%80%9F%E5%BA%A6"><span class="toc-text">使用代理人来提升处理速度</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%9C%89%E5%BF%85%E8%A6%81%E5%88%92%E5%88%86%E4%BB%A3%E7%90%86%E4%BA%BA%E5%92%8C%E6%9C%AC%E4%BA%BA%E5%90%97"><span class="toc-text">有必要划分代理人和本人吗</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BB%A3%E7%90%86%E4%B8%8E%E5%A7%94%E6%89%98"><span class="toc-text">代理与委托</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%80%8F%E6%98%8E%E6%80%A7"><span class="toc-text">透明性</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#HTTP%E4%BB%A3%E7%90%86"><span class="toc-text">HTTP代理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%90%84%E7%A7%8DProxy%E4%BB%A3%E7%90%86"><span class="toc-text">各种Proxy代理</span></a></li></ol></li></ol></li></ol>
+</div>
+            </main>
+            <aside class="right-column">
+              <div class="sticky-widescreen">
+  
+  
+    <article class="card card-content toc-card">
+      <div class="toc-header">
+  <i 
+    class="iconfont icon-menu" 
+    style="padding-right: 2px;">
+  </i>目录
+</div>
+<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Proxy%E6%A8%A1%E5%BC%8F%EF%BC%88%E4%BB%A3%E7%90%86%E6%A8%A1%E5%BC%8F%EF%BC%89"><span class="toc-text">Proxy模式（代理模式）</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E7%B1%BB%E5%9B%BE"><span class="toc-text">示例类图</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E7%A8%8B%E5%BA%8F"><span class="toc-text">示例程序</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Printer%E7%B1%BB"><span class="toc-text">Printer类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Printabler%E7%B1%BB"><span class="toc-text">Printabler类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#PrinterProxy%E7%B1%BB"><span class="toc-text">PrinterProxy类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Main%E7%B1%BB"><span class="toc-text">Main类</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Proxy%E6%A8%A1%E5%BC%8F%E4%B8%AD%E7%9A%84%E7%99%BB%E5%9C%BA%E8%A7%92%E8%89%B2"><span class="toc-text">Proxy模式中的登场角色</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Subject%EF%BC%88%E4%B8%BB%E4%BD%93%EF%BC%89"><span class="toc-text">Subject（主体）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Proxy%EF%BC%88%E4%BB%A3%E7%90%86%E4%BA%BA%EF%BC%89"><span class="toc-text">Proxy（代理人）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#RealSubject%EF%BC%88%E5%AE%9E%E4%BD%93%E7%9A%84%E4%B8%BB%E4%BD%93%EF%BC%89"><span class="toc-text">RealSubject（实体的主体）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Client%EF%BC%88%E8%AF%B7%E6%B1%82%E8%80%85%EF%BC%89"><span class="toc-text">Client（请求者）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Proxy%E6%A8%A1%E5%BC%8F%E7%9A%84%E7%B1%BB%E5%9B%BE"><span class="toc-text">Proxy模式的类图</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8B%93%E5%B1%95%E6%80%9D%E8%B7%AF%E8%A6%81%E7%82%B9"><span class="toc-text">拓展思路要点</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8%E4%BB%A3%E7%90%86%E4%BA%BA%E6%9D%A5%E6%8F%90%E5%8D%87%E5%A4%84%E7%90%86%E9%80%9F%E5%BA%A6"><span class="toc-text">使用代理人来提升处理速度</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%9C%89%E5%BF%85%E8%A6%81%E5%88%92%E5%88%86%E4%BB%A3%E7%90%86%E4%BA%BA%E5%92%8C%E6%9C%AC%E4%BA%BA%E5%90%97"><span class="toc-text">有必要划分代理人和本人吗</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BB%A3%E7%90%86%E4%B8%8E%E5%A7%94%E6%89%98"><span class="toc-text">代理与委托</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%80%8F%E6%98%8E%E6%80%A7"><span class="toc-text">透明性</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#HTTP%E4%BB%A3%E7%90%86"><span class="toc-text">HTTP代理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%90%84%E7%A7%8DProxy%E4%BB%A3%E7%90%86"><span class="toc-text">各种Proxy代理</span></a></li></ol></li></ol></li></ol>
+    </article>
+  
+  
+  <article class="card card-content">
+    <div class="recent-posts-card">
+  <div class="recent-posts-header">
+    <i 
+      class="iconfont icon-wenzhang_huaban" 
+      style="padding-right: 2px;">
+    </i>最近文章
+  </div>
+  <div class="recent-posts-list">
+    
+      <div class="recent-posts-item">
+        <div class="recent-posts-item-title">2023-03-16</div>
+        <a href="/2023/03/16/CommandPattern/"><div class="recent-posts-item-content">命令模式</div></a>
+      </div>
+    
+      <div class="recent-posts-item">
+        <div class="recent-posts-item-title">2023-03-16</div>
+        <a href="/2023/03/16/ProxyPatten/"><div class="recent-posts-item-content">代理模式</div></a>
+      </div>
+    
+      <div class="recent-posts-item">
+        <div class="recent-posts-item-title">2023-03-15</div>
+        <a href="/2023/03/15/FlyweightPattrn/"><div class="recent-posts-item-content">享元模式</div></a>
+      </div>
+    
+      <div class="recent-posts-item">
+        <div class="recent-posts-item-title">2023-03-08</div>
+        <a href="/2023/03/08/StatePattern/"><div class="recent-posts-item-content">状态模式</div></a>
+      </div>
+    
+  </div>
+</div>
+  </article>
+  
+  
+</div>
+            </aside>
+          </div>
+        </div>
+      </div>
+    </div>
+     
+    <footer class="footer">
+  <div class="footer-container">
+    <div>
+      <div class="footer-dsc">
+        <span>
+          Copyright ©
+          
+            2022
+          
+          
+                - 
+                2023
+          
+        </span>
+        &nbsp;
+        <a 
+          href="/" 
+          class="footer-link">
+          简单且极端
+        </a>
+      </div>
+    </div>
+
+    
+      <div class="footer-dsc">
+        
+          Powered by
+          <a 
+            href="https://hexo.io/" 
+            class="footer-link" 
+            target="_blank" 
+            rel="nofollow noopener noreferrer">
+            &nbsp;Hexo
+          </a>
+        
+        
+          <span>&nbsp;|&nbsp;</span>
+        
+        
+          Theme -
+          <a 
+            href="https://github.com/theme-kaze" 
+            class="footer-link" 
+            target="_blank"
+            rel="nofollow noopener noreferrer">
+            &nbsp;Kaze
+          </a>
+        
+      </div>
+    
+    
+    
+    
+</footer>
+ 
+    
+  <a 
+    role="button" 
+    id="scrollbutton" 
+    class="basebutton" 
+    aria-label="回到顶部">
+    <i class="iconfont icon-arrowleft button-icon"></i>
+  </a>
+
+<a 
+  role="button" 
+  id="menubutton"
+  aria-label="menu button"
+  class="basebutton">
+  <i class="iconfont icon-menu button-icon"></i>
+</a>
+<a 
+  role="button" 
+  id="popbutton" 
+  class="basebutton" 
+  aria-label="控制中心">
+  <i class="iconfont icon-expand button-icon"></i>
+</a>
+<a 
+  role="button" 
+  id="darkbutton" 
+  class="basebutton darkwidget" 
+  aria-label="夜色模式">
+  <i class="iconfont icon-weather button-icon"></i>
+</a>
+<a 
+  role="button" 
+  id="searchbutton" 
+  class="basebutton searchwidget" 
+  aria-label="搜索">
+  <i class="iconfont icon-search button-icon"></i>
+</a> 
+     
+     
+     
+      <script>
+  var addImgLayout = function () {
+    var img = document.querySelectorAll('.post-content img')
+    var i
+    for (i = 0; i < img.length; i++) {
+      var wrapper = document.createElement('a')
+      wrapper.setAttribute('href', img[i].getAttribute('data-src'))
+      wrapper.setAttribute('aria-label', 'illustration')
+      wrapper.style.cssText =
+        'width: 100%; display: flex; justify-content: center;'
+      if (img[i].alt) wrapper.dataset.caption = img[i].alt
+      wrapper.dataset.nolink = true
+      img[i].before(wrapper)
+      wrapper.append(img[i])
+      var divWrap = document.createElement('div')
+      divWrap.classList.add('gallery')
+      wrapper.before(divWrap)
+      divWrap.append(wrapper)
+    }
+    baguetteBox.run('.gallery')
+  }
+</script>
+<script>
+  loadScript(
+    "/js/lib/lightbox/baguetteBox.min.js",
+    addImgLayout
+  )
+</script>
+ 
+     
+     
+    <script src="/js/main.js"></script> 
+     
+    
+      <script>
+        var addLazyload = function () {
+          var observer = lozad('.lozad', {
+            load: function (el) {
+              el.srcset = el.getAttribute('data-src')
+            },
+            loaded: function (el) {
+              el.classList.add('loaded')
+            },
+          })
+          observer.observe()
+        }
+      </script>
+      <script>
+        loadScript('/js/lib/lozad.min.js', addLazyload)
+      </script>
+    
+    <script src="//instant.page/5.1.0" type="module"
+      integrity="sha384-by67kQnR+pyfy8yWP4kPO12fHKRLHZPfEsiSXR8u2IKcTdxD805MGUXBzVPnkLHw"></script>
+    
+    
+  </body>
+</html>

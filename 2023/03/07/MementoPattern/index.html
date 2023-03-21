@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+  <meta charset="UTF-8">
+  <meta 
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+  <meta 
+    http-equiv="X-UA-Compatible" 
+    content="ie=edge">
+  <meta 
+    name="theme-color" 
+    content="#fff" 
+    id="theme-color">
+  <meta 
+    name="description" 
+    content="Hexo">
+  <link 
+    rel="icon" 
+    href="/">
+  <title>备忘录模式</title>
+  
+    
+      <meta 
+        property="og:title" 
+        content="备忘录模式">
+    
+    
+      <meta 
+        property="og:url" 
+        content="https://extremelys.github.io/2023/03/07/MementoPattern/index.html">
+    
+    
+      <meta 
+        property="og:img" 
+        content="https://img.songhn.com/img/Y67gdd.png">
+    
+    
+    
+      <meta 
+        property="og:type" 
+        content="article">
+      <meta 
+        property="og:article:published_time" 
+        content="2023-03-07">
+      <meta 
+        property="og:article:modified_time" 
+        content="2023-03-08">
+      <meta 
+        property="og:article:author" 
+        content="简单且极端">
+      
+        
+          <meta 
+            property="og:article:tag" 
+            content="设计模式">
+        
+          <meta 
+            property="og:article:tag" 
+            content="管理状态">
+        
+      
+    
+  
+  
+  <link rel="preload" href="//at.alicdn.com/t/font_1946621_i1kgafibvw.css" as="style" >
+  <link rel="preload" href="//at.alicdn.com/t/font_1952792_89b4ac4k4up.css" as="style" >
+  <link rel="preload" href="/css/main.css" as="style" >
+  
+  <link rel="modulepreload" href="//instant.page/5.1.0">
+  
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1946621_i1kgafibvw.css">
+  
+  <link rel="stylesheet" href="//at.alicdn.com/t/font_1952792_89b4ac4k4up.css">
+  
+  
+  
+    <link rel="stylesheet" href="/js/lib/lightbox/baguetteBox.min.css">
+  
+  <script>
+    function loadScript(url, cb) {
+      var script = document.createElement('script');
+      script.src = url;
+      if (cb) script.onload = cb;
+      script.async = true;
+      document.body.appendChild(script);
+    }
+    function loadCSS(href, data, attr) {
+      var sheet = document.createElement('link');
+      sheet.ref = 'stylesheet';
+      sheet.href = href;
+      sheet.dataset[data] = attr;
+      document.head.appendChild(sheet);
+    }
+    function changeCSS(cssFile, data, attr) {
+      var oldlink = document.querySelector(data);
+      var newlink = document.createElement("link");
+      newlink.setAttribute("rel", "stylesheet");
+      newlink.setAttribute("href", cssFile);
+      newlink.dataset.prism = attr;
+      document.head.replaceChild(newlink, oldlink);
+    }
+  </script>
+  
+    
+      
+      
+      
+      
+        
+        
+        
+        <script>
+          function prismThemeChange() {
+            if(document.getElementById('theme-color').dataset.mode === 'dark') {
+              if(document.querySelector('[data-prism]')) {
+                changeCSS('/js/lib/prism/prism-tomorrow.min.css', '[data-prism]', 'prism-tomorrow');
+              } else {
+                loadCSS('/js/lib/prism/prism-tomorrow.min.css', 'prism', 'prism-tomorrow');
+              }
+            } else {
+              if(document.querySelector('[data-prism]')) {
+                changeCSS('/js/lib/prism/prism.min.css', '[data-prism]', 'prism');
+              } else {
+                loadCSS('/js/lib/prism/prism.min.css', 'prism', 'prism');
+              }
+            }
+          }
+          prismThemeChange()
+        </script>
+      
+      
+        
+        <link rel="stylesheet" href="/js/lib/prism/prism-line-numbers.min.css">
+      
+    
+  
+  <script>
+    // control reverse button
+    var reverseDarkList = {
+      dark: 'light',
+      light: 'dark'
+    };
+    var themeColor = {
+      dark: '#1c1c1e',
+      light: '#fff'
+    }
+    // get the data of css prefers-color-scheme
+    var getCssMediaQuery = function() {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    };
+    // reverse current darkmode setting function
+    var reverseDarkModeSetting = function() {
+      var setting = localStorage.getItem('user-color-scheme');
+      if(reverseDarkList[setting]) {
+        setting = reverseDarkList[setting];
+      } else if(setting === null) {
+        setting = reverseDarkList[getCssMediaQuery()];
+      } else {
+        return;
+      }
+      localStorage.setItem('user-color-scheme', setting);
+      return setting;
+    };
+    // apply current darkmode setting
+  </script>
+  
+    <script>
+      var setDarkmode = function(mode) {
+      var setting = mode || localStorage.getItem('user-color-scheme');
+      if(setting === getCssMediaQuery()) {
+        document.documentElement.removeAttribute('data-user-color-scheme');
+        localStorage.removeItem('user-color-scheme');
+        document.getElementById('theme-color').content = themeColor[setting];
+        document.getElementById('theme-color').dataset.mode = setting;
+        prismThemeChange();
+      } else if(reverseDarkList[setting]) {
+        document.documentElement.setAttribute('data-user-color-scheme', setting);
+        document.getElementById('theme-color').content = themeColor[setting];
+        document.getElementById('theme-color').dataset.mode = setting;
+        prismThemeChange();
+      } else {
+        document.documentElement.removeAttribute('data-user-color-scheme');
+        localStorage.removeItem('user-color-scheme');
+        document.getElementById('theme-color').content = themeColor[getCssMediaQuery()];
+        document.getElementById('theme-color').dataset.mode = getCssMediaQuery();
+        prismThemeChange();
+      }
+    };
+    setDarkmode();
+    </script>
+  
+  
+  
+    <link rel="preload" href="/js/lib/lightbox/baguetteBox.min.js" as="script">
+    <link rel="preload" href="/js/lib/lightbox/baguetteBox.min.css" as="style" >
+  
+  
+    <link rel="preload" href="/js/lib/lozad.min.js" as="script">
+  
+  
+  
+  
+  
+  
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+  <body>
+    <div class="wrapper">
+       
+      <nav class="navbar">
+  <div class="navbar-logo">
+    <a class="navbar-logo-main" href="/">
+      
+      <span class="navbar-logo-dsc">简单且极端</span>
+      </a>
+  </div>
+  <div class="navbar-menu">
+    
+      <a 
+        href="/" 
+        class="navbar-menu-item">
+        
+          首页
+        
+      </a>
+    
+      <a 
+        href="/archives" 
+        class="navbar-menu-item">
+        
+          归档
+        
+      </a>
+    
+      <a 
+        href="/tags" 
+        class="navbar-menu-item">
+        
+          标签
+        
+      </a>
+    
+      <a 
+        href="/categories" 
+        class="navbar-menu-item">
+        
+          分类
+        
+      </a>
+    
+    <button 
+      class="navbar-menu-item darknavbar navbar-menu-btn" 
+      aria-label="Toggle dark mode"
+      id="dark">
+      <i class="iconfont icon-weather"></i>
+    </button>
+    <button 
+      class="navbar-menu-item searchnavbar navbar-menu-btn" 
+      aria-label="Toggle search"
+      id="search">
+      <!-- <i 
+        class="iconfont icon-search" 
+        style="font-size: 1.2rem; font-weight: 400;">
+      </i> -->
+      <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img"
+        class="iconify iconify--ion" width="28" height="28" preserveAspectRatio="xMidYMid meet" viewBox="0 0 512 512">
+        <path fill="none" stroke="currentColor" stroke-miterlimit="10" stroke-width="28"
+          d="M256 80a176 176 0 1 0 176 176A176 176 0 0 0 256 80Z"></path>
+        <path fill="none" stroke="currentColor" stroke-miterlimit="10" stroke-width="28"
+          d="M232 160a72 72 0 1 0 72 72a72 72 0 0 0-72-72Z"></path>
+        <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="28"
+          d="M283.64 283.64L336 336"></path>
+      </svg>
+    </button>
+  </div>
+</nav> 
+      
+      <div 
+        id="local-search" 
+        style="display: none">
+        <input
+          class="navbar-menu-item"
+          id="search-input"
+          placeholder="请输入搜索内容..." />
+        <div id="search-content"></div>
+      </div>
+      
+      <div class="section-wrap">
+        <div class="container">
+          <div class="columns">
+            <aside class="left-column">
+              
+              <div class="card card-author">
+                
+  <img 
+    src="https://img.songhn.com/img/Y67gdd.png" 
+    class="author-img"
+    width="88"
+    height="88"
+    alt="author avatar">
+
+<p class="author-name">简单且极端</p>
+<p class="author-description">只做能力范围之内的事，<br/>那么你将永远不会进步。</p>
+<div class="author-message">
+  <a 
+    class="author-posts-count" 
+    href="/archives">
+    <span>22</span>
+    <span>文章</span>
+  </a>
+  <a 
+    class="author-categories-count" 
+    href="/categories">
+    <span>1</span>
+    <span>分类</span>
+  </a>
+  <a 
+    class="author-tags-count" 
+    href="/tags">
+    <span>10</span>
+    <span>标签</span>
+  </a>
+</div>
+
+              </div>
+               <div class="sticky-tablet">
+  
+  
+    <article class="display-when-two-columns spacer">
+      <div class="card card-content toc-card">
+        <div class="toc-header">
+  <i 
+    class="iconfont icon-menu" 
+    style="padding-right: 2px;">
+  </i>目录
+</div>
+<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Memento%E6%A8%A1%E5%BC%8F%EF%BC%88%E5%A4%87%E5%BF%98%E5%BD%95%E6%A8%A1%E5%BC%8F%EF%BC%89"><span class="toc-text">Memento模式（备忘录模式）</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E7%B1%BB%E5%9B%BE"><span class="toc-text">示例类图</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E7%A8%8B%E5%BA%8F"><span class="toc-text">示例程序</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Memento%E7%B1%BB"><span class="toc-text">Memento类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Gamer%E7%B1%BB"><span class="toc-text">Gamer类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Main%E7%B1%BB"><span class="toc-text">Main类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E7%A8%8B%E5%BA%8F%E6%97%B6%E5%BA%8F%E5%9B%BE"><span class="toc-text">示例程序时序图</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Memento%E6%A8%A1%E5%BC%8F%E4%B8%AD%E7%9A%84%E7%99%BB%E5%9C%BA%E8%A7%92%E8%89%B2"><span class="toc-text">Memento模式中的登场角色</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Originator%EF%BC%88%E7%94%9F%E6%88%90%E8%80%85%EF%BC%89"><span class="toc-text">Originator（生成者）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Memento%EF%BC%88%E7%BA%AA%E5%BF%B5%E5%93%81%EF%BC%89"><span class="toc-text">Memento（纪念品）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Caretaker%EF%BC%88%E8%B4%9F%E8%B4%A3%E4%BA%BA%EF%BC%89"><span class="toc-text">Caretaker（负责人）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Memento%E6%A8%A1%E5%BC%8F%E7%9A%84%E7%B1%BB%E5%9B%BE"><span class="toc-text">Memento模式的类图</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8B%93%E5%B1%95%E6%80%9D%E8%B7%AF%E8%A6%81%E7%82%B9"><span class="toc-text">拓展思路要点</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%A4%E7%A7%8D%E6%8E%A5%E5%8F%A3%EF%BC%88API%EF%BC%89%E5%92%8C%E5%8F%AF%E8%A7%81%E6%80%A7"><span class="toc-text">两种接口（API）和可见性</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%9C%80%E8%A6%81%E5%A4%9A%E5%B0%91%E4%B8%AAMemento"><span class="toc-text">需要多少个Memento</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Memento%E7%9A%84%E6%9C%89%E6%95%88%E6%9C%9F%E9%99%90%E6%98%AF%E5%A4%9A%E4%B9%85"><span class="toc-text">Memento的有效期限是多久</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%88%92%E5%88%86Caretaker%E8%A7%92%E8%89%B2%E5%92%8COriginator%E8%A7%92%E8%89%B2%E7%9A%84%E6%84%8F%E4%B9%89"><span class="toc-text">划分Caretaker角色和Originator角色的意义</span></a></li></ol></li></ol></li></ol>
+      </div>
+    </article>
+  
+  
+  <article class="card card-content categories-widget">
+    <div class="categories-card">
+  <div class="categories-header">
+    <i 
+      class="iconfont icon-fenlei" 
+      style="padding-right: 2px;">
+    </i>分类
+  </div>
+  <div class="categories-list">
+    
+      <a href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">
+        <div class="categories-list-item">
+          设计模式
+          <span class="categories-list-item-badge">22</span>
+        </div>
+      </a>
+    
+  </div>
+</div>
+  </article>
+  
+  <article class="card card-content tags-widget">
+    <div class="tags-card">
+  <div class="tags-header">
+    <i 
+      class="iconfont icon-biaoqian" 
+      style="padding-right: 2px;">
+    </i>热门标签
+  </div>
+  <div class="tags-list">
+    
+      <a 
+        href="/tags/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" 
+        title="设计模式">
+        <div class="tags-list-item">设计模式</div>
+      </a>
+    
+      <a 
+        href="/tags/%E7%94%9F%E6%88%90%E5%AE%9E%E4%BE%8B/" 
+        title="生成实例">
+        <div class="tags-list-item">生成实例</div>
+      </a>
+    
+      <a 
+        href="/tags/%E7%AE%A1%E7%90%86%E7%8A%B6%E6%80%81/" 
+        title="管理状态">
+        <div class="tags-list-item">管理状态</div>
+      </a>
+    
+      <a 
+        href="/tags/%E9%81%BF%E5%85%8D%E6%B5%AA%E8%B4%B9/" 
+        title="避免浪费">
+        <div class="tags-list-item">避免浪费</div>
+      </a>
+    
+      <a 
+        href="/tags/%E7%AE%80%E5%8D%95%E5%8C%96/" 
+        title="简单化">
+        <div class="tags-list-item">简单化</div>
+      </a>
+    
+      <a 
+        href="/tags/%E4%BA%A4%E7%BB%99%E5%AD%90%E7%B1%BB/" 
+        title="交给子类">
+        <div class="tags-list-item">交给子类</div>
+      </a>
+    
+      <a 
+        href="/tags/%E8%AE%BF%E9%97%AE%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" 
+        title="访问数据结构">
+        <div class="tags-list-item">访问数据结构</div>
+      </a>
+    
+      <a 
+        href="/tags/%E5%88%86%E5%BC%80%E8%80%83%E8%99%91/" 
+        title="分开考虑">
+        <div class="tags-list-item">分开考虑</div>
+      </a>
+    
+      <a 
+        href="/tags/%E9%80%82%E5%BA%94%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" 
+        title="适应设计模式">
+        <div class="tags-list-item">适应设计模式</div>
+      </a>
+    
+      <a 
+        href="/tags/%E4%B8%80%E8%87%B4%E6%80%A7/" 
+        title="一致性">
+        <div class="tags-list-item">一致性</div>
+      </a>
+    
+  </div>
+</div>
+  </article>
+  
+  
+</div>
+            </aside>
+            <main class="main-column">
+              
+<article class="card card-content">
+  <header>
+    <h1 class="post-title">
+      备忘录模式
+    </h1>
+  </header>
+  <div class="post-meta post-show-meta">
+    <time datetime="2023-03-07T07:15:11.920Z">
+      <i 
+        class="iconfont icon-calendar" 
+        style="margin-right: 2px;">
+      </i>
+      <span>2023-03-07</span>
+    </time>
+    
+      <span class="dot"></span>
+      
+        <a 
+          href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" 
+          class="post-meta-link">
+          设计模式
+        </a>
+      
+    
+    
+      <span class="dot"></span>
+      <span>3.6k 字</span>
+    
+  </div>
+  
+    <div 
+      class="post-meta post-show-meta" 
+      style="margin-top: -10px;">
+      <div style="display: flex; align-items: center;">
+        <i 
+          class="iconfont icon-biaoqian" 
+          style="margin-right: 2px; font-size: 1.15rem;">
+        </i>
+        
+          
+          <a 
+            href="/tags/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" 
+            class="post-meta-link">
+            设计模式
+          </a>
+        
+          
+            <span class="dot"></span>
+          
+          <a 
+            href="/tags/%E7%AE%A1%E7%90%86%E7%8A%B6%E6%80%81/" 
+            class="post-meta-link">
+            管理状态
+          </a>
+        
+      </div>
+    </div>
+  
+  </header>
+  <div 
+    id="section" 
+    class="post-content">
+    <h1 id="Memento模式（备忘录模式）"><a href="#Memento模式（备忘录模式）" class="headerlink" title="Memento模式（备忘录模式）"></a>Memento模式（备忘录模式）</h1><blockquote>
+<p>在使用文本编辑器编写文件时，如果不小心删除了某句话，可以通过撤销（undo）功能将文件恢复至之前的状态。有些文本编辑器甚至支持多次撤销，能够恢复至很久之前的版本。</p>
+<p>使用面向对象编程的方式实现撤销功能时，需要事先保存实例的相关状态信息。然后，在撤销时，还需要根据所保存信息将实例恢复至原来的状态。</p>
+<p>想要恢复实例，需要一个可以自由访问实例内部结构的权限。但是，如果稍不注意，又可能会将依赖实例内部结构的代码分散的编写在程序中的各个地方，导致程序变得难以维护。这种情况就叫作“破环了封装性”。</p>
+<p>通过引入表示实例状态的角色，可以在保存和恢复实例时有效的防止对象的封装性遭到破坏。这就是要学习的<strong>Memento模式</strong>。</p>
+<p>使用Memento模式可以实现应用程序的以下功能。</p>
+<ul>
+<li>Undo（撤销）</li>
+<li>Redo（重做）</li>
+<li>History（历史记录）</li>
+<li>Snapshot（快照）</li>
+</ul>
+<p>Moment有“纪念品”、“遗物”、“备忘录”的意思。</p>
+<p>当从抽屉中拿出一个让人怀念的照片时，肯定会感慨万千，感觉仿佛又回到了照片中的那个时候。Memento模式就是一个这样的设计模式，它事先将某个时间点的实例状态保存下来，之后在有必要时，再将实例恢复至当时的状态。</p>
+</blockquote>
+<h2 id="示例类图"><a href="#示例类图" class="headerlink" title="示例类图"></a>示例类图</h2><blockquote>
+<p><img src="/2023/03/07/MementoPattern/image-20230307154833137.png" alt="image-20230307154833137" srcset="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20300%20300'%3E%3C/svg%3E" data-src="/2023/03/07/MementoPattern/image-20230307154833137.png" class="lozad post-image"></p>
+</blockquote>
+<h2 id="示例程序"><a href="#示例程序" class="headerlink" title="示例程序"></a>示例程序</h2><p>下面来看一段使用Memento模式的实例程序。这是一个收集水果和获取金钱数的掷骰子游戏，游戏规则很简单，具体如下。</p>
+<ul>
+<li>游戏是自动进行的</li>
+<li>游戏的主人公通过掷骰子来决定下一个状态</li>
+<li>当骰子点数为1的时候，主人公的金钱会增加</li>
+<li>当骰子点数为2的时候，主人公的金钱会减少</li>
+<li>当骰子点数为6的时候，主人公会得到水果</li>
+<li>主人公没有钱时游戏就会结束</li>
+</ul>
+<p>在程序中，如果金钱增加，为了方便恢复状态，我们会生成Memento类的实例，将现在的状态保存起来。所保存的数据为当前持有的金钱和水果。如果不断掷出了会导致金钱减少的点数，为了防止金钱变为0而结束游戏，我们会使用Memento的实例将游戏恢复至之前的状态。</p>
+<p>下面，通过这个小游戏来学校Memento模式。</p>
+<table>
+<thead>
+<tr>
+<th>包</th>
+<th>名字</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>game</td>
+<td>Memento</td>
+<td>表示Gamer状态的类</td>
+</tr>
+<tr>
+<td>game</td>
+<td>Gamer</td>
+<td>表示游戏主人公的类。它会生成Memento的实例</td>
+</tr>
+<tr>
+<td>无名</td>
+<td>Main</td>
+<td>进行游戏的类。它会事先保存Memento的实例，之后会根据需要恢复Gamer的状态</td>
+</tr>
+</tbody></table>
+<h3 id="Memento类"><a href="#Memento类" class="headerlink" title="Memento类"></a>Memento类</h3><blockquote>
+<p>Memento类是表示Gamer（主人公）状态的类。</p>
+<p>Memento类和Gamer类都位于game包下。</p>
+<p>Memento类中有两个字段，即money和fruits。money表示主人公现在所持有的金钱数目，fruits表示现在为止我们希望同在game包下的Gamer类可以访问这两个字段。</p>
+<p>getMoney方法的作用是获取主人公当前所持有的金钱数目。</p>
+<p>Memento类的构造函数并非public，因此并不是任何其他类都可以生成Memento类的实例。只有在同一个包（game包）下的其他类才能调用Memento类的构造函数。具体来说，只有game包下的Gamer类才能生存Memento类的实例。</p>
+<p>addFruit方法用于添加所获得的水果。该方法的可见性也不是public。这是因为只有同一个包下的其他类才能添加水果。因此，无法从game包外部改变Memento内部状态。</p>
+</blockquote>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">import</span> <span class="token import"><span class="token namespace">java<span class="token punctuation">.</span>util<span class="token punctuation">.</span></span><span class="token class-name">ArrayList</span></span><span class="token punctuation">;</span>
+<span class="token keyword">import</span> <span class="token import"><span class="token namespace">java<span class="token punctuation">.</span>util<span class="token punctuation">.</span></span><span class="token class-name">List</span></span><span class="token punctuation">;</span>
+
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">Memento</span> <span class="token punctuation">&#123;</span>
+    <span class="token comment">/**
+     * 所持金钱
+     */</span>
+    <span class="token keyword">int</span> money<span class="token punctuation">;</span>
+
+    <span class="token comment">/**
+     * 获得的水果
+     */</span>
+    <span class="token class-name">ArrayList</span> fruits<span class="token punctuation">;</span>
+
+    <span class="token comment">/**
+     * 获取当前所持有金钱
+     * @return 金钱
+     */</span>
+    <span class="token keyword">public</span> <span class="token keyword">int</span> <span class="token function">getMoney</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> money<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 构造函数
+     * @param money 金钱
+     */</span>
+    <span class="token class-name">Memento</span><span class="token punctuation">(</span><span class="token keyword">int</span> money<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>money <span class="token operator">=</span> money<span class="token punctuation">;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>fruits <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">ArrayList</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 添加水果
+     * @param fruit 水果
+     */</span>
+    <span class="token keyword">void</span> <span class="token function">addFruit</span><span class="token punctuation">(</span><span class="token class-name">String</span> fruit<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        fruits<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>fruit<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 获取当前所持所有水果
+     * @return 所有水果
+     */</span>
+    <span class="token class-name">List</span> <span class="token function">getFruits</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> <span class="token punctuation">(</span><span class="token class-name">List</span><span class="token punctuation">)</span> fruits<span class="token punctuation">.</span><span class="token function">clone</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="Gamer类"><a href="#Gamer类" class="headerlink" title="Gamer类"></a>Gamer类</h3><blockquote>
+<p>Gamer类是表示游戏主人公的类。它有3个字段，即所持金钱（money）、获得的水果（fruits）以及随机数生成器（random）。而且还有一个名为fruitsname的静态字段。</p>
+<p>进行游戏的主要方法是bet方法。在该方法中，只要主人公没有破产，就会一直掷骰子，并根据骰子结果改变所持有的金钱数目和水果个数。</p>
+<p>createMemento方法的作用是保存当前的状态（拍摄快照）。在createMemento方法中，会根据在当前时间点所持有的金钱和水果生成一个Memento类的实例，该实例代表了“当前Gamer的状态”，它会被返回给调用者。就如同给对象照了张照片一样，我们将对象现在的状态封存在Memento类的实例中。请注意我们只保存了“好吃”的水果。</p>
+<p>restoreMemento方法的功能与createMemento相反，它会根据接收到的Memento类的实例来将Gamer恢复为以前的状态，仿佛是在游戏中念了一通“复活咒语”。</p>
+</blockquote>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">import</span> <span class="token import"><span class="token namespace">java<span class="token punctuation">.</span>util<span class="token punctuation">.</span></span><span class="token class-name">ArrayList</span></span><span class="token punctuation">;</span>
+<span class="token keyword">import</span> <span class="token import"><span class="token namespace">java<span class="token punctuation">.</span>util<span class="token punctuation">.</span></span><span class="token class-name">Iterator</span></span><span class="token punctuation">;</span>
+<span class="token keyword">import</span> <span class="token import"><span class="token namespace">java<span class="token punctuation">.</span>util<span class="token punctuation">.</span></span><span class="token class-name">List</span></span><span class="token punctuation">;</span>
+<span class="token keyword">import</span> <span class="token import"><span class="token namespace">java<span class="token punctuation">.</span>util<span class="token punctuation">.</span></span><span class="token class-name">Random</span></span><span class="token punctuation">;</span>
+
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">Gamer</span> <span class="token punctuation">&#123;</span>
+    <span class="token comment">/**
+     * 所持金钱
+     */</span>
+    <span class="token keyword">private</span> <span class="token keyword">int</span> money<span class="token punctuation">;</span>
+
+    <span class="token comment">/**
+     * 获得的水果
+     */</span>
+    <span class="token keyword">private</span> <span class="token class-name">List</span> fruits <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">ArrayList</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token comment">/**
+     * 随机数生成器
+     */</span>
+    <span class="token keyword">private</span> <span class="token class-name">Random</span> random <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Random</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token comment">/**
+     * 表示水果种类的数组
+     */</span>
+    <span class="token keyword">private</span> <span class="token keyword">static</span> <span class="token class-name">String</span><span class="token punctuation">[</span><span class="token punctuation">]</span> fruitsName <span class="token operator">=</span> <span class="token punctuation">&#123;</span>
+            <span class="token string">"苹果"</span><span class="token punctuation">,</span><span class="token string">"葡萄"</span><span class="token punctuation">,</span><span class="token string">"香蕉"</span><span class="token punctuation">,</span><span class="token string">"橘子"</span>
+    <span class="token punctuation">&#125;</span><span class="token punctuation">;</span>
+
+    <span class="token comment">/**
+     * 构造方法
+     * @param money 金额
+     */</span>
+    <span class="token keyword">public</span> <span class="token class-name">Gamer</span><span class="token punctuation">(</span><span class="token keyword">int</span> money<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>money <span class="token operator">=</span> money<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 获取当前所持金钱
+     * @return 金钱
+     */</span>
+    <span class="token keyword">public</span> <span class="token keyword">int</span> <span class="token function">getMoney</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> money<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 投掷骰子进行游戏
+     */</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">bet</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token comment">// 投骰子</span>
+        <span class="token keyword">int</span> dice <span class="token operator">=</span> random<span class="token punctuation">.</span><span class="token function">nextInt</span><span class="token punctuation">(</span><span class="token number">6</span><span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token number">1</span><span class="token punctuation">;</span>
+
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>dice <span class="token operator">==</span> <span class="token number">1</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span> <span class="token comment">//结果为1时，增加所持金钱</span>
+            money <span class="token operator">+=</span> <span class="token number">100</span><span class="token punctuation">;</span>
+            <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"所持金钱增加。"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token keyword">if</span> <span class="token punctuation">(</span>dice <span class="token operator">==</span> <span class="token number">2</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span> <span class="token comment">//结果为2时，减少所持金钱</span>
+            money <span class="token operator">/=</span> <span class="token number">2</span><span class="token punctuation">;</span>
+            <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"所持金钱减少。"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span><span class="token keyword">else</span> <span class="token keyword">if</span> <span class="token punctuation">(</span>dice <span class="token operator">==</span> <span class="token number">6</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span> <span class="token comment">//结果为6时，获得水果</span>
+            <span class="token class-name">String</span> f <span class="token operator">=</span> <span class="token function">getFruit</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            fruits<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>f<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span><span class="token keyword">else</span> <span class="token punctuation">&#123;</span> <span class="token comment">// 结果为3、4、5时什么都不会发生</span>
+            <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"什么都没有发生。。。"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 拍摄快照
+     * @return 快照
+     */</span>
+    <span class="token keyword">public</span> <span class="token class-name">Memento</span> <span class="token function">createMemento</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token class-name">Memento</span> m <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Memento</span><span class="token punctuation">(</span>money<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">Iterator</span> it <span class="token operator">=</span> fruits<span class="token punctuation">.</span><span class="token function">iterator</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">while</span> <span class="token punctuation">(</span>it<span class="token punctuation">.</span><span class="token function">hasNext</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token class-name">String</span> f <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token class-name">String</span><span class="token punctuation">)</span> it<span class="token punctuation">.</span><span class="token function">next</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">if</span> <span class="token punctuation">(</span>f<span class="token punctuation">.</span><span class="token function">startsWith</span><span class="token punctuation">(</span><span class="token string">" 好吃的 "</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span> <span class="token comment">//只保存好吃的水果</span>
+                m<span class="token punctuation">.</span><span class="token function">addFruit</span><span class="token punctuation">(</span>f<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token punctuation">&#125;</span>
+        <span class="token punctuation">&#125;</span>
+        <span class="token keyword">return</span> m<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 撤销
+     * @param memento 快照
+     */</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">restoreMemento</span><span class="token punctuation">(</span><span class="token class-name">Memento</span> memento<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>money <span class="token operator">=</span> memento<span class="token punctuation">.</span>money<span class="token punctuation">;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>fruits <span class="token operator">=</span> memento<span class="token punctuation">.</span><span class="token function">getFruits</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 用字符串表示主人公的状态
+     * @return 主人公状态
+     */</span>
+    <span class="token keyword">public</span> <span class="token class-name">String</span> <span class="token function">toString</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> <span class="token string">"[money = "</span> <span class="token operator">+</span> money <span class="token operator">+</span> <span class="token string">",fruits = "</span> <span class="token operator">+</span> fruits <span class="token operator">+</span> <span class="token string">" ]"</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 获得一个水果
+     * @return 水果
+     */</span>
+    <span class="token keyword">private</span> <span class="token class-name">String</span> <span class="token function">getFruit</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token class-name">String</span> preFix <span class="token operator">=</span> <span class="token string">""</span><span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>random<span class="token punctuation">.</span><span class="token function">nextBoolean</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            preFix <span class="token operator">=</span> <span class="token string">" 好吃的 "</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+        <span class="token keyword">return</span> preFix <span class="token operator">+</span> fruitsName<span class="token punctuation">[</span>random<span class="token punctuation">.</span><span class="token function">nextInt</span><span class="token punctuation">(</span>fruitsName<span class="token punctuation">.</span>length<span class="token punctuation">)</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="Main类"><a href="#Main类" class="headerlink" title="Main类"></a>Main类</h3><blockquote>
+<p>Main类生成了一个Gamer类的实例并进行游戏。它会重复调用Gamer的bet方法，并显示Gamer的所持金钱。</p>
+<p>到目前为止，这只是普通的掷骰子游戏，接下来我们来引入Memento模式。在变量memento中保存了“某个时间点的Gamer的状态”。如果运气很好，金钱增加了，会调用createMemento方法保存现在的状态；如果运气不好，金钱不足了，就会以memento为参数调用restoreMemento方法返还金额。</p>
+</blockquote>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">import</span> <span class="token import"><span class="token namespace">game<span class="token punctuation">.</span></span><span class="token class-name">Gamer</span></span><span class="token punctuation">;</span>
+<span class="token keyword">import</span> <span class="token import"><span class="token namespace">game<span class="token punctuation">.</span></span><span class="token class-name">Memento</span></span><span class="token punctuation">;</span>
+
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">Main</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token class-name">String</span><span class="token punctuation">[</span><span class="token punctuation">]</span> args<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token class-name">Gamer</span> gamer <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Gamer</span><span class="token punctuation">(</span><span class="token number">100</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// 最初的所持金钱数为 100</span>
+        <span class="token class-name">Memento</span> memento <span class="token operator">=</span> gamer<span class="token punctuation">.</span><span class="token function">createMemento</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// 保存最初的状态</span>
+        <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">int</span> i <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> <span class="token number">100</span><span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"===="</span> <span class="token operator">+</span> i<span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// 显示投掷骰子的次数</span>
+            <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"当前状态："</span> <span class="token operator">+</span> gamer<span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// 显示主人公现在的状态</span>
+
+            gamer<span class="token punctuation">.</span><span class="token function">bet</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">//进行游戏</span>
+
+            <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"所持金钱为"</span> <span class="token operator">+</span> gamer<span class="token punctuation">.</span><span class="token function">getMoney</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token string">"元。"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+            <span class="token keyword">if</span> <span class="token punctuation">(</span>gamer<span class="token punctuation">.</span><span class="token function">getMoney</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">></span> memento<span class="token punctuation">.</span><span class="token function">getMoney</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"   (所持金钱增加了许多，因此保存游戏当前状态) "</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                memento <span class="token operator">=</span> gamer<span class="token punctuation">.</span><span class="token function">createMemento</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token punctuation">&#125;</span><span class="token keyword">else</span> <span class="token keyword">if</span> <span class="token punctuation">(</span>gamer<span class="token punctuation">.</span><span class="token function">getMoney</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&lt;</span> memento<span class="token punctuation">.</span><span class="token function">getMoney</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">/</span> <span class="token number">2</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"   (所持金钱减少了许多，因此游戏状态恢复以前的状态) "</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                gamer<span class="token punctuation">.</span><span class="token function">restoreMemento</span><span class="token punctuation">(</span>memento<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token punctuation">&#125;</span>
+            <span class="token keyword">try</span> <span class="token punctuation">&#123;</span>
+                <span class="token class-name">Thread</span><span class="token punctuation">.</span><span class="token function">sleep</span><span class="token punctuation">(</span><span class="token number">1000</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token punctuation">&#125;</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">InterruptedException</span> e<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token punctuation">&#125;</span>
+            <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="示例程序时序图"><a href="#示例程序时序图" class="headerlink" title="示例程序时序图"></a>示例程序时序图</h3><blockquote>
+<p><img src="/2023/03/07/MementoPattern/image-20230308135512526.png" alt="image-20230308135512526" srcset="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20300%20300'%3E%3C/svg%3E" data-src="/2023/03/07/MementoPattern/image-20230308135512526.png" class="lozad post-image"></p>
+</blockquote>
+<h2 id="Memento模式中的登场角色"><a href="#Memento模式中的登场角色" class="headerlink" title="Memento模式中的登场角色"></a>Memento模式中的登场角色</h2><ul>
+<li><h3 id="Originator（生成者）"><a href="#Originator（生成者）" class="headerlink" title="Originator（生成者）"></a>Originator（生成者）</h3><blockquote>
+<p>Originator角色会在保存自己的最新状态时生成Memento角色。当把以前保存的Memento角色传递给Origiator角色时，它会将自己恢复至生成该Memento角色时的状态。</p>
+<p>在示例程序中，由Gamer类扮演此角色。</p>
+</blockquote>
+</li>
+<li><h3 id="Memento（纪念品）"><a href="#Memento（纪念品）" class="headerlink" title="Memento（纪念品）"></a>Memento（纪念品）</h3><blockquote>
+<p>Memento角色会将Originator角色的内部信息整合在一起。在Memento角色中虽然保存了Originator角色的信息，但它不会向外部公开这些信息。</p>
+<p>Memento角色有以下两种接口（API）</p>
+<ul>
+<li><p>wide interface——宽接口（API）</p>
+<p>Memento角色提供的“宽接口（API）”是指所有用于获取恢复对象状态信息的方法的集合。由于宽接口（API）会暴露所有Memento角色的内部信息，因此能够使用宽接口（API）的只有Originator角色。</p>
+</li>
+<li><p>narrowinterface——窄接口（API）</p>
+<p>Memento角色为外部的Caretaker角色提供了“窄接口（API）”。可以通过窄接口（API）获取Memeneto角色的内部信息非常有限，因此可以有效地防止信息泄露。</p>
+</li>
+</ul>
+<p>通过对外提供以上两种接口（API），可以有效地防止对象的封装性被破坏。</p>
+<p>在示例程序中，由Memento类扮演此角色。</p>
+<p>Originator角色和Memento角色之间有着非常紧密的联系。</p>
+</blockquote>
+</li>
+<li><h3 id="Caretaker（负责人）"><a href="#Caretaker（负责人）" class="headerlink" title="Caretaker（负责人）"></a>Caretaker（负责人）</h3><blockquote>
+<p>当Caretaker角色想要保存当前的Originator角色的状态时，会通知Originator角色。Originator角色在接收到通知后会生成Memento角色的实例并将其返回给Caretaker角色。由于以后可能会用Memento实例来将Originator恢复至原来的状态，因此Caretaker角色会一直保存Memento实例。</p>
+<p>在示例程序中，由Main类扮演此角色。</p>
+<p>不过，Caretaker角色只能使用Memento角色两种（API）中的窄接口（API），也就是说它无法访问Memento角色内部的所有信息。<strong>它只将Originator角色生成的Memento角色当作一个黑盒子保存起来</strong>。</p>
+<p>虽然Originator角色和Menento角色之间是强关联关系，但Carataker角色和Memento角色之间是弱关联关系。Memento角色对Caretaker角色隐藏了自身的内部信息。</p>
+</blockquote>
+</li>
+</ul>
+<h3 id="Memento模式的类图"><a href="#Memento模式的类图" class="headerlink" title="Memento模式的类图"></a>Memento模式的类图</h3><blockquote>
+<p><img src="/2023/03/07/MementoPattern/image-20230308143511396.png" alt="image-20230308143511396" srcset="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20300%20300'%3E%3C/svg%3E" data-src="/2023/03/07/MementoPattern/image-20230308143511396.png" class="lozad post-image"></p>
+</blockquote>
+<h2 id="拓展思路要点"><a href="#拓展思路要点" class="headerlink" title="拓展思路要点"></a>拓展思路要点</h2><ul>
+<li><h3 id="两种接口（API）和可见性"><a href="#两种接口（API）和可见性" class="headerlink" title="两种接口（API）和可见性"></a>两种接口（API）和可见性</h3><blockquote>
+<p>为了能够实现Memento模式中的两套接口（API），利用了Java语言中的可见性。</p>
+<table>
+<thead>
+<tr>
+<th>可见性</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>public</td>
+<td>所有类都可以访问</td>
+</tr>
+<tr>
+<td>protected</td>
+<td>同一包中的类或是该类的子类可以访问</td>
+</tr>
+<tr>
+<td>无</td>
+<td>同一包中的类可以访问</td>
+</tr>
+<tr>
+<td>private</td>
+<td>只有该类自身可以访问</td>
+</tr>
+</tbody></table>
+<p>在Memento类的方法和字段中，带有public修饰符的，也有不带修饰符的。这表示设计者希望能购进行控制，从而使某些类可以访问这些方法和字段，而其他一些类则无法访问</p>
+<table>
+<thead>
+<tr>
+<th>可见性</th>
+<th>字段、方法、构造函数</th>
+<th>哪个类可以访问</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>无</td>
+<td>money</td>
+<td>Memento类、Gamer类</td>
+</tr>
+<tr>
+<td>无</td>
+<td>fruits</td>
+<td>Memento类、Gamer类</td>
+</tr>
+<tr>
+<td>public</td>
+<td>getMoney</td>
+<td>Memento类、Gamer类、Main类</td>
+</tr>
+<tr>
+<td>无</td>
+<td>Memento</td>
+<td>Memento类、Gamer类</td>
+</tr>
+<tr>
+<td>无</td>
+<td>addFruit</td>
+<td>Memento类、Gamer类</td>
+</tr>
+</tbody></table>
+<p>在Memento类中，只有getMoney方法是public的，它是一个窄接又(API)，因此该方法也可以被扮演Caretaker角色的Main类调用。</p>
+<p>这里做一下补充说明。明明该方法带有修饰符public，但它却一个是窄接又(API)，这不免让人感到有些奇怪。其实，这里所说的“窄〞是指外部可以操作的类内部的内容很少。在Memento类的所有方法中，只有getMoney的可见性是public的。也就是说，扮演Caretaker角色的Main类可以获取的只有当前状态下的金钱数目而已。像这种“能够获取的信息非常少”的状态就是本章中“窄”的意思。</p>
+<p>由于扮演Caretaker角色的Main类并不在game包下，所以它只能调用public的getMoney方法。因此，Main类无法随意改变Memento类的状态。还有一点需要注意的是，在Main类中Memento类的构造两数是无法访问的，这就意味着无法像下面这样生成Memento类的实例。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token function">newMemento</span><span class="token punctuation">(</span><span class="token number">100</span><span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<p>如果像这样编写了代码，在编译代码时编译器就会报错。如果Main类中需要用到Memento类的实例，可以通过调用Game工类的createMemento方法告诉Game工类“我需要保存现在的状态，请生成一个Memento类的实例给我”。</p>
+<p>如果我们在编程时需要实现“允许有些类访问这个方法，其他类则不能访问这个方法”这种需求，可以像上面这样使用可见性来控制访问权限。</p>
+</blockquote>
+</li>
+<li><h3 id="需要多少个Memento"><a href="#需要多少个Memento" class="headerlink" title="需要多少个Memento"></a>需要多少个Memento</h3><blockquote>
+<p>在示例程序中，Main类只保存了一个Memento。如果在Main类中使用数组等集合，让它可以保存多个Memento类的实例，就可以实现保存各个时间点的对象状态。</p>
+</blockquote>
+</li>
+<li><h3 id="Memento的有效期限是多久"><a href="#Memento的有效期限是多久" class="headerlink" title="Memento的有效期限是多久"></a>Memento的有效期限是多久</h3><blockquote>
+<p>在示例程序中，我们是在内存中保存Memento的，这样并没有什么问题。如果要将Memento永久保存在文件中，就会出现有效期限的问题了。</p>
+<p>这是因为，假设我们在某个时间点将Memento保存在文件中，之后又升级了应用程序版本，那么可能会出现原来保存的Memento与当前的应用程序不匹配的情况。</p>
+</blockquote>
+</li>
+<li><h3 id="划分Caretaker角色和Originator角色的意义"><a href="#划分Caretaker角色和Originator角色的意义" class="headerlink" title="划分Caretaker角色和Originator角色的意义"></a>划分Caretaker角色和Originator角色的意义</h3><blockquote>
+<p>到这里可能会有这样的疑问：如果是要实现撤销功能，直接在Originator角色中实现不就好了吗？为什么要这么麻烦地引入Memento模式呢？</p>
+<p>Caretaker角色的职责是决定何时拍摄快照，何时撤销以及保存Memento角色。</p>
+<p>另一方面，Originator角色的职责则是生成Memento角色和使用用接收到的Memento角色来恢复自己的状态。</p>
+<p>以上就是Caretaker角色与Originator角色的<strong>职责分担</strong>。有了这样的职责分担，当我们需要对应以下需求时，就可以完全不用修改Originator角色。</p>
+<ul>
+<li><strong>变更为可以多次撤销</strong></li>
+<li><strong>变更为不仅可以撤销，还可以将现在的状态保存在文件中</strong></li>
+</ul>
+</blockquote>
+</li>
+</ul>
+
+  </div>
+  <div>
+    
+      <div 
+        class="post-note note-warning copyright" 
+        style="margin-top: 42px">
+        <p>
+          <span style="font-weight: bold;">作者：</span><a 
+            target="_blank" 
+            rel="nofollow noopener noreferrer" 
+            href="/about">
+            简单且极端
+          </a>
+        </p>
+        <p>
+          <span style="font-weight: bold;">文章链接：</span><a 
+            target="_blank" 
+            rel="nofollow noopener noreferrer" 
+            href="https://extremelys.github.io/2023/03/07/MementoPattern/">
+            https://extremelys.github.io/2023/03/07/MementoPattern/
+          </a>
+        </p>
+        <p><span style="font-weight: bold;">版权声明：</span>本博客所有文章除特别声明外，均采用<a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">CC BY-NC-SA 4.0 协议</a>。转载请注明出处！</p>
+      </div>
+    
+  </div>
+</article>
+<div class="nav">
+  
+    <div class="nav-item-prev">
+      <a 
+        href="/2023/03/08/StatePattern/" 
+        class="nav-link">
+        <i class="iconfont icon-left nav-prev-icon"></i>
+        <div>
+          <div class="nav-label">上一篇</div>
+          
+            <div class="nav-title">状态模式 </div>
+          
+        </div>
+      </a>
+    </div>
+  
+  
+    <div class="nav-item-next">
+      <a 
+        href="/2023/03/01/ObserverPatten/" 
+        class="nav-link">
+        <div>
+          <div class="nav-label">下一篇</div>
+          
+            <div class="nav-title">观察者模式 </div>
+          
+        </div>
+        <i class="iconfont icon-right nav-next-icon"></i>
+      </a>
+    </div>
+  
+</div>
+
+<div 
+  class="card card-content toc-card" 
+  id="mobiletoc">
+  <div class="toc-header">
+  <i 
+    class="iconfont icon-menu" 
+    style="padding-right: 2px;">
+  </i>目录
+</div>
+<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Memento%E6%A8%A1%E5%BC%8F%EF%BC%88%E5%A4%87%E5%BF%98%E5%BD%95%E6%A8%A1%E5%BC%8F%EF%BC%89"><span class="toc-text">Memento模式（备忘录模式）</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E7%B1%BB%E5%9B%BE"><span class="toc-text">示例类图</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E7%A8%8B%E5%BA%8F"><span class="toc-text">示例程序</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Memento%E7%B1%BB"><span class="toc-text">Memento类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Gamer%E7%B1%BB"><span class="toc-text">Gamer类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Main%E7%B1%BB"><span class="toc-text">Main类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E7%A8%8B%E5%BA%8F%E6%97%B6%E5%BA%8F%E5%9B%BE"><span class="toc-text">示例程序时序图</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Memento%E6%A8%A1%E5%BC%8F%E4%B8%AD%E7%9A%84%E7%99%BB%E5%9C%BA%E8%A7%92%E8%89%B2"><span class="toc-text">Memento模式中的登场角色</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Originator%EF%BC%88%E7%94%9F%E6%88%90%E8%80%85%EF%BC%89"><span class="toc-text">Originator（生成者）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Memento%EF%BC%88%E7%BA%AA%E5%BF%B5%E5%93%81%EF%BC%89"><span class="toc-text">Memento（纪念品）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Caretaker%EF%BC%88%E8%B4%9F%E8%B4%A3%E4%BA%BA%EF%BC%89"><span class="toc-text">Caretaker（负责人）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Memento%E6%A8%A1%E5%BC%8F%E7%9A%84%E7%B1%BB%E5%9B%BE"><span class="toc-text">Memento模式的类图</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8B%93%E5%B1%95%E6%80%9D%E8%B7%AF%E8%A6%81%E7%82%B9"><span class="toc-text">拓展思路要点</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%A4%E7%A7%8D%E6%8E%A5%E5%8F%A3%EF%BC%88API%EF%BC%89%E5%92%8C%E5%8F%AF%E8%A7%81%E6%80%A7"><span class="toc-text">两种接口（API）和可见性</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%9C%80%E8%A6%81%E5%A4%9A%E5%B0%91%E4%B8%AAMemento"><span class="toc-text">需要多少个Memento</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Memento%E7%9A%84%E6%9C%89%E6%95%88%E6%9C%9F%E9%99%90%E6%98%AF%E5%A4%9A%E4%B9%85"><span class="toc-text">Memento的有效期限是多久</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%88%92%E5%88%86Caretaker%E8%A7%92%E8%89%B2%E5%92%8COriginator%E8%A7%92%E8%89%B2%E7%9A%84%E6%84%8F%E4%B9%89"><span class="toc-text">划分Caretaker角色和Originator角色的意义</span></a></li></ol></li></ol></li></ol>
+</div>
+            </main>
+            <aside class="right-column">
+              <div class="sticky-widescreen">
+  
+  
+    <article class="card card-content toc-card">
+      <div class="toc-header">
+  <i 
+    class="iconfont icon-menu" 
+    style="padding-right: 2px;">
+  </i>目录
+</div>
+<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Memento%E6%A8%A1%E5%BC%8F%EF%BC%88%E5%A4%87%E5%BF%98%E5%BD%95%E6%A8%A1%E5%BC%8F%EF%BC%89"><span class="toc-text">Memento模式（备忘录模式）</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E7%B1%BB%E5%9B%BE"><span class="toc-text">示例类图</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E7%A8%8B%E5%BA%8F"><span class="toc-text">示例程序</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Memento%E7%B1%BB"><span class="toc-text">Memento类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Gamer%E7%B1%BB"><span class="toc-text">Gamer类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Main%E7%B1%BB"><span class="toc-text">Main类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E7%A8%8B%E5%BA%8F%E6%97%B6%E5%BA%8F%E5%9B%BE"><span class="toc-text">示例程序时序图</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Memento%E6%A8%A1%E5%BC%8F%E4%B8%AD%E7%9A%84%E7%99%BB%E5%9C%BA%E8%A7%92%E8%89%B2"><span class="toc-text">Memento模式中的登场角色</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Originator%EF%BC%88%E7%94%9F%E6%88%90%E8%80%85%EF%BC%89"><span class="toc-text">Originator（生成者）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Memento%EF%BC%88%E7%BA%AA%E5%BF%B5%E5%93%81%EF%BC%89"><span class="toc-text">Memento（纪念品）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Caretaker%EF%BC%88%E8%B4%9F%E8%B4%A3%E4%BA%BA%EF%BC%89"><span class="toc-text">Caretaker（负责人）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Memento%E6%A8%A1%E5%BC%8F%E7%9A%84%E7%B1%BB%E5%9B%BE"><span class="toc-text">Memento模式的类图</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8B%93%E5%B1%95%E6%80%9D%E8%B7%AF%E8%A6%81%E7%82%B9"><span class="toc-text">拓展思路要点</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%A4%E7%A7%8D%E6%8E%A5%E5%8F%A3%EF%BC%88API%EF%BC%89%E5%92%8C%E5%8F%AF%E8%A7%81%E6%80%A7"><span class="toc-text">两种接口（API）和可见性</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%9C%80%E8%A6%81%E5%A4%9A%E5%B0%91%E4%B8%AAMemento"><span class="toc-text">需要多少个Memento</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Memento%E7%9A%84%E6%9C%89%E6%95%88%E6%9C%9F%E9%99%90%E6%98%AF%E5%A4%9A%E4%B9%85"><span class="toc-text">Memento的有效期限是多久</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%88%92%E5%88%86Caretaker%E8%A7%92%E8%89%B2%E5%92%8COriginator%E8%A7%92%E8%89%B2%E7%9A%84%E6%84%8F%E4%B9%89"><span class="toc-text">划分Caretaker角色和Originator角色的意义</span></a></li></ol></li></ol></li></ol>
+    </article>
+  
+  
+  <article class="card card-content">
+    <div class="recent-posts-card">
+  <div class="recent-posts-header">
+    <i 
+      class="iconfont icon-wenzhang_huaban" 
+      style="padding-right: 2px;">
+    </i>最近文章
+  </div>
+  <div class="recent-posts-list">
+    
+      <div class="recent-posts-item">
+        <div class="recent-posts-item-title">2023-03-16</div>
+        <a href="/2023/03/16/CommandPattern/"><div class="recent-posts-item-content">命令模式</div></a>
+      </div>
+    
+      <div class="recent-posts-item">
+        <div class="recent-posts-item-title">2023-03-16</div>
+        <a href="/2023/03/16/ProxyPatten/"><div class="recent-posts-item-content">代理模式</div></a>
+      </div>
+    
+      <div class="recent-posts-item">
+        <div class="recent-posts-item-title">2023-03-15</div>
+        <a href="/2023/03/15/FlyweightPattrn/"><div class="recent-posts-item-content">享元模式</div></a>
+      </div>
+    
+      <div class="recent-posts-item">
+        <div class="recent-posts-item-title">2023-03-08</div>
+        <a href="/2023/03/08/StatePattern/"><div class="recent-posts-item-content">状态模式</div></a>
+      </div>
+    
+  </div>
+</div>
+  </article>
+  
+  
+</div>
+            </aside>
+          </div>
+        </div>
+      </div>
+    </div>
+     
+    <footer class="footer">
+  <div class="footer-container">
+    <div>
+      <div class="footer-dsc">
+        <span>
+          Copyright ©
+          
+            2022
+          
+          
+                - 
+                2023
+          
+        </span>
+        &nbsp;
+        <a 
+          href="/" 
+          class="footer-link">
+          简单且极端
+        </a>
+      </div>
+    </div>
+
+    
+      <div class="footer-dsc">
+        
+          Powered by
+          <a 
+            href="https://hexo.io/" 
+            class="footer-link" 
+            target="_blank" 
+            rel="nofollow noopener noreferrer">
+            &nbsp;Hexo
+          </a>
+        
+        
+          <span>&nbsp;|&nbsp;</span>
+        
+        
+          Theme -
+          <a 
+            href="https://github.com/theme-kaze" 
+            class="footer-link" 
+            target="_blank"
+            rel="nofollow noopener noreferrer">
+            &nbsp;Kaze
+          </a>
+        
+      </div>
+    
+    
+    
+    
+</footer>
+ 
+    
+  <a 
+    role="button" 
+    id="scrollbutton" 
+    class="basebutton" 
+    aria-label="回到顶部">
+    <i class="iconfont icon-arrowleft button-icon"></i>
+  </a>
+
+<a 
+  role="button" 
+  id="menubutton"
+  aria-label="menu button"
+  class="basebutton">
+  <i class="iconfont icon-menu button-icon"></i>
+</a>
+<a 
+  role="button" 
+  id="popbutton" 
+  class="basebutton" 
+  aria-label="控制中心">
+  <i class="iconfont icon-expand button-icon"></i>
+</a>
+<a 
+  role="button" 
+  id="darkbutton" 
+  class="basebutton darkwidget" 
+  aria-label="夜色模式">
+  <i class="iconfont icon-weather button-icon"></i>
+</a>
+<a 
+  role="button" 
+  id="searchbutton" 
+  class="basebutton searchwidget" 
+  aria-label="搜索">
+  <i class="iconfont icon-search button-icon"></i>
+</a> 
+     
+     
+     
+      <script>
+  var addImgLayout = function () {
+    var img = document.querySelectorAll('.post-content img')
+    var i
+    for (i = 0; i < img.length; i++) {
+      var wrapper = document.createElement('a')
+      wrapper.setAttribute('href', img[i].getAttribute('data-src'))
+      wrapper.setAttribute('aria-label', 'illustration')
+      wrapper.style.cssText =
+        'width: 100%; display: flex; justify-content: center;'
+      if (img[i].alt) wrapper.dataset.caption = img[i].alt
+      wrapper.dataset.nolink = true
+      img[i].before(wrapper)
+      wrapper.append(img[i])
+      var divWrap = document.createElement('div')
+      divWrap.classList.add('gallery')
+      wrapper.before(divWrap)
+      divWrap.append(wrapper)
+    }
+    baguetteBox.run('.gallery')
+  }
+</script>
+<script>
+  loadScript(
+    "/js/lib/lightbox/baguetteBox.min.js",
+    addImgLayout
+  )
+</script>
+ 
+     
+     
+    <script src="/js/main.js"></script> 
+     
+    
+      <script>
+        var addLazyload = function () {
+          var observer = lozad('.lozad', {
+            load: function (el) {
+              el.srcset = el.getAttribute('data-src')
+            },
+            loaded: function (el) {
+              el.classList.add('loaded')
+            },
+          })
+          observer.observe()
+        }
+      </script>
+      <script>
+        loadScript('/js/lib/lozad.min.js', addLazyload)
+      </script>
+    
+    <script src="//instant.page/5.1.0" type="module"
+      integrity="sha384-by67kQnR+pyfy8yWP4kPO12fHKRLHZPfEsiSXR8u2IKcTdxD805MGUXBzVPnkLHw"></script>
+    
+    
+  </body>
+</html>
